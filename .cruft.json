@@ -1,0 +1,23 @@
+{
+  "template": "https://github.com/scverse/cookiecutter-scverse",
+  "commit": "7b86b3572123c7777e012adcf6fff0c7217ba7a0",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "FlowSOM",
+      "package_name": "FlowSOM",
+      "project_description": "The complete FlowSOM package known from R, now available in Python",
+      "author_full_name": "Artuur Couckuyt",
+      "author_email": "artuur.couckuyt@ugent.be",
+      "github_user": "artuurC",
+      "project_repo": "https://github.com/artuurC/FlowSOM",
+      "license": "GNU General Public License Version 3",
+      "_copy_without_render": [
+        ".github/workflows/**.yaml",
+        "docs/_templates/autosummary/**.rst"
+      ],
+      "_template": "https://github.com/scverse/cookiecutter-scverse"
+    }
+  },
+  "directory": null
+}
