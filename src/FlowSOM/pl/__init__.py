@@ -1,1 +1,1 @@
-from .basic import BasicClass, basic_plot
+from .plot_functions import *
