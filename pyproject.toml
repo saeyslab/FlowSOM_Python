@@ -20,10 +20,11 @@ urls.Documentation = "https://FlowSOM.readthedocs.io/"
 urls.Source = "https://github.com/artuurC/FlowSOM"
 urls.Home-page = "https://github.com/artuurC/FlowSOM"
 dependencies = [
-    "anndata",
-    # for debug logging (referenced from the issue template)
+    "anndata", "numpy", "matplotlib", "pandas", "scipy", "pytometry",
+    "pyFlowSOM", "sklearn", "python-igraph", "pytest", "pooch",
     "session-info"
 ]
+
 
 [project.optional-dependencies]
 dev = [

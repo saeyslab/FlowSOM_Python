@@ -53,8 +53,11 @@ class FlowSOM:
         elif isinstance(inp, str):
             inp = read_FCS(inp)
             data = inp.X
-        markers = get_markers(inp, range(data.shape[1]))
-        pretty_colnames = [i + " <" + markers[i] + ">" for i in markers]
+        channels = np.asarray(inp.var["channel"])
+        markers = np.asarray(inp.var["marker"])
+        isnan_markers = [str(marker) == "nan" for marker in markers]
+        markers[isnan_markers] = channels[isnan_markers]
+        pretty_colnames = [markers[i] + " <" + channels[i] + ">" for i in range(len(markers))]
         fsom = np.array(data, dtype=np.float32)
         fsom = ad.AnnData(fsom)
         fsom.uns["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
@@ -103,48 +106,60 @@ class FlowSOM:
         data = np.asarray(inp, dtype=np.float64)
         if importance is not None:
             data = np.stack([data[:, i] * importance[i] for i in range(len(importance))], axis=1)
-        nodes = som(data, xdim=xdim, ydim=ydim, rlen=rlen)
+        nodes = som(data, xdim=xdim, ydim=ydim, rlen=rlen * 5)
         clusters, dists = map_data_to_nodes(nodes, data)
         return nodes, clusters, dists, xdim, ydim
 
     def update_derived_values(self):
         """Update the derived values such as median values and CV values"""
-        df = self.adata.X[self.adata.X[:, 0].argsort()]
+        df = self.adata.X  # [self.adata.X[:, 0].argsort()]
         df = np.c_[self.adata.obs["clustering"], df]
-        df = df[df[:, 0].argsort()]
-        split_df = np.split(df, np.unique(df[:, 0], return_index=True)[1][1:])
-        cluster_adata = [np.median(i, axis=0) for i in split_df]
+        n_nodes = self.adata.uns["n_nodes"]
+        cluster_median_values = np.vstack(
+            [
+                np.median(df[df[:, 0] == cl + 1], axis=0)
+                if df[df[:, 0] == cl + 1].shape[0] != 0
+                else np.repeat(np.nan, df[df[:, 0] == cl + 1].shape[1])
+                for cl in range(n_nodes)
+            ]
+        )
         if "cluster_adata" in self.adata.uns_keys():
             cluster_adata = self.adata.uns["cluster_adata"]
+            cluster_adata.X = np.delete(cluster_median_values, 0, axis=1)
         else:
-            cluster_adata = pd.DataFrame(cluster_adata, dtype=np.float32)
-            cluster_adata = ad.AnnData(cluster_adata.drop(0, axis=1), dtype=np.float32)
+            cluster_adata = ad.AnnData(np.delete(cluster_median_values, 0, axis=1))
         cluster_adata.var_names = self.adata.var_names
+        sd_values = list()
+        cv_values = list()
+        mad_values = list()
+        pctgs = dict()
+        for cl in range(n_nodes):
+            cluster_data = df[df[:, 0] == cl + 1, :]
+            cv_values.append(np.divide(np.std(cluster_data, axis=0), np.mean(cluster_data, axis=0)))
+            sd_values.append(np.std(cluster_data, axis=0))
+            mad_values.append(median_abs_deviation(cluster_data, axis=0))
+            pctgs[cl] = cluster_data.shape[0]
 
-        cv_values = [np.divide(np.std(i, axis=0), np.mean(i, axis=0)) for i in split_df]
         cluster_adata.obsm["cv_values"] = np.vstack(cv_values)
-
-        sd_values = [np.std(i, axis=0) for i in split_df]
         cluster_adata.obsm["sd_values"] = np.vstack(sd_values)
-
-        mad_values = [median_abs_deviation(i, axis=0) for i in split_df]
         cluster_adata.obsm["mad_values"] = np.vstack(mad_values)
-
-        count_dict = collections.Counter(sorted(self.adata.obs["clustering"]))
-        total = sum(count_dict.values())
-        pctgs = [np.divide(i, total) for i in count_dict.values()]
+        pctgs = np.divide(list(pctgs.values()), np.sum(list(pctgs.values())))
         cluster_adata.obs["percentages"] = pctgs
 
         self.adata.uns["cluster_adata"] = cluster_adata
-
         if "metaclustering" in self.adata.obs_keys():
             df = self.adata.X[self.adata.X[:, 0].argsort()]
             df = np.c_[self.adata.obs["metaclustering"], df]
-            df = df[df[:, 0].argsort()]
-            split_df = np.split(df, np.unique(df[:, 0], return_index=True)[1][1:])
+            metacluster_median_values = np.vstack(
+                [
+                    np.median(df[df[:, 0] == cl + 1], axis=0)
+                    if df[df[:, 0] == cl + 1].shape[0] != 0
+                    else np.repeat(np.nan, df[df[:, 0] == cl + 1].shape[1])
+                    for cl in range(self.adata.uns["n_metaclusters"])
+                ]
+            )
+            self.adata.uns["metacluster_MFIs"] = np.vstack(metacluster_median_values)
 
-            metacluster_MFIs = np.asarray([np.median(i, axis=0) for i in split_df])[:, 1:]
-            self.adata.uns["metacluster_MFIs"] = np.asarray(metacluster_MFIs)
         return self
 
     def build_MST(self):
@@ -266,6 +281,30 @@ class FlowSOM:
             result_channels = pd.DataFrame(outliers_dict)
             result = result.join(result_channels)
         return result
+
+    def new_data(self, inp, mad_allowed=4):
+        fsom_new = FlowSOM(inp)
+        fsom_new.adata.uns["pretty_colnames"] = self.adata.uns["pretty_colnames"]
+        fsom_new.adata.uns["cols_used"] = self.adata.uns["cols_used"]
+        fsom_new.adata.uns["xdim"] = self.adata.uns["xdim"]
+        fsom_new.adata.uns["ydim"] = self.adata.uns["ydim"]
+        fsom_new.adata.uns["n_nodes"] = self.adata.uns["n_nodes"]
+        fsom_new.adata.uns["n_metaclusters"] = self.adata.uns["n_metaclusters"]
+        fsom_new.adata.uns["cluster_adata"] = self.adata.uns["cluster_adata"]
+
+        clusters, dists = map_data_to_nodes(
+            np.array(self.get_cluster_adata().obsm["codes"], dtype=np.float64),
+            np.array(fsom_new.adata.X, dtype=np.float64),
+        )
+        fsom_new.adata.obsm["mapping"] = np.array(dists)
+        fsom_new.adata.obs["clustering"] = np.array(clusters)
+        fsom_new = fsom_new.update_derived_values()
+        metaclusters = self.get_cluster_adata().obs["metaclustering"]
+        fsom_new.adata.obs["metaclustering"] = np.asarray(
+            [np.array(metaclusters)[int(i) - 1] for i in np.asarray(fsom_new.adata.obs["clustering"])]
+        )
+        # test_outliers = fsom_new.test_outliers(mad_allowed = mad_allowed, fsom_reference = self)
+        return fsom_new
 
     def get_cluster_adata(self):
         return self.adata.uns["cluster_adata"]

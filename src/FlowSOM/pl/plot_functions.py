@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.colors
 import random
 
-from FlowSOM.FlowSOM import *
+from FlowSOM.main import get_channels, get_markers
 from matplotlib import collections as mc
 from matplotlib import gridspec
 from FlowSOM.pl.plot_helper_functions import *
@@ -15,7 +15,7 @@ def plot_FlowSOM(
     fsom,
     view: str = "MST",
     background_values: np.array = None,
-    background_colors=gg_color_hue(),
+    background_cmap=gg_color_hue(),
     node_sizes: np.array = None,
     max_node_size: int = 1,
     ref_node_size: int = None,
@@ -30,8 +30,8 @@ def plot_FlowSOM(
     :type view: str
     :param background_values: The background values to be plotted
     :type background_values: np.array
-    :param background_colors: A colormap for the background colors
-    :type background_colors: Colormap
+    :param background_cmap: A colormap for the background colors
+    :type background_cmap: Colormap
     :param node_sizes: An array with the node sizes. Will be scaled between 0
     and max_node_size and transformed with a sqrt. Default is the percentages
     :type node_sizes: np.array
@@ -48,7 +48,7 @@ def plot_FlowSOM(
     """
     # Initialization
     nNodes = fsom.adata.uns["n_nodes"]
-    isEmpty = None  # toadapt
+    isEmpty = fsom.get_cluster_adata().obs["percentages"] == 0
 
     # Warnings
     # assert nNodes == len(node_sizes), f"Length of \"node_sizes\" should be equal to number of clusters in FlowSOM object"
@@ -61,7 +61,7 @@ def plot_FlowSOM(
         ref_node_size=ref_node_size,
         equal_node_size=equal_node_size,
     )
-
+    node_sizes[isEmpty] = min([0.05, node_sizes.max()])
     # Layout
     layout = fsom.get_cluster_adata().obsm["layout"] if view == "MST" else fsom.get_cluster_adata().obsm["grid"]
 
@@ -71,7 +71,7 @@ def plot_FlowSOM(
     # Add background
     if background_values is not None:
         background = add_nodes(layout, node_sizes * 1.5)
-        b = mc.PatchCollection(background, cmap=background_colors)
+        b = mc.PatchCollection(background, cmap=background_cmap)
         b.set_array(background_values)
         b.set_alpha(0.5)
         b.set_zorder(1)
@@ -89,7 +89,7 @@ def plot_FlowSOM(
     # Add nodes
     nodes = add_nodes(layout, node_sizes)
     n = mc.PatchCollection(nodes)
-    n.set_facecolor("white")
+    n.set_facecolor(["#C7C7C7" if tf else "#FFFFFF" for tf in isEmpty])  # "white")
     n.set_edgecolor("black")
     n.set_linewidth(0.5)
     n.set_zorder(2)
@@ -231,7 +231,7 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
 def plot_labels(
     fsom,
     cell_types,
-    color_palette=matplotlib.colors.ListedColormap(
+    cmap=matplotlib.colors.ListedColormap(
         ["white", "#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
     ),
     title=None,
@@ -244,8 +244,8 @@ def plot_labels(
     :type fsom:
     :param cell_types:
     :type cell_types:
-    :param color_palette:
-    :type color_palette:
+    :param cmap:
+    :type cmap:
     """
     fig, ax, layout, scaledNodeSize = plot_FlowSOM(fsom, **kwargs)
 
@@ -254,7 +254,7 @@ def plot_labels(
     grouped_df = cell_types.groupby("cl")
     i = 0
     uniquecell_types = np.unique(cell_types["gatingResult"])
-    color_dict = dict(zip(uniquecell_types, color_palette(np.linspace(0, 1, len(uniquecell_types)))))
+    color_dict = dict(zip(uniquecell_types, cmap(np.linspace(0, 1, len(uniquecell_types)))))
     for _, group in grouped_df:
         table = pd.crosstab(index=group["gatingResult"], columns="count")
         table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
@@ -277,22 +277,22 @@ def plot_labels(
     return (fig, ax)
 
 
-def plot_variable(fsom, variable, color_palette=FlowSOM_colors(), lim=None, title=None, **kwargs):
+def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, **kwargs):
     """Plot FlowSOM grid or tree, colored by node values given in variable
 
     :param fsom:
     :type fsom:
     :param variable:
     :type variable:
-    :param color_palette:
-    :type color_palette:
+    :param cmap:
+    :type cmap:
     :param lim:
     :type lim:
     """
     # assert isinstance(variable, list) and len(variable) == fsom.nClusters(), f"Length of variable should be the same as the number of nodes in your FlowSOM object"
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     nodes = add_nodes(layout, scaled_node_size)
-    n = mc.PatchCollection(nodes, cmap=color_palette)
+    n = mc.PatchCollection(nodes, cmap=cmap)
     n.set_array(variable)
     if lim is not None:
         n.set_clim(lim)
@@ -306,7 +306,7 @@ def plot_variable(fsom, variable, color_palette=FlowSOM_colors(), lim=None, titl
     plt.show()
 
 
-def plot_marker(fsom, marker, ref_markers=None, lim=None, color_palette=FlowSOM_colors(), **kwargs):
+def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(), **kwargs):
     """Plot FlowSOM grid or tree, colored by node values for a specific marker
 
     :param fsom:
@@ -317,8 +317,8 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, color_palette=FlowSOM_
     :type ref_markers:
     :param lim:
     :type lim:
-    :param color_palette:
-    :type color_palette:
+    :param cmap:
+    :type cmap:
     """
     if ref_markers is None:
         ref_markers = fsom.adata.uns["cols_used"]
@@ -329,7 +329,7 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, color_palette=FlowSOM_
         lim = (mfis[:, indices_markers].min(), mfis[:, indices_markers].max())
     marker = list(get_channels(fsom, marker).keys())[0]
     marker_index = np.where(fsom.adata.var_names == marker)[0][0]
-    plot_variable(fsom, variable=mfis[:, marker_index], color_palette=color_palette, lim=lim, **kwargs)
+    plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
 
 
 def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black", title=None, **kwargs):
@@ -435,22 +435,22 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     plt.show()
 
 
-def plot_stars(fsom, markers=None, color_palette=FlowSOM_colors(), title=None, **kwargs):
+def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     """Plot star charts
 
     :param fsom:
     :type fsom:
     :param markers:
     :type markers:
-    :param color_palette:
-    :type color_palette:
+    :param cmap:
+    :type cmap:
     """
     if markers is None:
         markers = fsom.adata.uns["cols_used"]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     data = fsom.adata.uns["cluster_adata"][:, markers].X
     heights = scale_star_heights(data, scaled_node_size)
-    s = mc.PatchCollection(add_stars(layout, heights), cmap=color_palette)
+    s = mc.PatchCollection(add_stars(layout, heights), cmap=cmap)
     s.set_array(range(data.shape[1]))
     s.set_edgecolor("black")
     s.set_linewidth(0.5)
@@ -465,7 +465,7 @@ def plot_stars(fsom, markers=None, color_palette=FlowSOM_colors(), title=None, *
 def plot_pies(
     fsom,
     cell_types,
-    color_palette=matplotlib.colors.ListedColormap(
+    cmap=matplotlib.colors.ListedColormap(
         ["white", "#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
     ),
     title=None,
@@ -478,13 +478,13 @@ def plot_pies(
     :type fsom:
     :param cell_types:
     :type cell_types:
-    :param color_palette:
-    :type color_palette:
+    :param cmap:
+    :type cmap:
     """
 
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     unique_cell_types = np.unique(cell_types)
-    color_dict = dict(zip(unique_cell_types, color_palette(np.linspace(0, 1, len(unique_cell_types)))))
+    color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))
 
     for cl in range(fsom.adata.uns["n_nodes"]):
         node_cell_types = cell_types[fsom.adata.obs["clustering"] == (cl + 1)]
