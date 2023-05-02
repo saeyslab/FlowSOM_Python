@@ -77,12 +77,13 @@ class FlowSOM:
         if cols_to_use is None:
             cols_to_use = self.adata.var_names
         cols_to_use = list(get_channels(self, cols_to_use).keys())
-        nodes, clusters, dists, xdim, ydim = self.SOM(inp=self.adata[:, cols_to_use].X, **kwargs)
+        nodes, clusters, dists, xdim, ydim, som = self.SOM(inp=self.adata[:, cols_to_use].X, **kwargs)
         self.adata.obs["clustering"] = np.array(clusters)
         self.adata.obs["mapping"] = np.array(dists)
         self.adata.uns["cols_used"] = cols_to_use
         self.adata.uns["xdim"] = xdim
         self.adata.uns["ydim"] = ydim
+        self.adata.uns["som"] = som
         self.adata.uns["n_nodes"] = xdim * ydim
         self = self.update_derived_values()
         self.adata.uns["cluster_adata"].obsm["codes"] = np.array(nodes)
@@ -133,7 +134,7 @@ class FlowSOM:
             nodes, data
         )  # cluster is cluster labels (len = 19225), dist = distance to the cluster (len = 19225)
         """
-        return nodes, clusters, dists, xdim, ydim
+        return nodes, clusters, dists, xdim, ydim, som
 
     def update_derived_values(self):
         """Update the derived values such as median values and CV values"""
@@ -316,13 +317,12 @@ class FlowSOM:
         fsom_new.adata.uns["n_nodes"] = self.adata.uns["n_nodes"]
         fsom_new.adata.uns["n_metaclusters"] = self.adata.uns["n_metaclusters"]
         fsom_new.adata.uns["cluster_adata"] = self.adata.uns["cluster_adata"]
-
-        """clusters, dists = map_data_to_nodes(
-            np.array(self.get_cluster_adata().obsm["codes"], dtype=np.float64),
-            np.array(fsom_new.adata.X, dtype=np.float64),
-        )"""
-        # TO DO
-        dists, clusters = None
+        som = self.adata.uns["som"]
+        data = fsom_new.adata[:, self.adata.uns["cols_used"]].X
+        winner_coordinates = np.array([som.winner(x) for x in data])
+        clusters = np.ravel_multi_index(winner_coordinates.T, (self.adata.uns["xdim"], self.adata.uns["ydim"]))
+        dists_map = som.distance_map()
+        dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
         fsom_new.adata.obsm["mapping"] = np.array(dists)
         fsom_new.adata.obs["clustering"] = np.array(clusters)
         fsom_new = fsom_new.update_derived_values()
