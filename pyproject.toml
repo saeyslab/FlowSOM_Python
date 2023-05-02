@@ -21,7 +21,7 @@ urls.Source = "https://github.com/artuurC/FlowSOM"
 urls.Home-page = "https://github.com/artuurC/FlowSOM"
 dependencies = [
     "anndata", "numpy", "matplotlib", "pandas", "scipy", "pytometry",
-    "pyFlowSOM", "sklearn", "python-igraph", "pytest", "pooch",
+    "minisom", "sklearn", "python-igraph", "pytest", "pooch",
     "session-info"
 ]
 

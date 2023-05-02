@@ -20,6 +20,7 @@ def test_plot_stars(FlowSOM_res):
 def test_new_data(fcs):
     fsom = FlowSOM.main.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
     fsom_new = fsom.new_data(fcs[1001:2000])
+    assert fsom_new.adata.shape == (999, 18)
 
 
 def test_FlowSOM_class(FlowSOM_res):

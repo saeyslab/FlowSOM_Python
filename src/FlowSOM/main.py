@@ -8,9 +8,11 @@ import re
 import random
 import collections
 
-from pyFlowSOM import map_data_to_nodes, som
+# from pyFlowSOM import map_data_to_nodes, som
+
+from minisom import MiniSom
 from scipy.stats import median_abs_deviation
-from scipy.spatial.distance import cdist
+from scipy.spatial.distance import cdist, pdist, squareform
 from sklearn.cluster import AgglomerativeClustering
 
 
@@ -106,8 +108,31 @@ class FlowSOM:
         data = np.asarray(inp, dtype=np.float64)
         if importance is not None:
             data = np.stack([data[:, i] * importance[i] for i in range(len(importance))], axis=1)
-        nodes = som(data, xdim=xdim, ydim=ydim, rlen=rlen * 5)
-        clusters, dists = map_data_to_nodes(nodes, data)
+
+        # Initialize the grid
+        grid = [(x, y) for x in range(xdim) for y in range(ydim)]
+        nCodes = len(grid)
+
+        # Initialize the neighbourhood
+        nhbrdist = squareform(pdist(grid, metric="chebyshev"))
+        radius = np.quantile(nhbrdist, 0.67)
+
+        # Compute the SOM
+        som = MiniSom(x=xdim, y=ydim, input_len=data.shape[1], sigma=radius, learning_rate=0.05)
+        som.random_weights_init(data)
+        som.train(data, rlen * data.shape[0])
+        winner_coordinates = np.array([som.winner(x) for x in data])
+        clusters = np.ravel_multi_index(winner_coordinates.T, (xdim, ydim))
+        nodes = som.get_weights().reshape((xdim * ydim, data.shape[1]))
+        dists_map = som.distance_map()
+        dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
+        """
+        pyFlowSOM
+        nodes = som(data, xdim=xdim, ydim=ydim, rlen=rlen * 5)  # nodes is coords of the nodes (100, 7)
+        clusters, dists = map_data_to_nodes(
+            nodes, data
+        )  # cluster is cluster labels (len = 19225), dist = distance to the cluster (len = 19225)
+        """
         return nodes, clusters, dists, xdim, ydim
 
     def update_derived_values(self):
@@ -292,10 +317,12 @@ class FlowSOM:
         fsom_new.adata.uns["n_metaclusters"] = self.adata.uns["n_metaclusters"]
         fsom_new.adata.uns["cluster_adata"] = self.adata.uns["cluster_adata"]
 
-        clusters, dists = map_data_to_nodes(
+        """clusters, dists = map_data_to_nodes(
             np.array(self.get_cluster_adata().obsm["codes"], dtype=np.float64),
             np.array(fsom_new.adata.X, dtype=np.float64),
-        )
+        )"""
+        # TO DO
+        dists, clusters = None
         fsom_new.adata.obsm["mapping"] = np.array(dists)
         fsom_new.adata.obs["clustering"] = np.array(clusters)
         fsom_new = fsom_new.update_derived_values()
@@ -428,9 +455,7 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False, si
 
         file_ids = np.repeat(i, cPerFile)
 
-        f = f[
-            ids,
-        ]
+        f = f[ids,]
         f.obs["Original_ID"] = np.array(ids, dtype=np.float32)
         f.obs["File"] = np.array(file_ids, dtype=np.float32)
         f.obs["File_scattered"] = np.array(
