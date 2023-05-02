@@ -91,10 +91,5 @@ def add_wedges(coord, heights, angles=None):
     if angles is None:
         part = 360 / len(heights)
         angles = np.arange(0, 360.01, part)
-        """
-        r = np.arange(90, -270.001, -part)
-        angles = [i if i >= 0 else i + 360 for i in r]
-        if angles == [90, 90]: angles = [0, 360]
-        """
     stars = [Wedge(coord, heights[i], angles[i], angles[i + 1], edgecolor="black") for i in range(len(angles) - 1)]
     return stars

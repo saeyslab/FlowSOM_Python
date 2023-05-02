@@ -191,11 +191,7 @@ def plot_2D_scatters(
                 else:
                     df_ss = fsom.adata.X[np.isin(metacluster.astype(int), n), :]
                     df_ss = df_ss[:, indices_markers]
-                    """
-                    print(cell_cluster[np.isin(metacluster.astype(int), n)].astype(int))
-                    df_ss = np.c_[df_ss, metacluster[cell_cluster[np.isin(metacluster.astype(int), n)]]]
-                    print(df_ss)
-                    """
+
                 if len(xy_labels) == 1 and xy_labels[0] == "channel":
                     xy_label = list(get_channels(fsom, channelpair).keys())
                 elif len(xy_labels) == 1 and xy_labels[0] == "marker":

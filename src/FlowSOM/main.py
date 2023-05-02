@@ -6,9 +6,6 @@ import igraph as ig
 
 import re
 import random
-import collections
-
-# from pyFlowSOM import map_data_to_nodes, som
 
 from minisom import MiniSom
 from scipy.stats import median_abs_deviation
@@ -127,13 +124,6 @@ class FlowSOM:
         nodes = som.get_weights().reshape((xdim * ydim, data.shape[1]))
         dists_map = som.distance_map()
         dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
-        """
-        pyFlowSOM
-        nodes = som(data, xdim=xdim, ydim=ydim, rlen=rlen * 5)  # nodes is coords of the nodes (100, 7)
-        clusters, dists = map_data_to_nodes(
-            nodes, data
-        )  # cluster is cluster labels (len = 19225), dist = distance to the cluster (len = 19225)
-        """
         return nodes, clusters, dists, xdim, ydim, som
 
     def update_derived_values(self):
