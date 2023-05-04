@@ -47,8 +47,8 @@ def plot_FlowSOM(
     :type title: str
     """
     # Initialization
-    nNodes = fsom.adata.uns["n_nodes"]
-    isEmpty = fsom.get_cluster_adata().obs["percentages"] == 0
+    nNodes = fsom.get_cell_data().uns["n_nodes"]
+    isEmpty = fsom.get_cluster_data().obs["percentages"] == 0
 
     # Warnings
     # assert nNodes == len(node_sizes), f"Length of \"node_sizes\" should be equal to number of clusters in FlowSOM object"
@@ -63,7 +63,7 @@ def plot_FlowSOM(
     )
     node_sizes[isEmpty] = min([0.05, node_sizes.max()])
     # Layout
-    layout = fsom.get_cluster_adata().obsm["layout"] if view == "MST" else fsom.get_cluster_adata().obsm["grid"]
+    layout = fsom.get_cluster_data().obsm["layout"] if view == "MST" else fsom.get_cluster_data().obsm["grid"]
 
     # Start plot
     fig, ax = plt.subplots()
@@ -153,11 +153,13 @@ def plot_2D_scatters(
     assert (
         "marker" in xy_labels or "channel" in xy_labels
     ), f'xy_labels should be a list containing "marker" and/or "channel".'
-    metacluster = fsom.adata.obs["metaclustering"]
+    metacluster = fsom.get_cell_data().obs["metaclustering"]
 
-    cell_cluster = fsom.adata.obs["clustering"]
+    cell_cluster = fsom.get_cell_data().obs["clustering"]
 
-    bgI = random.sample(range(fsom.adata.X.shape[0]), min([fsom.adata.X.shape[0], max_background_points]))
+    bgI = random.sample(
+        range(fsom.get_cell_data().X.shape[0]), min([fsom.get_cell_data().X.shape[0], max_background_points])
+    )
 
     if clusters is None:
         clusters = []
@@ -179,17 +181,17 @@ def plot_2D_scatters(
 
             for k, channelpair in enumerate(channelpairs):
                 channelpair = list(get_channels(fsom, channelpair).keys())
-                df_bg = np.array(fsom.adata.X[bgI, :])
-                indices_markers = (np.asarray(fsom.adata.var_names)[:, None] == channelpair).argmax(axis=0)
+                df_bg = np.array(fsom.get_cell_data().X[bgI, :])
+                indices_markers = (np.asarray(fsom.get_cell_data().var_names)[:, None] == channelpair).argmax(axis=0)
                 df_bg = np.take(df_bg, indices_markers, axis=1)
                 if group == "Cluster":
                     clusters_OI = np.isin(cell_cluster, n)
-                    df_ss = fsom.adata.X[clusters_OI, :]
+                    df_ss = fsom.get_cell_data().X[clusters_OI, :]
                     df_ss = df_ss[:, indices_markers]
                     df_ss = np.c_[df_ss, cell_cluster[clusters_OI]]
 
                 else:
-                    df_ss = fsom.adata.X[np.isin(metacluster.astype(int), n), :]
+                    df_ss = fsom.get_cell_data().X[np.isin(metacluster.astype(int), n), :]
                     df_ss = df_ss[:, indices_markers]
 
                 if len(xy_labels) == 1 and xy_labels[0] == "channel":
@@ -218,9 +220,9 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     """
     assert level in ["clusters", "metaclusters"], f"level should be clusters or metaclusters"
     if level == "clusters":
-        numbers = np.arange(1, fsom.adata.uns["n_nodes"] + 1)
+        numbers = np.arange(1, fsom.get_cell_data().uns["n_nodes"] + 1)
     elif level == "metaclusters":
-        numbers = np.asarray(fsom.get_cluster_adata().obs["metaclustering"], dtype=int)
+        numbers = np.asarray(fsom.get_cluster_data().obs["metaclustering"], dtype=int)
     plot_labels(fsom=fsom, labels=numbers, max_node_size=max_node_size, **kwargs)
 
 
@@ -317,14 +319,14 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
     :type cmap:
     """
     if ref_markers is None:
-        ref_markers = fsom.adata.uns["cols_used"]
-    mfis = fsom.adata.uns["cluster_adata"].X
+        ref_markers = fsom.get_cell_data().uns["cols_used"]
+    mfis = fsom.get_cluster_data().X
     ref_markers = list(get_channels(fsom, ref_markers).keys())
-    indices_markers = (np.asarray(fsom.adata.var_names)[:, None] == ref_markers).argmax(axis=0)
+    indices_markers = (np.asarray(fsom.get_cell_data().var_names)[:, None] == ref_markers).argmax(axis=0)
     if lim is None:
         lim = (mfis[:, indices_markers].min(), mfis[:, indices_markers].max())
     marker = list(get_channels(fsom, marker).keys())[0]
-    marker_index = np.where(fsom.adata.var_names == marker)[0][0]
+    marker_index = np.where(fsom.get_cell_data().var_names == marker)[0][0]
     plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
 
 
@@ -442,9 +444,10 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     :type cmap:
     """
     if markers is None:
-        markers = fsom.adata.uns["cols_used"]
+        markers_bool = fsom.get_cell_data().uns["cols_used"]
+        markers = fsom.get_cell_data().var_names[markers_bool]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
-    data = fsom.adata.uns["cluster_adata"][:, markers].X
+    data = fsom.get_cluster_data()[:, markers].X
     heights = scale_star_heights(data, scaled_node_size)
     s = mc.PatchCollection(add_stars(layout, heights), cmap=cmap)
     s.set_array(range(data.shape[1]))
@@ -455,7 +458,8 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     ax.axis("equal")
     if title is not None:
         plt.title(title)
-    plt.show()
+    plt.savefig("star_chart.png", dpi=300)
+    # plt.show()
 
 
 def plot_pies(
@@ -482,8 +486,8 @@ def plot_pies(
     unique_cell_types = np.unique(cell_types)
     color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))
 
-    for cl in range(fsom.adata.uns["n_nodes"]):
-        node_cell_types = cell_types[fsom.adata.obs["clustering"] == (cl + 1)]
+    for cl in range(fsom.get_cell_data().uns["n_nodes"]):
+        node_cell_types = cell_types[fsom.get_cell_data().obs["clustering"] == (cl + 1)]
         table = pd.crosstab(node_cell_types, columns="count")
         table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
         angles = np.asarray(np.cumsum(table["part"]))
