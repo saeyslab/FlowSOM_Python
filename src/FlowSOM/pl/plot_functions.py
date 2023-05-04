@@ -271,6 +271,7 @@ def plot_labels(
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()
     return (fig, ax)
 
@@ -301,6 +302,7 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()
 
 
@@ -319,7 +321,8 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
     :type cmap:
     """
     if ref_markers is None:
-        ref_markers = fsom.get_cell_data().uns["cols_used"]
+        ref_markers_bool = fsom.get_cell_data().uns["cols_used"]
+        ref_markers = fsom.get_cell_data().var_names[ref_markers_bool]
     mfis = fsom.get_cluster_data().X
     ref_markers = list(get_channels(fsom, ref_markers).keys())
     indices_markers = (np.asarray(fsom.get_cell_data().var_names)[:, None] == ref_markers).argmax(axis=0)
@@ -349,10 +352,11 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()
 
 
-def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
+def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max_star_height=1, star_height=1):
     """Function makes the legend of the FlowSOM star plot
 
     :param markers:
@@ -363,7 +367,7 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     :type star_height:
     """
     n_markers = len(markers)
-    if isinstance(star_height, int):
+    if isinstance(star_height, int) | isinstance(star_height, float):
         star_height = np.repeat(star_height, len(markers)).tolist()
     else:
         assert len(star_height) == n_markers, f"Make sure star_height is an array with the same length as markers"
@@ -373,8 +377,8 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     segments = np.column_stack(
         (
             markers,
-            [np.cos(x) for x in circular_coords],
-            [np.sin(x) for x in circular_coords],
+            [np.cos(x) * max_star_height for x in circular_coords],
+            [np.sin(x) * max_star_height for x in circular_coords],
             [1.1 if i >= 0 else -1.1 for i in np.cos(circular_coords)],
             np.repeat(None, len(markers)),
             range(len(markers)),
@@ -390,7 +394,6 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
         segments_left = segments_left[segments_left[:, 2].argsort()]
         segments_right = segments[segments[:, 1] >= 0]
         segments_right = segments_right[segments_right[:, 2].argsort()[::-1]]
-
         segments = np.concatenate((segments_right, segments_left))
         segments[segments[:, 1] < 0, 4] = left - sum(left) / len(left)
         segments[segments[:, 1] >= 0, 4] = right - sum(right) / len(right)
@@ -412,25 +415,26 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     segments = np.concatenate((segments, horizontal_lines))
     x = np.add(horizontal_lines[:, 3], [0.3 if i >= 0 else -0.3 for i in horizontal_lines[:, 3]])
     y = np.asarray(horizontal_lines[:, 4])
-    dfLabels = np.column_stack((x, y, ["left" if i >= 0 else "right" for i in x]))
-    fig, ax = plt.subplots()
+    x_coord = coords[0] - min(x) + 0.2 * len(max(markers, key=len))
+    dfLabels = np.column_stack((x + x_coord, y + coords[1], ["left" if i >= 0 else "right" for i in x]))
+    # fig, ax = plt.subplots()
     lines = []
     for row in segments:
-        lines += [[(row[1], row[2]), (row[3], row[4])]]
-    e = mc.LineCollection(lines, cmap=cmap)
+        lines += [[(row[1] + x_coord, row[2] + coords[1]), (row[3] + x_coord, row[4] + coords[1])]]
+    e = mc.LineCollection(lines, cmap=cmap, capstyle="round", joinstyle="round")
     e.set_array(range(n_markers))
-    e.set_linewidth(2)
+    e.set_linewidth(1)
     e.set_zorder(0)
     ax.add_collection(e)
-    ax = add_text(ax, dfLabels, markers, horizontal_alignment=dfLabels[:, 2])
-    coords = np.array((0, 0))
-    l = mc.PatchCollection(add_wedges(coords, star_height), cmap=cmap)
+    ax = add_text(ax, dfLabels, markers, horizontal_alignment=dfLabels[:, 2], text_size=5)
+    l = mc.PatchCollection(add_wedges(np.array((x_coord, coords[1])), star_height), cmap=cmap)
     l.set_array(range(n_markers))
     l.set_edgecolor("black")
     l.set_linewidth(0.5)
     ax.add_collection(l)
     ax.axis("equal")
-    plt.show()
+    # plt.show()
+    return fig, ax
 
 
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
@@ -447,6 +451,10 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
         markers_bool = fsom.get_cell_data().uns["cols_used"]
         markers = fsom.get_cell_data().var_names[markers_bool]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
+    max_x, max_y = np.max(layout, axis=0)
+    fig, ax = plot_star_legend(
+        fig, ax, markers, coords=(max_x, max_y), cmap=cmap, max_star_height=max(scaled_node_size) * 2, star_height=1
+    )
     data = fsom.get_cluster_data()[:, markers].X
     heights = scale_star_heights(data, scaled_node_size)
     s = mc.PatchCollection(add_stars(layout, heights), cmap=cmap)
@@ -456,6 +464,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     s.set_zorder(3)
     ax.add_collection(s)
     ax.axis("equal")
+    plt.axis("off")
     if title is not None:
         plt.title(title)
     plt.savefig("star_chart.png", dpi=300)
@@ -505,4 +514,5 @@ def plot_pies(
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()

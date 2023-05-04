@@ -6,7 +6,7 @@ def test_package_has_version():
 
 
 def test_fcs(FlowSOM_res):
-    assert FlowSOM_res.adata.shape == (19225, 18)
+    assert FlowSOM_res.get_cell_data().shape == (19225, 18)
 
 
 def test_FlowSOM_type(FlowSOM_res):
@@ -14,7 +14,12 @@ def test_FlowSOM_type(FlowSOM_res):
 
 
 def test_plot_stars(FlowSOM_res):
-    FlowSOM.pl.plot_stars(FlowSOM_res)
+    FlowSOM.pl.plot_stars(
+        FlowSOM_res,
+        background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
+        view="grid",
+        equal_node_size=True,
+    )
 
 
 def test_new_data(fcs):
@@ -69,3 +74,7 @@ def test_FlowSOM_class(FlowSOM_res):
             obsm_keys_cluster,
         ]
     )
+
+
+def test_star_legend(markers=["APC-A", "APC-Cy7-A", "PE-A", "PE-Texas Red-A"]):
+    FlowSOM.pl.plot_star_legend(markers, coords=(0, 0), max_star_height=0.7)

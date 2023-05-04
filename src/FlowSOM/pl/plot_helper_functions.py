@@ -57,7 +57,7 @@ def add_text(ax, layout, text, text_size=20, text_color="black", horizontal_alig
     if len(horizontal_alignment) == 1:
         horizontal_alignment = np.repeat(horizontal_alignment, len(text))
     for i, row in enumerate(layout):
-        ax.text(row[0], row[1], text[i], size=text_size, horizontalalignment=horizontal_alignment[i])
+        ax.text(row[0], row[1], text[i], size=text_size, horizontalalignment=horizontal_alignment[i], clip_on=False)
     return ax
 
 
