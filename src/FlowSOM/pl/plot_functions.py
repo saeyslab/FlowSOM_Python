@@ -47,8 +47,8 @@ def plot_FlowSOM(
     :type title: str
     """
     # Initialization
-    nNodes = fsom.adata.uns["n_nodes"]
-    isEmpty = fsom.get_cluster_adata().obs["percentages"] == 0
+    nNodes = fsom.get_cell_data().uns["n_nodes"]
+    isEmpty = fsom.get_cluster_data().obs["percentages"] == 0
 
     # Warnings
     # assert nNodes == len(node_sizes), f"Length of \"node_sizes\" should be equal to number of clusters in FlowSOM object"
@@ -63,7 +63,7 @@ def plot_FlowSOM(
     )
     node_sizes[isEmpty] = min([0.05, node_sizes.max()])
     # Layout
-    layout = fsom.get_cluster_adata().obsm["layout"] if view == "MST" else fsom.get_cluster_adata().obsm["grid"]
+    layout = fsom.get_cluster_data().obsm["layout"] if view == "MST" else fsom.get_cluster_data().obsm["grid"]
 
     # Start plot
     fig, ax = plt.subplots()
@@ -153,11 +153,13 @@ def plot_2D_scatters(
     assert (
         "marker" in xy_labels or "channel" in xy_labels
     ), f'xy_labels should be a list containing "marker" and/or "channel".'
-    metacluster = fsom.adata.obs["metaclustering"]
+    metacluster = fsom.get_cell_data().obs["metaclustering"]
 
-    cell_cluster = fsom.adata.obs["clustering"]
+    cell_cluster = fsom.get_cell_data().obs["clustering"]
 
-    bgI = random.sample(range(fsom.adata.X.shape[0]), min([fsom.adata.X.shape[0], max_background_points]))
+    bgI = random.sample(
+        range(fsom.get_cell_data().X.shape[0]), min([fsom.get_cell_data().X.shape[0], max_background_points])
+    )
 
     if clusters is None:
         clusters = []
@@ -179,17 +181,17 @@ def plot_2D_scatters(
 
             for k, channelpair in enumerate(channelpairs):
                 channelpair = list(get_channels(fsom, channelpair).keys())
-                df_bg = np.array(fsom.adata.X[bgI, :])
-                indices_markers = (np.asarray(fsom.adata.var_names)[:, None] == channelpair).argmax(axis=0)
+                df_bg = np.array(fsom.get_cell_data().X[bgI, :])
+                indices_markers = (np.asarray(fsom.get_cell_data().var_names)[:, None] == channelpair).argmax(axis=0)
                 df_bg = np.take(df_bg, indices_markers, axis=1)
                 if group == "Cluster":
                     clusters_OI = np.isin(cell_cluster, n)
-                    df_ss = fsom.adata.X[clusters_OI, :]
+                    df_ss = fsom.get_cell_data().X[clusters_OI, :]
                     df_ss = df_ss[:, indices_markers]
                     df_ss = np.c_[df_ss, cell_cluster[clusters_OI]]
 
                 else:
-                    df_ss = fsom.adata.X[np.isin(metacluster.astype(int), n), :]
+                    df_ss = fsom.get_cell_data().X[np.isin(metacluster.astype(int), n), :]
                     df_ss = df_ss[:, indices_markers]
 
                 if len(xy_labels) == 1 and xy_labels[0] == "channel":
@@ -218,9 +220,9 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     """
     assert level in ["clusters", "metaclusters"], f"level should be clusters or metaclusters"
     if level == "clusters":
-        numbers = np.arange(1, fsom.adata.uns["n_nodes"] + 1)
+        numbers = np.arange(1, fsom.get_cell_data().uns["n_nodes"] + 1)
     elif level == "metaclusters":
-        numbers = np.asarray(fsom.get_cluster_adata().obs["metaclustering"], dtype=int)
+        numbers = np.asarray(fsom.get_cluster_data().obs["metaclustering"], dtype=int)
     plot_labels(fsom=fsom, labels=numbers, max_node_size=max_node_size, **kwargs)
 
 
@@ -269,6 +271,7 @@ def plot_labels(
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()
     return (fig, ax)
 
@@ -299,6 +302,7 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()
 
 
@@ -317,14 +321,15 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
     :type cmap:
     """
     if ref_markers is None:
-        ref_markers = fsom.adata.uns["cols_used"]
-    mfis = fsom.adata.uns["cluster_adata"].X
+        ref_markers_bool = fsom.get_cell_data().uns["cols_used"]
+        ref_markers = fsom.get_cell_data().var_names[ref_markers_bool]
+    mfis = fsom.get_cluster_data().X
     ref_markers = list(get_channels(fsom, ref_markers).keys())
-    indices_markers = (np.asarray(fsom.adata.var_names)[:, None] == ref_markers).argmax(axis=0)
+    indices_markers = (np.asarray(fsom.get_cell_data().var_names)[:, None] == ref_markers).argmax(axis=0)
     if lim is None:
         lim = (mfis[:, indices_markers].min(), mfis[:, indices_markers].max())
     marker = list(get_channels(fsom, marker).keys())[0]
-    marker_index = np.where(fsom.adata.var_names == marker)[0][0]
+    marker_index = np.where(fsom.get_cell_data().var_names == marker)[0][0]
     plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
 
 
@@ -347,10 +352,11 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()
 
 
-def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
+def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max_star_height=1, star_height=1):
     """Function makes the legend of the FlowSOM star plot
 
     :param markers:
@@ -361,7 +367,7 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     :type star_height:
     """
     n_markers = len(markers)
-    if isinstance(star_height, int):
+    if isinstance(star_height, int) | isinstance(star_height, float):
         star_height = np.repeat(star_height, len(markers)).tolist()
     else:
         assert len(star_height) == n_markers, f"Make sure star_height is an array with the same length as markers"
@@ -371,8 +377,8 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     segments = np.column_stack(
         (
             markers,
-            [np.cos(x) for x in circular_coords],
-            [np.sin(x) for x in circular_coords],
+            [np.cos(x) * max_star_height for x in circular_coords],
+            [np.sin(x) * max_star_height for x in circular_coords],
             [1.1 if i >= 0 else -1.1 for i in np.cos(circular_coords)],
             np.repeat(None, len(markers)),
             range(len(markers)),
@@ -388,7 +394,6 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
         segments_left = segments_left[segments_left[:, 2].argsort()]
         segments_right = segments[segments[:, 1] >= 0]
         segments_right = segments_right[segments_right[:, 2].argsort()[::-1]]
-
         segments = np.concatenate((segments_right, segments_left))
         segments[segments[:, 1] < 0, 4] = left - sum(left) / len(left)
         segments[segments[:, 1] >= 0, 4] = right - sum(right) / len(right)
@@ -410,25 +415,26 @@ def plot_star_legend(markers, cmap=FlowSOM_colors(), star_height=1):
     segments = np.concatenate((segments, horizontal_lines))
     x = np.add(horizontal_lines[:, 3], [0.3 if i >= 0 else -0.3 for i in horizontal_lines[:, 3]])
     y = np.asarray(horizontal_lines[:, 4])
-    dfLabels = np.column_stack((x, y, ["left" if i >= 0 else "right" for i in x]))
-    fig, ax = plt.subplots()
+    x_coord = coords[0] - min(x) + 0.2 * len(max(markers, key=len))
+    dfLabels = np.column_stack((x + x_coord, y + coords[1], ["left" if i >= 0 else "right" for i in x]))
+    # fig, ax = plt.subplots()
     lines = []
     for row in segments:
-        lines += [[(row[1], row[2]), (row[3], row[4])]]
-    e = mc.LineCollection(lines, cmap=cmap)
+        lines += [[(row[1] + x_coord, row[2] + coords[1]), (row[3] + x_coord, row[4] + coords[1])]]
+    e = mc.LineCollection(lines, cmap=cmap, capstyle="round", joinstyle="round")
     e.set_array(range(n_markers))
-    e.set_linewidth(2)
+    e.set_linewidth(1)
     e.set_zorder(0)
     ax.add_collection(e)
-    ax = add_text(ax, dfLabels, markers, horizontal_alignment=dfLabels[:, 2])
-    coords = np.array((0, 0))
-    l = mc.PatchCollection(add_wedges(coords, star_height), cmap=cmap)
+    ax = add_text(ax, dfLabels, markers, horizontal_alignment=dfLabels[:, 2], text_size=5)
+    l = mc.PatchCollection(add_wedges(np.array((x_coord, coords[1])), star_height), cmap=cmap)
     l.set_array(range(n_markers))
     l.set_edgecolor("black")
     l.set_linewidth(0.5)
     ax.add_collection(l)
     ax.axis("equal")
-    plt.show()
+    # plt.show()
+    return fig, ax
 
 
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
@@ -442,9 +448,14 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     :type cmap:
     """
     if markers is None:
-        markers = fsom.adata.uns["cols_used"]
+        markers_bool = fsom.get_cell_data().uns["cols_used"]
+        markers = fsom.get_cell_data().var_names[markers_bool]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
-    data = fsom.adata.uns["cluster_adata"][:, markers].X
+    max_x, max_y = np.max(layout, axis=0)
+    fig, ax = plot_star_legend(
+        fig, ax, markers, coords=(max_x, max_y), cmap=cmap, max_star_height=max(scaled_node_size) * 2, star_height=1
+    )
+    data = fsom.get_cluster_data()[:, markers].X
     heights = scale_star_heights(data, scaled_node_size)
     s = mc.PatchCollection(add_stars(layout, heights), cmap=cmap)
     s.set_array(range(data.shape[1]))
@@ -453,9 +464,11 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     s.set_zorder(3)
     ax.add_collection(s)
     ax.axis("equal")
+    plt.axis("off")
     if title is not None:
         plt.title(title)
-    plt.show()
+    plt.savefig("star_chart.png", dpi=300)
+    # plt.show()
 
 
 def plot_pies(
@@ -482,8 +495,8 @@ def plot_pies(
     unique_cell_types = np.unique(cell_types)
     color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))
 
-    for cl in range(fsom.adata.uns["n_nodes"]):
-        node_cell_types = cell_types[fsom.adata.obs["clustering"] == (cl + 1)]
+    for cl in range(fsom.get_cell_data().uns["n_nodes"]):
+        node_cell_types = cell_types[fsom.get_cell_data().obs["clustering"] == (cl + 1)]
         table = pd.crosstab(node_cell_types, columns="count")
         table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
         angles = np.asarray(np.cumsum(table["part"]))
@@ -501,4 +514,5 @@ def plot_pies(
     ax.axis("equal")
     if title is not None:
         plt.title(title)
+    plt.axis("off")
     plt.show()

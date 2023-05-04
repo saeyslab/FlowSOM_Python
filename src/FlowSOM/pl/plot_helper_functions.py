@@ -32,10 +32,9 @@ def scale_star_heights(median_values, node_sizes):
 
 
 def parse_node_sizes(fsom, view="MST", node_sizes=None, max_node_size=1, ref_node_size=None, equal_node_size=False):
-
-    node_sizes = fsom.get_cluster_adata().obs["percentages"] if node_sizes == None else node_sizes
+    node_sizes = fsom.get_cluster_data().obs["percentages"] if node_sizes == None else node_sizes
     ref_node_size = max(node_sizes) if ref_node_size == None else ref_node_size
-    layout = fsom.get_cluster_adata().obsm["layout"] if view == "MST" else fsom.get_cluster_adata().obsm["grid"]
+    layout = fsom.get_cluster_data().obsm["layout"] if view == "MST" else fsom.get_cluster_data().obsm["grid"]
     auto_node_size = auto_max_node_size(layout, 1 if view == "MST" else -0.3)  # overlap
     max_node_size = auto_node_size * max_node_size
 
@@ -58,7 +57,7 @@ def add_text(ax, layout, text, text_size=20, text_color="black", horizontal_alig
     if len(horizontal_alignment) == 1:
         horizontal_alignment = np.repeat(horizontal_alignment, len(text))
     for i, row in enumerate(layout):
-        ax.text(row[0], row[1], text[i], size=text_size, horizontalalignment=horizontal_alignment[i])
+        ax.text(row[0], row[1], text[i], size=text_size, horizontalalignment=horizontal_alignment[i], clip_on=False)
     return ax
 
 
@@ -69,8 +68,8 @@ def add_MST(fsom):
 
 
 def parse_edges(fsom):
-    edge_list = fsom.get_cluster_adata().uns["graph"].get_edgelist()
-    coords = fsom.get_cluster_adata().obsm["layout"]
+    edge_list = fsom.get_cluster_data().uns["graph"].get_edgelist()
+    coords = fsom.get_cluster_data().obsm["layout"]
     segment_plot = [
         (coords[nodeID[0], 0], coords[nodeID[0], 1], coords[nodeID[1], 0], coords[nodeID[1], 1]) for nodeID in edge_list
     ]
