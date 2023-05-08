@@ -51,7 +51,11 @@ def plot_FlowSOM(
     isEmpty = fsom.get_cluster_data().obs["percentages"] == 0
 
     # Warnings
-    # assert nNodes == len(node_sizes), f"Length of \"node_sizes\" should be equal to number of clusters in FlowSOM object"
+    if node_sizes is not None:
+        assert nNodes == len(
+            node_sizes
+        ), f'Length of "node_sizes" should be equal to number of clusters in FlowSOM object'
+
     # Node sizes
     node_sizes = parse_node_sizes(
         fsom,
@@ -62,6 +66,7 @@ def plot_FlowSOM(
         equal_node_size=equal_node_size,
     )
     node_sizes[isEmpty] = min([0.05, node_sizes.max()])
+
     # Layout
     layout = fsom.get_cluster_data().obsm["layout"] if view == "MST" else fsom.get_cluster_data().obsm["grid"]
 
@@ -205,8 +210,8 @@ def plot_2D_scatters(
                 ssI = random.sample(range(df_ss.shape[0]), min([df_ss.shape[0], max_points]))
                 df_ss = df_ss[ssI, :]
                 ax = fig.add_subplot(spec[rowI + (rowI + k)])
-                ax.scatter(df_bg[:, 0], df_bg[:, 1], c="grey")
-                ax.scatter(df_ss[:, 0], df_ss[:, 1], c="red")
+                ax.scatter(df_bg[:, 0], df_bg[:, 1], c="grey", s=size_background_points)
+                ax.scatter(df_ss[:, 0], df_ss[:, 1], c="red", s=size_points)
                 ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
 
 
@@ -448,7 +453,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     :type cmap:
     """
     if markers is None:
-        markers_bool = fsom.get_cell_data().uns["cols_used"]
+        markers_bool = fsom.get_cell_data().var["cols_used"]
         markers = fsom.get_cell_data().var_names[markers_bool]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     max_x, max_y = np.max(layout, axis=0)

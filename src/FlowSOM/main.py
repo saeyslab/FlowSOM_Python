@@ -60,7 +60,7 @@ class FlowSOM:
         pretty_colnames = [markers[i] + " <" + channels[i] + ">" for i in range(len(markers))]
         fsom = np.array(data, dtype=np.float32)
         fsom = MuData({"cell_data": ad.AnnData(fsom)})
-        fsom.mod["cell_data"].uns["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
+        fsom.mod["cell_data"].var["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
         fsom.mod["cell_data"].var_names = np.asarray(inp.uns["meta"]["channels"]["$PnN"])
         return fsom
 
@@ -78,7 +78,7 @@ class FlowSOM:
         nodes, clusters, dists, xdim, ydim, som = self.SOM(inp=self.mudata["cell_data"][:, cols_to_use].X, **kwargs)
         self.mudata["cell_data"].obs["clustering"] = np.array(clusters)
         self.mudata["cell_data"].obs["mapping"] = np.array(dists)
-        self.mudata["cell_data"].uns["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
+        self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
         self.mudata["cell_data"].uns["xdim"] = xdim
         self.mudata["cell_data"].uns["ydim"] = ydim
         self.mudata["cell_data"].uns["som"] = som
@@ -117,7 +117,9 @@ class FlowSOM:
         radius = np.quantile(nhbrdist, 0.67)
 
         # Compute the SOM
-        som = MiniSom(x=xdim, y=ydim, input_len=data.shape[1], sigma=radius, learning_rate=0.05)
+        som = MiniSom(
+            x=xdim, y=ydim, input_len=data.shape[1], sigma=radius, learning_rate=0.05, neighborhood_function="triangle"
+        )
         som.random_weights_init(data)
         som.train(data, rlen * data.shape[0])
         winner_coordinates = np.array([som.winner(x) for x in data])
@@ -302,7 +304,7 @@ class FlowSOM:
 
     def new_data(self, inp, mad_allowed=4):
         fsom_new = FlowSOM(inp)
-        fsom_new.get_cell_data().uns["pretty_colnames"] = self.get_cell_data().uns["pretty_colnames"]
+        fsom_new.get_cell_data().var["pretty_colnames"] = self.get_cell_data().var["pretty_colnames"]
         fsom_new.get_cell_data().uns["cols_used"] = self.get_cell_data().uns["cols_used"]
         fsom_new.get_cell_data().uns["xdim"] = self.get_cell_data().uns["xdim"]
         fsom_new.get_cell_data().uns["ydim"] = self.get_cell_data().uns["ydim"]
@@ -310,7 +312,7 @@ class FlowSOM:
         fsom_new.get_cell_data().uns["n_metaclusters"] = self.get_cell_data().uns["n_metaclusters"]
         fsom_new.mudata.mod["cluster_data"] = self.get_cluster_data()
         som = self.get_cell_data().uns["som"]
-        markers_bool = self.get_cell_data().uns["cols_used"]
+        markers_bool = self.get_cell_data().var["cols_used"]
         markers = self.get_cell_data().var_names[markers_bool]
         data = fsom_new.get_cell_data()[:, markers].X
         winner_coordinates = np.array([som.winner(x) for x in data])
@@ -349,12 +351,12 @@ def get_channels(obj, markers, exact=True):
     assert isinstance(obj, FlowSOM) or isinstance(obj, ad.AnnData), f"Please provide an FCS file or a FlowSOM object"
     if isinstance(obj, FlowSOM):
         object_markers = np.asarray(
-            [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].uns["pretty_colnames"]]
+            [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
         )
         object_channels = np.asarray(
             [
                 re.sub(r".*<(.*)>.*", r"\1", pretty_colname)
-                for pretty_colname in obj.mudata["cell_data"].uns["pretty_colnames"]
+                for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]
             ]
         )
     elif isinstance(obj, ad.AnnData):
@@ -395,12 +397,12 @@ def get_markers(obj, channels, exact=True):
     assert isinstance(obj, FlowSOM) or isinstance(obj, ad.AnnData), f"Please provide an FCS file or a FlowSOM object"
     if isinstance(obj, FlowSOM):
         object_markers = np.asarray(
-            [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].uns["pretty_colnames"]]
+            [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
         )
         object_channels = np.asarray(
             [
                 re.sub(r".*<(.*)>.*", r"\1", pretty_colname)
-                for pretty_colname in obj.mudata["cell_data"].uns["pretty_colnames"]
+                for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]
             ]
         )
     if isinstance(obj, ad.AnnData):
