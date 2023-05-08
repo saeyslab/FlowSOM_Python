@@ -22,6 +22,16 @@ def test_plot_stars(FlowSOM_res):
     )
 
 
+def test_plot_marker(FlowSOM_res):
+    FlowSOM.pl.plot_marker(
+        FlowSOM_res,
+        marker=["CD3"],
+        background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
+        view="grid",
+        equal_node_size=True,
+    )
+
+
 def test_new_data(fcs):
     fsom = FlowSOM.main.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
     fsom_new = fsom.new_data(fcs[1001:2000])

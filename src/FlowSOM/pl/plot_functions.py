@@ -11,98 +11,6 @@ from matplotlib import gridspec
 from FlowSOM.pl.plot_helper_functions import *
 
 
-def plot_FlowSOM(
-    fsom,
-    view: str = "MST",
-    background_values: np.array = None,
-    background_cmap=gg_color_hue(),
-    node_sizes: np.array = None,
-    max_node_size: int = 1,
-    ref_node_size: int = None,
-    equal_node_size: bool = False,
-):
-    """Plots the base layer of a FlowSOM result
-
-    :param fsom: A FlowSOM object
-    :type fsom: A object from the class FlowSOM
-    :param view: The view you want to plot, can be either "grid" for
-    a grid view or "MST" for a minimum spanning tree view
-    :type view: str
-    :param background_values: The background values to be plotted
-    :type background_values: np.array
-    :param background_cmap: A colormap for the background colors
-    :type background_cmap: Colormap
-    :param node_sizes: An array with the node sizes. Will be scaled between 0
-    and max_node_size and transformed with a sqrt. Default is the percentages
-    :type node_sizes: np.array
-    :param max_node_size: The maximum node size
-    :type max_node_size: float
-    :param ref_node_size: Reference for node size against which the node sizes
-    will be scaled. Default is the maximum of the node sizes
-    :type ref_node_size: float
-    :param equal_node_size: If True the all the nodes will be equally sized to
-    max_node_size
-    :type equal_node_size: boolean
-    :param title: Title for the plot
-    :type title: str
-    """
-    # Initialization
-    nNodes = fsom.get_cell_data().uns["n_nodes"]
-    isEmpty = fsom.get_cluster_data().obs["percentages"] == 0
-
-    # Warnings
-    if node_sizes is not None:
-        assert nNodes == len(
-            node_sizes
-        ), f'Length of "node_sizes" should be equal to number of clusters in FlowSOM object'
-
-    # Node sizes
-    node_sizes = parse_node_sizes(
-        fsom,
-        view=view,
-        node_sizes=node_sizes,
-        max_node_size=max_node_size,
-        ref_node_size=ref_node_size,
-        equal_node_size=equal_node_size,
-    )
-    node_sizes[isEmpty] = min([0.05, node_sizes.max()])
-
-    # Layout
-    layout = fsom.get_cluster_data().obsm["layout"] if view == "MST" else fsom.get_cluster_data().obsm["grid"]
-
-    # Start plot
-    fig, ax = plt.subplots()
-
-    # Add background
-    if background_values is not None:
-        background = add_nodes(layout, node_sizes * 1.5)
-        b = mc.PatchCollection(background, cmap=background_cmap)
-        b.set_array(background_values)
-        b.set_alpha(0.5)
-        b.set_zorder(1)
-        ax.add_collection(b)
-
-    # Add MST
-    if view == "MST":
-        e = add_MST(fsom)
-        MST = mc.LineCollection(e)
-        MST.set_edgecolor("black")
-        MST.set_linewidth(0.5)
-        MST.set_zorder(0)
-        ax.add_collection(MST)
-
-    # Add nodes
-    nodes = add_nodes(layout, node_sizes)
-    n = mc.PatchCollection(nodes)
-    n.set_facecolor(["#C7C7C7" if tf else "#FFFFFF" for tf in isEmpty])  # "white")
-    n.set_edgecolor("black")
-    n.set_linewidth(0.5)
-    n.set_zorder(2)
-    ax.add_collection(n)
-
-    return fig, ax, layout, node_sizes
-
-
 def plot_2D_scatters(
     fsom,
     channelpairs: np.array,
@@ -308,7 +216,8 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     if title is not None:
         plt.title(title)
     plt.axis("off")
-    plt.show()
+    plt.savefig("plot_marker.png", dpi=300)
+    # plt.show()
 
 
 def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(), **kwargs):
@@ -326,7 +235,7 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
     :type cmap:
     """
     if ref_markers is None:
-        ref_markers_bool = fsom.get_cell_data().uns["cols_used"]
+        ref_markers_bool = fsom.get_cell_data().var["cols_used"]
         ref_markers = fsom.get_cell_data().var_names[ref_markers_bool]
     mfis = fsom.get_cluster_data().X
     ref_markers = list(get_channels(fsom, ref_markers).keys())
@@ -359,87 +268,6 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
         plt.title(title)
     plt.axis("off")
     plt.show()
-
-
-def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max_star_height=1, star_height=1):
-    """Function makes the legend of the FlowSOM star plot
-
-    :param markers:
-    :type markers:
-    :param cmap:
-    :type cmap:
-    :param star_height:
-    :type star_height:
-    """
-    n_markers = len(markers)
-    if isinstance(star_height, int) | isinstance(star_height, float):
-        star_height = np.repeat(star_height, len(markers)).tolist()
-    else:
-        assert len(star_height) == n_markers, f"Make sure star_height is an array with the same length as markers"
-    x = 2 * np.pi / (n_markers * 2)
-    y = 2 * np.pi / n_markers
-    circular_coords = np.linspace(start=x, stop=x + (n_markers - 1) * y, num=n_markers)
-    segments = np.column_stack(
-        (
-            markers,
-            [np.cos(x) * max_star_height for x in circular_coords],
-            [np.sin(x) * max_star_height for x in circular_coords],
-            [1.1 if i >= 0 else -1.1 for i in np.cos(circular_coords)],
-            np.repeat(None, len(markers)),
-            range(len(markers)),
-        )
-    )
-    n_left_right = segments[:, 1] >= 0
-    n_left_right = pd.crosstab(n_left_right, columns="x")
-    if n_left_right.shape[0] != 1:
-        by = 1 if len(markers) <= 8 else 0.65
-        left = np.linspace(start=0, stop=(n_left_right.x[0] - 1) * by, num=n_left_right.x[0])
-        right = np.multiply(-1, np.linspace(start=0, stop=(n_left_right.x[1] - 1) * by, num=n_left_right.x[1]))
-        segments_left = segments[segments[:, 1] < 0, :]
-        segments_left = segments_left[segments_left[:, 2].argsort()]
-        segments_right = segments[segments[:, 1] >= 0]
-        segments_right = segments_right[segments_right[:, 2].argsort()[::-1]]
-        segments = np.concatenate((segments_right, segments_left))
-        segments[segments[:, 1] < 0, 4] = left - sum(left) / len(left)
-        segments[segments[:, 1] >= 0, 4] = right - sum(right) / len(right)
-        segments = segments[segments[:, 5].argsort()]
-        segments = np.delete(segments, 5, axis=1)
-    else:
-        segments[:, 4] = -1
-        segments[:, 1] = segments[:, 1] * -1
-        segments[:, 3] = segments[:, 3] * -1
-    horizontal_lines = np.column_stack(
-        (
-            segments[:, 0],
-            segments[:, 3],
-            segments[:, 4],
-            np.add(segments[:, 3], [0.5 if i >= 0 else -0.5 for i in segments[:, 3]]),
-            segments[:, 4],
-        )
-    )
-    segments = np.concatenate((segments, horizontal_lines))
-    x = np.add(horizontal_lines[:, 3], [0.3 if i >= 0 else -0.3 for i in horizontal_lines[:, 3]])
-    y = np.asarray(horizontal_lines[:, 4])
-    x_coord = coords[0] - min(x) + 0.2 * len(max(markers, key=len))
-    dfLabels = np.column_stack((x + x_coord, y + coords[1], ["left" if i >= 0 else "right" for i in x]))
-    # fig, ax = plt.subplots()
-    lines = []
-    for row in segments:
-        lines += [[(row[1] + x_coord, row[2] + coords[1]), (row[3] + x_coord, row[4] + coords[1])]]
-    e = mc.LineCollection(lines, cmap=cmap, capstyle="round", joinstyle="round")
-    e.set_array(range(n_markers))
-    e.set_linewidth(1)
-    e.set_zorder(0)
-    ax.add_collection(e)
-    ax = add_text(ax, dfLabels, markers, horizontal_alignment=dfLabels[:, 2], text_size=5)
-    l = mc.PatchCollection(add_wedges(np.array((x_coord, coords[1])), star_height), cmap=cmap)
-    l.set_array(range(n_markers))
-    l.set_edgecolor("black")
-    l.set_linewidth(0.5)
-    ax.add_collection(l)
-    ax.axis("equal")
-    # plt.show()
-    return fig, ax
 
 
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
@@ -479,8 +307,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     plt.axis("off")
     if title is not None:
         plt.title(title)
-    plt.savefig("star_chart.png", dpi=300)
-    # plt.show()
+    plt.show()
 
 
 def plot_pies(
