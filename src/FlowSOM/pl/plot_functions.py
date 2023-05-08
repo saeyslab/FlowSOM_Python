@@ -455,10 +455,17 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     if markers is None:
         markers_bool = fsom.get_cell_data().var["cols_used"]
         markers = fsom.get_cell_data().var_names[markers_bool]
+    pretty_markers = fsom.get_cell_data()[:, markers].var["pretty_colnames"]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     max_x, max_y = np.max(layout, axis=0)
     fig, ax = plot_star_legend(
-        fig, ax, markers, coords=(max_x, max_y), cmap=cmap, max_star_height=max(scaled_node_size) * 2, star_height=1
+        fig,
+        ax,
+        pretty_markers,
+        coords=(max_x, max_y),
+        cmap=cmap,
+        max_star_height=max(scaled_node_size) * 2,
+        star_height=1,
     )
     data = fsom.get_cluster_data()[:, markers].X
     heights = scale_star_heights(data, scaled_node_size)

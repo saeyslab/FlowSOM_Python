@@ -55,13 +55,13 @@ class FlowSOM:
             data = inp.X
         channels = np.asarray(inp.var["channel"])
         markers = np.asarray(inp.var["marker"])
-        isnan_markers = [str(marker) == "nan" for marker in markers]
+        isnan_markers = [str(marker) == "nan" or len(marker) == 0 for marker in markers]
         markers[isnan_markers] = channels[isnan_markers]
         pretty_colnames = [markers[i] + " <" + channels[i] + ">" for i in range(len(markers))]
         fsom = np.array(data, dtype=np.float32)
         fsom = MuData({"cell_data": ad.AnnData(fsom)})
         fsom.mod["cell_data"].var["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
-        fsom.mod["cell_data"].var_names = np.asarray(inp.uns["meta"]["channels"]["$PnN"])
+        fsom.mod["cell_data"].var_names = np.asarray(channels)
         return fsom
 
     def build_SOM(self, cols_to_use: np.array = None, outlier_MAD=4, **kwargs):
@@ -136,9 +136,9 @@ class FlowSOM:
         n_nodes = self.mudata["cell_data"].uns["n_nodes"]
         cluster_median_values = np.vstack(
             [
-                np.median(df[df[:, 0] == cl], axis=0)  # cl +1 if cluster starts with 1
-                if df[df[:, 0] == cl].shape[0] != 0  # cl +1 if cluster starts with 1
-                else np.repeat(np.nan, df[df[:, 0] == cl].shape[1])  # cl +1 if cluster starts with 1
+                np.median(df[df[:, 0] == cl], axis=0)  # cl + 1 if cluster starts with 1
+                if df[df[:, 0] == cl].shape[0] != 0  # cl + 1 if cluster starts with 1
+                else np.repeat(np.nan, df[df[:, 0] == cl].shape[1])  # cl + 1 if cluster starts with 1
                 for cl in range(n_nodes)
             ]
         )
