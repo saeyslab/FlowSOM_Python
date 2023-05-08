@@ -136,9 +136,9 @@ class FlowSOM:
         n_nodes = self.mudata["cell_data"].uns["n_nodes"]
         cluster_median_values = np.vstack(
             [
-                np.median(df[df[:, 0] == cl + 1], axis=0)
-                if df[df[:, 0] == cl + 1].shape[0] != 0
-                else np.repeat(np.nan, df[df[:, 0] == cl + 1].shape[1])
+                np.median(df[df[:, 0] == cl], axis=0)  # cl +1 if cluster starts with 1
+                if df[df[:, 0] == cl].shape[0] != 0  # cl +1 if cluster starts with 1
+                else np.repeat(np.nan, df[df[:, 0] == cl].shape[1])  # cl +1 if cluster starts with 1
                 for cl in range(n_nodes)
             ]
         )
@@ -153,7 +153,7 @@ class FlowSOM:
         mad_values = list()
         pctgs = dict()
         for cl in range(n_nodes):
-            cluster_data = df[df[:, 0] == cl + 1, :]
+            cluster_data = df[df[:, 0] == cl, :]  # +1 if cluster starts at 1
             cv_values.append(np.divide(np.std(cluster_data, axis=0), np.mean(cluster_data, axis=0)))
             sd_values.append(np.std(cluster_data, axis=0))
             mad_values.append(median_abs_deviation(cluster_data, axis=0))
