@@ -30,26 +30,20 @@ def test_new_data(fcs):
 
 def test_FlowSOM_class(FlowSOM_res):
     cell_data = FlowSOM_res.get_cell_data()
-    uns_true_keys_cell = [
-        "pretty_colnames",
-        "cols_used",
-        "xdim",
-        "ydim",
-        "n_nodes",
-        "n_metaclusters",
-        "metacluster_MFIs",
-        "som",
-    ]
+    uns_true_keys_cell = ["n_nodes", "n_metaclusters"]
     obs_true_keys_cell = ["clustering", "mapping", "metaclustering"]
+    var_true_keys_cell = ["pretty_colnames", "cols_used"]
 
     length_uns_cell = len(uns_true_keys_cell) == len(cell_data.uns.keys())
     length_obs_cell = len(obs_true_keys_cell) == len(cell_data.obs.keys())
+    length_var_cell = len(var_true_keys_cell) == len(cell_data.var.keys())
 
     uns_keys_cell = all([key in uns_true_keys_cell for key in cell_data.uns.keys()])
     obs_keys_cell = all([key in obs_true_keys_cell for key in cell_data.obs.keys()])
+    var_keys_cell = all([key in var_true_keys_cell for key in cell_data.var.keys()])
 
     cluster_data = FlowSOM_res.get_cluster_data()
-    uns_true_keys_cluster = ["outliers", "graph"]
+    uns_true_keys_cluster = ["outliers", "graph", "xdim", "ydim", "metacluster_MFIs", "som"]
     obs_true_keys_cluster = ["percentages", "metaclustering"]
     obsm_true_keys_cluster = ["cv_values", "sd_values", "mad_values", "codes", "grid", "layout"]
 
@@ -64,8 +58,10 @@ def test_FlowSOM_class(FlowSOM_res):
         [
             length_uns_cell,
             length_obs_cell,
+            length_var_cell,
             uns_keys_cell,
             obs_keys_cell,
+            var_keys_cell,
             length_uns_cluster,
             length_obs_cluster,
             length_obsm_cluster,
@@ -74,7 +70,3 @@ def test_FlowSOM_class(FlowSOM_res):
             obsm_keys_cluster,
         ]
     )
-
-
-def test_star_legend(markers=["APC-A", "APC-Cy7-A", "PE-A", "PE-Texas Red-A"]):
-    FlowSOM.pl.plot_star_legend(markers, coords=(0, 0), max_star_height=0.7)

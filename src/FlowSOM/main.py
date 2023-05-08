@@ -79,11 +79,12 @@ class FlowSOM:
         self.mudata["cell_data"].obs["clustering"] = np.array(clusters)
         self.mudata["cell_data"].obs["mapping"] = np.array(dists)
         self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
-        self.mudata["cell_data"].uns["xdim"] = xdim
-        self.mudata["cell_data"].uns["ydim"] = ydim
-        self.mudata["cell_data"].uns["som"] = som
+
         self.mudata["cell_data"].uns["n_nodes"] = xdim * ydim
         self = self.update_derived_values()
+        self.mudata["cluster_data"].uns["xdim"] = xdim
+        self.mudata["cluster_data"].uns["ydim"] = ydim
+        self.mudata["cluster_data"].uns["som"] = som
         self.mudata["cluster_data"].obsm["codes"] = np.array(nodes)
         self.mudata["cluster_data"].obsm["grid"] = np.array([(x, y) for x in range(xdim) for y in range(ydim)])
         self.mudata["cluster_data"].uns["outliers"] = self.test_outliers(mad_allowed=outlier_MAD).reset_index()
@@ -177,7 +178,7 @@ class FlowSOM:
                     for cl in range(self.mudata["cell_data"].uns["n_metaclusters"])
                 ]
             )
-            self.mudata["cell_data"].uns["metacluster_MFIs"] = np.vstack(metacluster_median_values)
+            self.mudata["cluster_data"].uns["metacluster_MFIs"] = np.vstack(metacluster_median_values)
 
         return self
 
@@ -305,19 +306,19 @@ class FlowSOM:
     def new_data(self, inp, mad_allowed=4):
         fsom_new = FlowSOM(inp)
         fsom_new.get_cell_data().var["pretty_colnames"] = self.get_cell_data().var["pretty_colnames"]
-        fsom_new.get_cell_data().uns["cols_used"] = self.get_cell_data().uns["cols_used"]
-        fsom_new.get_cell_data().uns["xdim"] = self.get_cell_data().uns["xdim"]
-        fsom_new.get_cell_data().uns["ydim"] = self.get_cell_data().uns["ydim"]
+        fsom_new.get_cell_data().var["cols_used"] = self.get_cell_data().var["cols_used"]
+        fsom_new.get_cluster_data().uns["xdim"] = self.get_cluster_data().uns["xdim"]
+        fsom_new.get_cluster_data().uns["ydim"] = self.get_cluster_data().uns["ydim"]
         fsom_new.get_cell_data().uns["n_nodes"] = self.get_cell_data().uns["n_nodes"]
         fsom_new.get_cell_data().uns["n_metaclusters"] = self.get_cell_data().uns["n_metaclusters"]
         fsom_new.mudata.mod["cluster_data"] = self.get_cluster_data()
-        som = self.get_cell_data().uns["som"]
+        som = self.get_cluster_data().uns["som"]
         markers_bool = self.get_cell_data().var["cols_used"]
         markers = self.get_cell_data().var_names[markers_bool]
         data = fsom_new.get_cell_data()[:, markers].X
         winner_coordinates = np.array([som.winner(x) for x in data])
         clusters = np.ravel_multi_index(
-            winner_coordinates.T, (self.get_cell_data().uns["xdim"], self.get_cell_data().uns["ydim"])
+            winner_coordinates.T, (self.get_cluster_data().uns["xdim"], self.get_cluster_data().uns["ydim"])
         )
         dists_map = som.distance_map()
         dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
