@@ -20,9 +20,9 @@ urls.Documentation = "https://FlowSOM.readthedocs.io/"
 urls.Source = "https://github.com/artuurC/FlowSOM"
 urls.Home-page = "https://github.com/artuurC/FlowSOM"
 dependencies = [
-    "anndata", "numpy", "matplotlib", "pandas", "scipy", "pytometry",
+    "mudata", "numpy", "matplotlib", "pandas", "scipy", "pytometry",
     "minisom", "scikit-learn", "python-igraph", "pytest", "pooch",
-    "session-info"
+    "session-info", "pathlib"
 ]
 
 

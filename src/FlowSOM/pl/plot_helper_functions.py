@@ -1,5 +1,6 @@
 import matplotlib.colors
 
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -143,24 +144,6 @@ def plot_FlowSOM(
             title_fontsize=6,
             labels_fontsize=5,
         )
-        """
-        legend_data = [
-            Line2D(
-                [0],
-                [0],
-                marker="o",
-                label=i,
-                markerfacecolor=background_cmap(i),
-                color="white",
-                markersize=5,
-                alpha=0.5,
-            )
-            for i in sorted(np.unique(background_values))
-        ]
-        ax.legend(
-            handles=legend_data, title="Background", loc="lower right", title_fontsize=6, frameon=False, fontsize=5
-        )
-        """
 
     # Add MST
     if view == "MST":
