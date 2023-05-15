@@ -62,6 +62,8 @@ class FlowSOM:
         fsom = MuData({"cell_data": ad.AnnData(fsom)})
         fsom.mod["cell_data"].var["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
         fsom.mod["cell_data"].var_names = np.asarray(channels)
+        fsom.mod["cell_data"].var["markers"] = np.asarray(markers)
+        fsom.mod["cell_data"].var["channels"] = np.asarray(channels)
         return fsom
 
     def build_SOM(self, cols_to_use: np.array = None, outlier_MAD=4, **kwargs):
@@ -77,7 +79,7 @@ class FlowSOM:
         cols_to_use = list(get_channels(self, cols_to_use).keys())
         nodes, clusters, dists, xdim, ydim, som = self.SOM(inp=self.mudata["cell_data"][:, cols_to_use].X, **kwargs)
         self.mudata["cell_data"].obs["clustering"] = np.array(clusters)
-        self.mudata["cell_data"].obs["mapping"] = np.array(dists)
+        self.mudata["cell_data"].obs["distance_to_bmu"] = np.array(dists)
         self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
 
         self.mudata["cell_data"].uns["n_nodes"] = xdim * ydim
@@ -231,26 +233,33 @@ class FlowSOM:
         if fsom_reference is None:
             fsom_ref = self
         cell_cl = fsom_ref.mudata["cell_data"].obs["clustering"]
-        mapping = fsom_ref.mudata["cell_data"].obs["mapping"]
+        distance_to_bmu = fsom_ref.mudata["cell_data"].obs["distance_to_bmu"]
         distances_median = [
-            np.median(mapping[cell_cl == cl + 1]) if len(mapping[cell_cl == cl + 1]) > 0 else 0
+            np.median(distance_to_bmu[cell_cl == cl + 1]) if len(distance_to_bmu[cell_cl == cl + 1]) > 0 else 0
             for cl in range(fsom_ref.mudata["cell_data"].uns["n_nodes"])
         ]
 
         distances_mad = [
-            median_abs_deviation(mapping[cell_cl == cl + 1]) if len(mapping[cell_cl == cl + 1]) > 0 else 0
+            median_abs_deviation(distance_to_bmu[cell_cl == cl + 1])
+            if len(distance_to_bmu[cell_cl == cl + 1]) > 0
+            else 0
             for cl in range(fsom_ref.mudata["cell_data"].uns["n_nodes"])
         ]
         thresholds = np.add(distances_median, np.multiply(mad_allowed, distances_mad))
 
         max_distances_new = [
-            np.max(self.mudata["cell_data"].obs["mapping"][self.mudata["cell_data"].obs["clustering"] == cl + 1])
-            if len(self.mudata["cell_data"].obs["mapping"][self.mudata["cell_data"].obs["clustering"] == cl + 1]) > 0
+            np.max(
+                self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
+            )
+            if len(
+                self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
+            )
+            > 0
             else 0
             for cl in range(self.mudata["cell_data"].uns["n_nodes"])
         ]
         distances = [
-            self.mudata["cell_data"].obs["mapping"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
+            self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
             for cl in range(self.mudata["cell_data"].uns["n_nodes"])
         ]
         outliers = [sum(distances[i] > thresholds[i]) for i in range(len(distances))]
@@ -322,7 +331,7 @@ class FlowSOM:
         )
         dists_map = som.distance_map()
         dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
-        fsom_new.get_cell_data().obsm["mapping"] = np.array(dists)
+        fsom_new.get_cell_data().obsm["distance_to_bmu"] = np.array(dists)
         fsom_new.get_cell_data().obs["clustering"] = np.array(clusters)
         fsom_new = fsom_new.update_derived_values()
         metaclusters = self.get_cluster_data().obs["metaclustering"]
