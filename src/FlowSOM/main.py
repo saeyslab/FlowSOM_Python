@@ -3,6 +3,7 @@ import pandas as pd
 import anndata as ad
 import pytometry as pm
 import igraph as ig
+import ensembleclustering as CE
 
 import re
 import random
@@ -16,7 +17,7 @@ from FlowSOM.som import SOM, map_data_to_codes
 
 class FlowSOM:
     """
-    A class that contains all the FlowSOM data using AnnData objects.
+    A class that contains all the FlowSOM data using MuData objects.
 
     """
 
@@ -263,16 +264,34 @@ class FlowSOM:
         :param n_clus: The number of metaclusters
         :type n_clus: int
         """
-        average = AgglomerativeClustering(n_clusters=n_clus, linkage="average")
-        metaclustering = average.fit(self.mudata["cluster_data"].obsm["codes"])
-        metaclusters = metaclustering.labels_
+        metaclusters = self.hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
+        # metaclusters = self.consensus_hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
         self.mudata["cell_data"].uns["n_metaclusters"] = n_clus
         self.mudata["cluster_data"].obs["metaclustering"] = metaclusters
-        metaclustering = np.array(metaclusters)
         self.mudata["cell_data"].obs["metaclustering"] = np.asarray(
             [np.array(metaclusters)[int(i) - 1] for i in np.asarray(self.mudata["cell_data"].obs["clustering"])]
         )
         return self
+
+    def hierarchical_clustering(self, data, n_clus, linkage="average"):
+        average = AgglomerativeClustering(n_clusters=n_clus, linkage=linkage)
+        metaclustering = average.fit(data)
+        metaclusters = metaclustering.labels_
+        return metaclusters
+
+    def consensus_hierarchical_clustering(self, data, n_clusters, n_subsamples=100, linkage="average"):
+        sample_size = data.shape[0]
+        subsample_size = int(data.shape[0] * 0.9)
+        cluster_labels = []
+        for _ in range(n_subsamples):
+            subsample_indices = np.random.choice(sample_size, size=subsample_size, replace=False)
+            subsample_data = data[subsample_indices, :]
+            labels_subsampled = self.hierarchical_clustering(subsample_data, n_clusters, linkage)
+            labels = np.repeat(np.nan, sample_size)
+            labels[subsample_indices] = labels_subsampled
+            cluster_labels.append(labels)
+        label_ce = CE.cluster_ensembles(np.asarray(cluster_labels))
+        return label_ce
 
     def test_outliers(self, mad_allowed: int = 4, fsom_reference=None, plot_file=None, channels=None):
         """Test if any cells are too far from their cluster centers
