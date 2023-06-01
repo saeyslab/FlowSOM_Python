@@ -5,16 +5,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from matplotlib.patches import Circle, Wedge
-from matplotlib.lines import Line2D
 from scipy.spatial.distance import pdist
 from matplotlib import collections as mc
 
 
 def FlowSOM_colors():
     """Colormap of default FlowSOM colors"""
-    cmap = matplotlib.colors.ListedColormap(
-        ["#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
+    cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
+        "FlowSOM_colors",
+        ["#00007F", "#0000E1", "#007FFF", "#00E1E1", "#7FFF7F", "#E1E100", "#FF7F00", "#E10000", "#7F0000"],
     )
+    """cmap = matplotlib.colors.ListedColormap(
+        ["#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
+    )"""
     return cmap
 
 
@@ -26,41 +29,12 @@ def gg_color_hue():
     return cmap
 
 
-def add_legend(fig, ax, data, title, loc, cmap, alpha=1, title_fontsize=6, labels_fontsize=5):
-    # if data is categorical
-    if isinstance(data[0], str):
-        legend_data = [
-            Line2D(
-                [0],
-                [0],
-                marker="o",
-                label=i,
-                markerfacecolor=cmap(i),
-                color="white",
-                markersize=labels_fontsize,
-                alpha=alpha,
-            )
-            for i in sorted(np.unique(data))
-        ]
-        ax.legend(handles=legend_data, title=title, loc=loc, title_fontsize=title_fontsize, frameon=False)
-
-    # if data is continuous
-    else:
-        legend_data = [
-            Line2D(
-                [0],
-                [0],
-                marker="o",
-                label=i,
-                markerfacecolor=cmap(i),
-                color="white",
-                markersize=labels_fontsize,
-                alpha=alpha,
-            )
-            for i in np.linspace(min(data), max(data), 5)
-        ]
-        ax.legend(handles=legend_data, title=title, loc=loc, title_fontsize=title_fontsize, frameon=False)
-    return ax
+def add_legend(fig, ax, data, title, cmap, location="bottom", ticks=None):
+    norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array(data)
+    fig.colorbar(sm, ax=ax, orientation="horizontal", shrink=0.4, label=title, location=location, ticks=ticks)
+    return ax, fig
 
 
 def plot_FlowSOM(
@@ -133,16 +107,13 @@ def plot_FlowSOM(
         b.set_alpha(0.5)
         b.set_zorder(1)
         ax.add_collection(b)
-        ax = add_legend(
+        ax, fig = add_legend(
             fig=fig,
             ax=ax,
             data=background_values,
             title="Background",
-            loc="lower right",
             cmap=background_cmap,
-            alpha=0.5,
-            title_fontsize=6,
-            labels_fontsize=5,
+            ticks=np.linspace(min(background_values), max(background_values), len(np.unique(background_values))),
         )
 
     # Add MST

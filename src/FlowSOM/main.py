@@ -7,11 +7,11 @@ import igraph as ig
 import re
 import random
 
-from minisom import MiniSom
 from scipy.stats import median_abs_deviation
 from scipy.spatial.distance import cdist, pdist, squareform
 from sklearn.cluster import AgglomerativeClustering
 from mudata import MuData
+from FlowSOM.som import SOM, map_data_to_codes
 
 
 class FlowSOM:
@@ -77,7 +77,7 @@ class FlowSOM:
         if cols_to_use is None:
             cols_to_use = self.mudata["cell_data"].var_names
         cols_to_use = list(get_channels(self, cols_to_use).keys())
-        nodes, clusters, dists, xdim, ydim, som = self.SOM(inp=self.mudata["cell_data"][:, cols_to_use].X, **kwargs)
+        codes, clusters, dists, xdim, ydim = self.SOM(inp=self.mudata["cell_data"][:, cols_to_use].X, **kwargs)
         self.mudata["cell_data"].obs["clustering"] = np.array(clusters)
         self.mudata["cell_data"].obs["distance_to_bmu"] = np.array(dists)
         self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
@@ -86,13 +86,26 @@ class FlowSOM:
         self = self.update_derived_values()
         self.mudata["cluster_data"].uns["xdim"] = xdim
         self.mudata["cluster_data"].uns["ydim"] = ydim
-        self.mudata["cluster_data"].uns["som"] = som
-        self.mudata["cluster_data"].obsm["codes"] = np.array(nodes)
+        self.mudata["cluster_data"].obsm["codes"] = np.array(codes)
         self.mudata["cluster_data"].obsm["grid"] = np.array([(x, y) for x in range(xdim) for y in range(ydim)])
         self.mudata["cluster_data"].uns["outliers"] = self.test_outliers(mad_allowed=outlier_MAD).reset_index()
         return self
 
-    def SOM(self, inp, xdim=10, ydim=10, rlen=10, importance=None):
+    def SOM(
+        self,
+        inp,
+        xdim=10,
+        ydim=10,
+        rlen=10,
+        mst=1,
+        alpha=(0.05, 0.01),
+        init=False,
+        initf=None,
+        map=True,
+        codes=None,
+        importance=None,
+        seed=None,
+    ):
         """Perform SOM clustering
 
         :param inp:  An array of the columns to use for clustering
@@ -108,29 +121,58 @@ class FlowSOM:
         :type importance: np.array
         """
         data = np.asarray(inp, dtype=np.float64)
+        if codes is not None:
+            assert (codes.shape[1] == data.shape[1]) or (
+                codes.shape[0] == xdim - ydim
+            ), f"If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
+
         if importance is not None:
             data = np.stack([data[:, i] * importance[i] for i in range(len(importance))], axis=1)
 
         # Initialize the grid
         grid = [(x, y) for x in range(xdim) for y in range(ydim)]
-        nCodes = len(grid)
+        n_codes = len(grid)
+        if codes is None:
+            if init:
+                codes = initf(data, xdim, ydim)
+            else:
+                codes = data[np.random.randint(0, data.shape[0], n_codes), :]
 
         # Initialize the neighbourhood
         nhbrdist = squareform(pdist(grid, metric="chebyshev"))
-        radius = np.quantile(nhbrdist, 0.67)
+
+        # Initialize the radius
+        radius = (np.quantile(nhbrdist, 0.67), 0)
+        if mst == 1:
+            radius = [radius]
+            alpha = [alpha]
+        else:
+            radius = np.linspace(radius[0], radius[1], num=mst + 1)
+            radius = [tuple(radius[i : i + 2]) for i in range(mst)]
+            alpha = np.linspace(alpha[0], alpha[1], num=mst + 1)
+            alpha = [tuple(alpha[i : i + 2]) for i in range(mst)]
 
         # Compute the SOM
-        som = MiniSom(
-            x=xdim, y=ydim, input_len=data.shape[1], sigma=radius, learning_rate=0.05, neighborhood_function="triangle"
-        )
-        som.random_weights_init(data)
-        som.train(data, rlen * data.shape[0])
-        winner_coordinates = np.array([som.winner(x) for x in data])
-        clusters = np.ravel_multi_index(winner_coordinates.T, (xdim, ydim))
-        nodes = som.get_weights().reshape((xdim * ydim, data.shape[1]))
-        dists_map = som.distance_map()
-        dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
-        return nodes, clusters, dists, xdim, ydim, som
+        for i in range(mst):
+            codes = SOM(
+                data,
+                codes,
+                nhbrdist,
+                alphas=alpha[i],
+                radii=radius[i],
+                ncodes=n_codes,
+                rlen=rlen,
+                seed=seed,
+            )
+            if mst != 1:
+                nhbrdist = self.dist_mst(codes)
+
+        if map:
+            clusters, dists = map_data_to_codes(data=data, codes=codes)
+        else:
+            clusters = dists = np.zeros((n_codes))
+
+        return codes, clusters, dists, xdim, ydim
 
     def update_derived_values(self):
         """Update the derived values such as median values and CV values"""
@@ -200,6 +242,20 @@ class FlowSOM:
         self.mudata["cluster_data"].obsm["layout"] = np.array(layout)
         self.mudata["cluster_data"].uns["graph"] = MST_graph
         return self
+
+    def dist_mst(self, codes):
+        adjacency = cdist(
+            codes,
+            codes,
+            metric="euclidean",
+        )
+        full_graph = ig.Graph.Weighted_Adjacency(adjacency, mode="undirected", loops=False)
+        MST_graph = ig.Graph.spanning_tree(full_graph, weights=full_graph.es["weight"])
+        codes = [
+            [len(x) - 1 for x in MST_graph.get_shortest_paths(v=i, to=MST_graph.vs.indices, weights=None)]
+            for i in MST_graph.vs.indices
+        ]
+        return codes
 
     def metacluster(self, n_clus):
         """Perform a hierarchical clustering
@@ -321,16 +377,11 @@ class FlowSOM:
         fsom_new.get_cell_data().uns["n_nodes"] = self.get_cell_data().uns["n_nodes"]
         fsom_new.get_cell_data().uns["n_metaclusters"] = self.get_cell_data().uns["n_metaclusters"]
         fsom_new.mudata.mod["cluster_data"] = self.get_cluster_data()
-        som = self.get_cluster_data().uns["som"]
+
         markers_bool = self.get_cell_data().var["cols_used"]
         markers = self.get_cell_data().var_names[markers_bool]
         data = fsom_new.get_cell_data()[:, markers].X
-        winner_coordinates = np.array([som.winner(x) for x in data])
-        clusters = np.ravel_multi_index(
-            winner_coordinates.T, (self.get_cluster_data().uns["xdim"], self.get_cluster_data().uns["ydim"])
-        )
-        dists_map = som.distance_map()
-        dists = np.array([dists_map[i, j] for i, j in winner_coordinates])
+        clusters, dists = map_data_to_codes(data=data, codes=self.get_cluster_data().obsm["codes"])
         fsom_new.get_cell_data().obsm["distance_to_bmu"] = np.array(dists)
         fsom_new.get_cell_data().obs["clustering"] = np.array(clusters)
         fsom_new = fsom_new.update_derived_values()
