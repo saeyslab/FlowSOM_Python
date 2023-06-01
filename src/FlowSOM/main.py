@@ -7,7 +7,6 @@ import igraph as ig
 import re
 import random
 
-from minisom import MiniSom
 from scipy.stats import median_abs_deviation
 from scipy.spatial.distance import cdist, pdist, squareform
 from sklearn.cluster import AgglomerativeClustering
@@ -102,10 +101,10 @@ class FlowSOM:
         alpha=(0.05, 0.01),
         init=False,
         initf=None,
-        distf="eucl",
         map=True,
         codes=None,
         importance=None,
+        seed=None,
     ):
         """Perform SOM clustering
 
@@ -163,6 +162,7 @@ class FlowSOM:
                 radii=radius[i],
                 ncodes=n_codes,
                 rlen=rlen,
+                seed=seed,
             )
             if mst != 1:
                 nhbrdist = self.dist_mst(codes)

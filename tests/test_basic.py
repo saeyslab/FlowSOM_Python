@@ -17,8 +17,8 @@ def test_plot_stars(FlowSOM_res):
     FlowSOM.pl.plot_stars(
         FlowSOM_res,
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
-        view="grid",
-        equal_node_size=True,
+        view="MST",
+        equal_node_size=False,
     )
 
 

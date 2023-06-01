@@ -212,6 +212,7 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     n.set_linewidth(0.5)
     n.set_zorder(2)
     ax.add_collection(n)
+    ax, fig = add_legend(fig=fig, ax=ax, data=variable, title="Marker", cmap=cmap)
     ax.axis("equal")
     if title is not None:
         plt.title(title)
@@ -307,7 +308,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     plt.axis("off")
     if title is not None:
         plt.title(title)
-    plt.show()
+    plt.savefig("plot_stars_somptimized.png", dpi=300)
 
 
 def plot_pies(
