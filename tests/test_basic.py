@@ -32,6 +32,14 @@ def test_plot_marker(FlowSOM_res):
     )
 
 
+def test_plot_pies(FlowSOM_res, gating_results):
+    FlowSOM.pl.plot_pies(
+        FlowSOM_res,
+        cell_types=gating_results,
+        background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
+    )
+
+
 def test_new_data(fcs):
     fsom = FlowSOM.main.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
     fsom_new = fsom.new_data(fcs[1001:2000])

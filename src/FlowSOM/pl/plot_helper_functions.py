@@ -15,9 +15,6 @@ def FlowSOM_colors():
         "FlowSOM_colors",
         ["#00007F", "#0000E1", "#007FFF", "#00E1E1", "#7FFF7F", "#E1E100", "#FF7F00", "#E10000", "#7F0000"],
     )
-    """cmap = matplotlib.colors.ListedColormap(
-        ["#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
-    )"""
     return cmap
 
 
@@ -29,11 +26,20 @@ def gg_color_hue():
     return cmap
 
 
-def add_legend(fig, ax, data, title, cmap, location="bottom", ticks=None):
+def add_legend(fig, ax, data, title, cmap, location="bottom", orientation="horizontal", ticks=None, labels=None):
+    is_num = True
+    if not ((data.dtype == np.float64) or (data.dtype == np.int64)):
+        data_dummies = pd.get_dummies(data)
+        labels = data_dummies.columns
+        ticks = np.arange(len(labels))
+        data = data_dummies.values.argmax(1)
+        is_num = False
     norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
     sm.set_array(data)
-    fig.colorbar(sm, ax=ax, orientation="horizontal", shrink=0.4, label=title, location=location, ticks=ticks)
+    cbar = fig.colorbar(sm, ax=ax, orientation=orientation, shrink=0.4, label=title, location=location, ticks=ticks)
+    if not is_num:
+        cbar.ax.set_xticklabels(labels)
     return ax, fig
 
 
@@ -121,7 +127,7 @@ def plot_FlowSOM(
         e = add_MST(fsom)
         MST = mc.LineCollection(e)
         MST.set_edgecolor("black")
-        MST.set_linewidth(0.5)
+        MST.set_linewidth(0.2)
         MST.set_zorder(0)
         ax.add_collection(MST)
 
@@ -130,7 +136,7 @@ def plot_FlowSOM(
     n = mc.PatchCollection(nodes)
     n.set_facecolor(["#C7C7C7" if tf else "#FFFFFF" for tf in isEmpty])  # "white")
     n.set_edgecolor("black")
-    n.set_linewidth(0.5)
+    n.set_linewidth(0.2)
     n.set_zorder(2)
     ax.add_collection(n)
 

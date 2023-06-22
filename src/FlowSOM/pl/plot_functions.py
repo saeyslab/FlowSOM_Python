@@ -123,6 +123,29 @@ def plot_2D_scatters(
                 ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
 
 
+def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black", title=None, **kwargs):
+    """Plot labels for each cluster
+
+    :param fsom:
+    :type fsom:
+    :param labels:
+    :type labels:
+    :param max_node_size:
+    :type max_node_size:
+    :param text_size:
+    :type text_size: int
+    :param text_color:
+    :type text_color:
+    """
+    fig, ax, layout, _ = plot_FlowSOM(fsom=fsom, max_node_size=max_node_size, **kwargs)
+    ax = add_text(ax, layout, labels, text_size, text_color)
+    ax.axis("equal")
+    if title is not None:
+        plt.title(title)
+    plt.axis("off")
+    plt.show()
+
+
 def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     """Plot cluster ids for each cluster
 
@@ -137,56 +160,6 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     elif level == "metaclusters":
         numbers = np.asarray(fsom.get_cluster_data().obs["metaclustering"], dtype=int)
     plot_labels(fsom=fsom, labels=numbers, max_node_size=max_node_size, **kwargs)
-
-
-def plot_labels(
-    fsom,
-    cell_types,
-    cmap=matplotlib.colors.ListedColormap(
-        ["white", "#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
-    ),
-    title=None,
-    **kwargs,
-):
-    """Plot FlowSOM grid or tree, with pies indicating another clustering or
-    manual gating result
-
-    :param fsom:
-    :type fsom:
-    :param cell_types:
-    :type cell_types:
-    :param cmap:
-    :type cmap:
-    """
-    fig, ax, layout, scaledNodeSize = plot_FlowSOM(fsom, **kwargs)
-
-    cell_types["cl"] = fsom.GetClusters()
-    cell_types.columns = ["gatingResult", "cl"]
-    grouped_df = cell_types.groupby("cl")
-    i = 0
-    uniquecell_types = np.unique(cell_types["gatingResult"])
-    color_dict = dict(zip(uniquecell_types, cmap(np.linspace(0, 1, len(uniquecell_types)))))
-    for _, group in grouped_df:
-        table = pd.crosstab(index=group["gatingResult"], columns="count")
-        table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
-        angles = np.asarray(np.cumsum(table["part"]))
-        if 0 not in angles:
-            angles = np.insert(angles, 0, 0)
-        row = layout[i, :]
-        patches = add_wedges(tuple(row), heights=np.repeat(scaledNodeSize[i], len(angles)), angles=angles)
-        p = mc.PatchCollection(patches)
-        p.set_facecolor([color_dict.get(key) for key in table.index.values])
-        p.set_edgecolor("black")
-        p.set_linewidth(0.5)
-        p.set_zorder(3)
-        ax.add_collection(p)
-        i += 1
-    ax.axis("equal")
-    if title is not None:
-        plt.title(title)
-    plt.axis("off")
-    plt.show()
-    return (fig, ax)
 
 
 def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, **kwargs):
@@ -248,29 +221,6 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
     plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
 
 
-def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black", title=None, **kwargs):
-    """Plot labels for each cluster
-
-    :param fsom:
-    :type fsom:
-    :param labels:
-    :type labels:
-    :param max_node_size:
-    :type max_node_size:
-    :param text_size:
-    :type text_size: int
-    :param text_color:
-    :type text_color:
-    """
-    fig, ax, layout, _ = plot_FlowSOM(fsom=fsom, max_node_size=max_node_size, **kwargs)
-    ax = add_text(ax, layout, labels, text_size, text_color)
-    ax.axis("equal")
-    if title is not None:
-        plt.title(title)
-    plt.axis("off")
-    plt.show()
-
-
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     """Plot star charts
 
@@ -301,21 +251,21 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     s = mc.PatchCollection(add_stars(layout, heights), cmap=cmap)
     s.set_array(range(data.shape[1]))
     s.set_edgecolor("black")
-    s.set_linewidth(0.5)
+    s.set_linewidth(0.2)
     s.set_zorder(3)
     ax.add_collection(s)
     ax.axis("equal")
     plt.axis("off")
     if title is not None:
         plt.title(title)
-    plt.savefig("plot_stars_somptimized.png", dpi=300)
+    plt.savefig("plot_stars.pdf")
 
 
 def plot_pies(
     fsom,
     cell_types,
     cmap=matplotlib.colors.ListedColormap(
-        ["white", "#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"]
+        ["white", "#00007F", "#0000E1", "#007FFF", "#00E1E1", "#7FFF7F", "#E1E100", "#FF7F00", "#E10000", "#7F0000"],
     ),
     title=None,
     **kwargs,
@@ -330,13 +280,14 @@ def plot_pies(
     :param cmap:
     :type cmap:
     """
-
+    if not isinstance(cell_types, np.ndarray):
+        cell_types = np.asarray(cell_types)
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     unique_cell_types = np.unique(cell_types)
     color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))
 
     for cl in range(fsom.get_cell_data().uns["n_nodes"]):
-        node_cell_types = cell_types[fsom.get_cell_data().obs["clustering"] == (cl + 1)]
+        node_cell_types = cell_types[fsom.get_cell_data().obs["clustering"] == cl]
         table = pd.crosstab(node_cell_types, columns="count")
         table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
         angles = np.asarray(np.cumsum(table["part"]))
@@ -347,12 +298,13 @@ def plot_pies(
         p = mc.PatchCollection(patches)
         p.set_facecolor([color_dict.get(key) for key in table.index.values])
         p.set_edgecolor("black")
-        p.set_linewidth(0.5)
+        p.set_linewidth(0.2)
         p.set_zorder(3)
         ax.add_collection(p)
 
     ax.axis("equal")
+    ax, fig = add_legend(fig=fig, ax=ax, data=cell_types, title="", cmap=cmap, location="right", orientation="vertical")
     if title is not None:
         plt.title(title)
     plt.axis("off")
-    plt.show()
+    plt.savefig("plot_pies.pdf")
