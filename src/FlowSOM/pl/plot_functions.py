@@ -121,6 +121,7 @@ def plot_2D_scatters(
                 ax.scatter(df_bg[:, 0], df_bg[:, 1], c="grey", s=size_background_points)
                 ax.scatter(df_ss[:, 0], df_ss[:, 1], c="red", s=size_points)
                 ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
+    return fig
 
 
 def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black", title=None, **kwargs):
@@ -143,7 +144,7 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
     if title is not None:
         plt.title(title)
     plt.axis("off")
-    plt.show()
+    return fig
 
 
 def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
@@ -190,8 +191,7 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     if title is not None:
         plt.title(title)
     plt.axis("off")
-    plt.savefig("plot_marker.png", dpi=300)
-    # plt.show()
+    return fig
 
 
 def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(), **kwargs):
@@ -258,7 +258,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     plt.axis("off")
     if title is not None:
         plt.title(title)
-    plt.savefig("plot_stars.pdf")
+    return fig
 
 
 def plot_pies(
@@ -303,8 +303,10 @@ def plot_pies(
         ax.add_collection(p)
 
     ax.axis("equal")
-    ax, fig = add_legend(fig=fig, ax=ax, data=cell_types, title="", cmap=cmap, location="right", orientation="vertical")
+    ax, fig = add_legend(
+        fig=fig, ax=ax, data=cell_types, title="", cmap=cmap, location="upper right", orientation="vertical"
+    )
     if title is not None:
         plt.title(title)
     plt.axis("off")
-    plt.savefig("plot_pies.pdf")
+    return fig

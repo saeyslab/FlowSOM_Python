@@ -215,15 +215,16 @@ class FlowSOM:
         if "metaclustering" in self.mudata["cell_data"].obs_keys():
             df = self.mudata["cell_data"].X[self.mudata["cell_data"].X[:, 0].argsort()]
             df = np.c_[self.mudata["cell_data"].obs["metaclustering"], df]
-            metacluster_median_values = np.vstack(
+            metacluster_median_values = pd.DataFrame(df).groupby(0).median()
+            """metacluster_median_values = np.vstack(
                 [
                     np.median(df[df[:, 0] == cl + 1], axis=0)
                     if df[df[:, 0] == cl + 1].shape[0] != 0
                     else np.repeat(np.nan, df[df[:, 0] == cl + 1].shape[1])
                     for cl in range(self.mudata["cell_data"].uns["n_metaclusters"])
                 ]
-            )
-            self.mudata["cluster_data"].uns["metacluster_MFIs"] = np.vstack(metacluster_median_values)
+            )"""
+            self.mudata["cluster_data"].uns["metacluster_MFIs"] = metacluster_median_values
 
         return self
 
@@ -264,12 +265,12 @@ class FlowSOM:
         :param n_clus: The number of metaclusters
         :type n_clus: int
         """
-        metaclusters = self.hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
-        # metaclusters = self.consensus_hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
+        # metaclusters = (self.hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)).astype(str)
+        metaclusters = self.consensus_hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
         self.mudata["cell_data"].uns["n_metaclusters"] = n_clus
         self.mudata["cluster_data"].obs["metaclustering"] = metaclusters
         self.mudata["cell_data"].obs["metaclustering"] = np.asarray(
-            [np.array(metaclusters)[int(i) - 1] for i in np.asarray(self.mudata["cell_data"].obs["clustering"])]
+            [np.array(metaclusters)[int(i)] for i in np.asarray(self.mudata["cell_data"].obs["clustering"])]
         )
         return self
 
@@ -406,7 +407,7 @@ class FlowSOM:
         fsom_new = fsom_new.update_derived_values()
         metaclusters = self.get_cluster_data().obs["metaclustering"]
         fsom_new.get_cell_data().obs["metaclustering"] = np.asarray(
-            [np.array(metaclusters)[int(i) - 1] for i in np.asarray(fsom_new.get_cell_data().obs["clustering"])]
+            [np.array(metaclusters)[int(i)] for i in np.asarray(fsom_new.get_cell_data().obs["clustering"])]
         )
         # test_outliers = fsom_new.test_outliers(mad_allowed = mad_allowed, fsom_reference = self)
         return fsom_new

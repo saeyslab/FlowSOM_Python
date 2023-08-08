@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, Wedge
 from scipy.spatial.distance import pdist
 from matplotlib import collections as mc
@@ -26,20 +27,21 @@ def gg_color_hue():
     return cmap
 
 
-def add_legend(fig, ax, data, title, cmap, location="bottom", orientation="horizontal", ticks=None, labels=None):
-    is_num = True
-    if not ((data.dtype == np.float64) or (data.dtype == np.int64)):
-        data_dummies = pd.get_dummies(data)
-        labels = data_dummies.columns
-        ticks = np.arange(len(labels))
-        data = data_dummies.values.argmax(1)
-        is_num = False
-    norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-    sm.set_array(data)
-    cbar = fig.colorbar(sm, ax=ax, orientation=orientation, shrink=0.4, label=title, location=location, ticks=ticks)
-    if not is_num:
-        cbar.ax.set_xticklabels(labels)
+def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizontal", ticks=None, labels=None):
+    if data.dtype == np.float64 or data.dtype == np.int64:
+        norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array(data)
+        fig.colorbar(sm, ax=ax, orientation=orientation, shrink=0.4, label=title)
+    else:
+        unique_data = sorted(np.unique(data))
+        colors = cmap(np.linspace(0, 1, len(unique_data)))
+        legend_elements = [
+            Line2D([0], [0], marker="o", color="w", label=unique_data[i], markerfacecolor=colors[i], markersize=5)
+            for i in range(len(unique_data))
+        ]
+        legend = plt.legend(handles=legend_elements, loc=location, frameon=False, title=title)
+        plt.gca().add_artist(legend)
     return ax, fig
 
 
@@ -109,7 +111,10 @@ def plot_FlowSOM(
     if background_values is not None:
         background = add_nodes(layout, node_sizes * 1.5)
         b = mc.PatchCollection(background, cmap=background_cmap)
-        b.set_array(background_values)
+        if background_values.dtype == np.float64 or background_values.dtype == np.int64:
+            b.set_array(background_values)
+        else:
+            b.set_array(pd.get_dummies(background_values).values.argmax(1))
         b.set_alpha(0.5)
         b.set_zorder(1)
         ax.add_collection(b)
@@ -119,7 +124,7 @@ def plot_FlowSOM(
             data=background_values,
             title="Background",
             cmap=background_cmap,
-            ticks=np.linspace(min(background_values), max(background_values), len(np.unique(background_values))),
+            location="lower right",
         )
 
     # Add MST
