@@ -186,7 +186,9 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     n.set_linewidth(0.5)
     n.set_zorder(2)
     ax.add_collection(n)
-    ax, fig = add_legend(fig=fig, ax=ax, data=variable, title="Marker", cmap=cmap)
+    ax, fig = add_legend(
+        fig=fig, ax=ax, data=variable, title="Marker", cmap=cmap, location="upper left", bbox_to_anchor=(1.04, 1)
+    )
     ax.axis("equal")
     if title is not None:
         plt.title(title)
@@ -218,7 +220,8 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
         lim = (mfis[:, indices_markers].min(), mfis[:, indices_markers].max())
     marker = list(get_channels(fsom, marker).keys())[0]
     marker_index = np.where(fsom.get_cell_data().var_names == marker)[0][0]
-    plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
+    fig = plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
+    return fig
 
 
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
@@ -304,7 +307,14 @@ def plot_pies(
 
     ax.axis("equal")
     ax, fig = add_legend(
-        fig=fig, ax=ax, data=cell_types, title="", cmap=cmap, location="upper right", orientation="vertical"
+        fig=fig,
+        ax=ax,
+        data=cell_types,
+        title="",
+        cmap=cmap,
+        location="upper left",
+        orientation="vertical",
+        bbox_to_anchor=(1.04, 1),
     )
     if title is not None:
         plt.title(title)

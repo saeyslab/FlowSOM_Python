@@ -27,7 +27,7 @@ def gg_color_hue():
     return cmap
 
 
-def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizontal", ticks=None, labels=None):
+def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizontal", bbox_to_anchor=None):
     if data.dtype == np.float64 or data.dtype == np.int64:
         norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
@@ -40,7 +40,17 @@ def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizon
             Line2D([0], [0], marker="o", color="w", label=unique_data[i], markerfacecolor=colors[i], markersize=5)
             for i in range(len(unique_data))
         ]
-        legend = plt.legend(handles=legend_elements, loc=location, frameon=False, title=title)
+        box = ax.get_position()
+        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        legend = plt.legend(
+            handles=legend_elements,
+            loc=location,
+            frameon=False,
+            title=title,
+            bbox_to_anchor=bbox_to_anchor,  # (1, 0.5),
+            fontsize="small",
+            title_fontsize="small",
+        )
         plt.gca().add_artist(legend)
     return ax, fig
 
@@ -124,7 +134,8 @@ def plot_FlowSOM(
             data=background_values,
             title="Background",
             cmap=background_cmap,
-            location="lower right",
+            location="lower left",
+            bbox_to_anchor=(1.04, 0),
         )
 
     # Add MST

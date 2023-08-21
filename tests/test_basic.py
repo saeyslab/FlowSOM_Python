@@ -14,30 +14,33 @@ def test_FlowSOM_type(FlowSOM_res):
 
 
 def test_plot_stars(FlowSOM_res):
-    FlowSOM.pl.plot_stars(
+    pl = FlowSOM.pl.plot_stars(
         FlowSOM_res,
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
         view="MST",
         equal_node_size=False,
     )
+    pl.savefig("plotstars.pdf")
 
 
 def test_plot_marker(FlowSOM_res):
-    FlowSOM.pl.plot_marker(
+    pl = FlowSOM.pl.plot_marker(
         FlowSOM_res,
         marker=["CD3"],
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
         view="grid",
         equal_node_size=True,
     )
+    pl.savefig("plotmarker.pdf")
 
 
 def test_plot_pies(FlowSOM_res, gating_results):
-    FlowSOM.pl.plot_pies(
+    pl = FlowSOM.pl.plot_pies(
         FlowSOM_res,
         cell_types=gating_results,
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
     )
+    pl.savefig("plotpies.pdf")
 
 
 def test_new_data(fcs):
