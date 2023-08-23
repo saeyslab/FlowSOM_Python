@@ -291,19 +291,20 @@ def plot_pies(
 
     for cl in range(fsom.get_cell_data().uns["n_nodes"]):
         node_cell_types = cell_types[fsom.get_cell_data().obs["clustering"] == cl]
-        table = pd.crosstab(node_cell_types, columns="count")
-        table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
-        angles = np.asarray(np.cumsum(table["part"]))
-        if 0 not in angles:
-            angles = np.insert(angles, 0, 0)
-        row = layout[cl, :]
-        patches = add_wedges(tuple(row), heights=np.repeat(scaled_node_size[cl], len(angles)), angles=angles)
-        p = mc.PatchCollection(patches)
-        p.set_facecolor([color_dict.get(key) for key in table.index.values])
-        p.set_edgecolor("black")
-        p.set_linewidth(0.2)
-        p.set_zorder(3)
-        ax.add_collection(p)
+        if len(node_cell_types) != 0:
+            table = pd.crosstab(node_cell_types, columns="count")
+            table["part"] = np.multiply(np.divide(table["count"], sum(table["count"])), 360)
+            angles = np.asarray(np.cumsum(table["part"]))
+            if 0 not in angles:
+                angles = np.insert(angles, 0, 0)
+            row = layout[cl, :]
+            patches = add_wedges(tuple(row), heights=np.repeat(scaled_node_size[cl], len(angles)), angles=angles)
+            p = mc.PatchCollection(patches)
+            p.set_facecolor([color_dict.get(key) for key in table.index.values])
+            p.set_edgecolor("black")
+            p.set_linewidth(0.2)
+            p.set_zorder(3)
+            ax.add_collection(p)
 
     ax.axis("equal")
     ax, fig = add_legend(
