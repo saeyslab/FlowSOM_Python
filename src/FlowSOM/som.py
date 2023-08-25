@@ -2,7 +2,7 @@ import numpy as np
 from numba import jit
 
 
-@jit(nopython=True, parallel=True)
+@jit(nopython=True, parallel=False)
 def eucl(p1, p2):
     distance = 0.0
     for j in range(len(p1)):
