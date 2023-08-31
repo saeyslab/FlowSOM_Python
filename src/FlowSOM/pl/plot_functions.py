@@ -246,7 +246,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
         pretty_markers,
         coords=(max_x, max_y),
         cmap=cmap,
-        max_star_height=max(scaled_node_size) * 2,
+        max_star_height=max(scaled_node_size) * 3,
         star_height=1,
     )
     data = fsom.get_cluster_data()[:, markers].X
@@ -254,7 +254,7 @@ def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     s = mc.PatchCollection(add_stars(layout, heights), cmap=cmap)
     s.set_array(range(data.shape[1]))
     s.set_edgecolor("black")
-    s.set_linewidth(0.2)
+    s.set_linewidth(0.1)
     s.set_zorder(3)
     ax.add_collection(s)
     ax.axis("equal")
@@ -302,7 +302,7 @@ def plot_pies(
             p = mc.PatchCollection(patches)
             p.set_facecolor([color_dict.get(key) for key in table.index.values])
             p.set_edgecolor("black")
-            p.set_linewidth(0.2)
+            p.set_linewidth(0.1)
             p.set_zorder(3)
             ax.add_collection(p)
 

@@ -48,8 +48,8 @@ def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizon
             frameon=False,
             title=title,
             bbox_to_anchor=bbox_to_anchor,  # (1, 0.5),
-            fontsize="small",
-            title_fontsize="small",
+            fontsize=5,
+            title_fontsize=6,
         )
         plt.gca().add_artist(legend)
     return ax, fig
@@ -152,7 +152,7 @@ def plot_FlowSOM(
     n = mc.PatchCollection(nodes)
     n.set_facecolor(["#C7C7C7" if tf else "#FFFFFF" for tf in isEmpty])  # "white")
     n.set_edgecolor("black")
-    n.set_linewidth(0.2)
+    n.set_linewidth(0.1)
     n.set_zorder(2)
     ax.add_collection(n)
 
@@ -174,6 +174,7 @@ def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max
         star_height = np.repeat(star_height, len(markers)).tolist()
     else:
         assert len(star_height) == n_markers, f"Make sure star_height is an array with the same length as markers"
+    star_height = np.divide(star_height, max(star_height)) * max_star_height
     x = 2 * np.pi / (n_markers * 2)
     y = 2 * np.pi / n_markers
     circular_coords = np.linspace(start=x, stop=x + (n_markers - 1) * y, num=n_markers)
@@ -232,7 +233,7 @@ def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max
     l = mc.PatchCollection(add_wedges(np.array((x_coord, coords[1])), star_height), cmap=cmap)
     l.set_array(range(n_markers))
     l.set_edgecolor("black")
-    l.set_linewidth(0.5)
+    l.set_linewidth(0.1)
     ax.add_collection(l)
     ax.axis("equal")
 
