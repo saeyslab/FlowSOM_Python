@@ -49,6 +49,31 @@ def test_new_data(fcs):
     assert fsom_new.get_cell_data().shape == (999, 18)
 
 
+def test_aggregate_flowframes():
+    new_ff = FlowSOM.main.aggregate_flowframes(
+        ["./tests/data/ff.fcs", "./tests/data/ff.fcs"], c_total=5000, channels=[8, 11, 13, 14, 15, 16, 17]
+    )
+    assert new_ff.shape == (5000, 7)
+
+
+def test_flowsom_subset(FlowSOM_res):
+    fsom_subset = FlowSOM_res.subset(FlowSOM_res.get_cell_data().obs["metaclustering"] == 4)
+    FlowSOM.pl.plot_stars(fsom_subset, background_values=fsom_subset.get_cluster_data().obs["metaclustering"])
+    assert fsom_subset.get_cell_data().shape == (sum(FlowSOM_res.get_cell_data().obs["metaclustering"] == 4), 18)
+
+
+def test_get_features(FlowSOM_res):
+    FlowSOM.main.get_features(
+        FlowSOM_res,
+        ["./tests/data/ff.fcs", "./tests/data/ff.fcs"],
+        level=["clusters", "metaclusters"],
+        type=["counts", "MFIs", "percentages", "percentages_positive"],
+        MFI=["CD3", "CD4"],
+        positive_cutoffs={"CD3": 2, "PE-A": 2},
+        filenames=None,
+    )
+
+
 def test_FlowSOM_class(FlowSOM_res):
     cell_data = FlowSOM_res.get_cell_data()
     uns_true_keys_cell = ["n_nodes", "n_metaclusters"]

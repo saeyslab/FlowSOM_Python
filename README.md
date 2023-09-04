@@ -36,6 +36,24 @@ pip install FlowSOM
 pip install git+https://github.com/artuurC/FlowSOM.git@main
 ```
 
+## Usage
+Starting from an FCS file that is properly transformed, compensated and checked for quality, the following code can be used to run the FlowSOM algorithm:
+
+```python
+# Import the FlowSOM package
+import FlowSOM as fs
+
+# Load the FCS file
+ff = fs.main.read_FCS("./tests/data/ff.fcs")
+
+# Run the FlowSOM algorithm
+fsom = fs.main.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], xdim=10, ydim=10, n_clus=10)
+
+# Plot the FlowSOM results
+p = fs.pl.plot_stars(fsom, background_values=fsom.get_cluster_data().obs.metaclustering
+p.show()
+```
+
 ## Release notes
 
 See the [changelog][changelog].
@@ -46,8 +64,11 @@ For questions and help requests, you can reach out in the [scverse discourse][sc
 If you found a bug, please use the [issue tracker][issue-tracker].
 
 ## Citation
+If you use `FlowSOM` in your work, please cite the following paper:
 
-> t.b.a
+> Sofie Van Gassen, Britt Callebaut, Mary J. Van Helden, Bart N. Lambrecht, Piet Demeester, Tom Dhaene and Yvan Saeys. FlowSOM: Using self-organizing maps for visualization and interpretation of cytometry data. Cytometry A 2015, volume 87.7 (p. 636-645)
+
+> DOI: 10.1002/cyto.a.22625
 
 [scverse-discourse]: https://discourse.scverse.org/
 [issue-tracker]: https://github.com/artuurC/FlowSOM/issues

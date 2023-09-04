@@ -252,7 +252,7 @@ class FlowSOM:
         return codes
 
     def metacluster(self, n_clus):
-        """Perform a hierarchical clustering
+        """Perform a (consensus) hierarchical clustering
 
         :param n_clus: The number of metaclusters
         :type n_clus: int
@@ -295,19 +295,19 @@ class FlowSOM:
         :type channels:
         """
         if fsom_reference is None:
-            fsom_ref = self
-        cell_cl = fsom_ref.mudata["cell_data"].obs["clustering"]
-        distance_to_bmu = fsom_ref.mudata["cell_data"].obs["distance_to_bmu"]
+            fsom_reference = self
+        cell_cl = fsom_reference.mudata["cell_data"].obs["clustering"]
+        distance_to_bmu = fsom_reference.mudata["cell_data"].obs["distance_to_bmu"]
         distances_median = [
             np.median(distance_to_bmu[cell_cl == cl + 1]) if len(distance_to_bmu[cell_cl == cl + 1]) > 0 else 0
-            for cl in range(fsom_ref.mudata["cell_data"].uns["n_nodes"])
+            for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
         ]
 
         distances_mad = [
             median_abs_deviation(distance_to_bmu[cell_cl == cl + 1])
             if len(distance_to_bmu[cell_cl == cl + 1]) > 0
             else 0
-            for cl in range(fsom_ref.mudata["cell_data"].uns["n_nodes"])
+            for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
         ]
         thresholds = np.add(distances_median, np.multiply(mad_allowed, distances_mad))
 
@@ -340,22 +340,22 @@ class FlowSOM:
 
         if channels is not None:
             outliers_dict = dict()
-            codes = fsom_ref.mudata["cluster_data"]().obsm["codes"]
-            data = fsom_ref.mudata["cell_data"].X
-            channels = list(get_channels(fsom_ref, channels).keys())
+            codes = fsom_reference.mudata["cluster_data"]().obsm["codes"]
+            data = fsom_reference.mudata["cell_data"].X
+            channels = list(get_channels(fsom_reference, channels).keys())
             for channel in channels:
-                channel_i = np.where(fsom_ref.mudata["cell_data"].var_names == channel)[0][0]
+                channel_i = np.where(fsom_reference.mudata["cell_data"].var_names == channel)[0][0]
                 distances_median_channel = [
                     np.median(np.abs(np.subtract(data[cell_cl == cl + 1, channel_i], codes[cl, channel_i])))
                     if len(data[cell_cl == cl + 1, channel_i]) > 0
                     else 0
-                    for cl in range(fsom_ref.mudata["cell_data"].uns["n_nodes"])
+                    for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
                 ]
                 distances_mad_channel = [
                     median_abs_deviation(np.abs(np.subtract(data[cell_cl == cl + 1, channel_i], codes[cl, channel_i])))
                     if len(data[cell_cl == cl + 1, channel_i]) > 0
                     else 0
-                    for cl in range(fsom_ref.mudata["cell_data"].uns["n_nodes"])
+                    for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
                 ]
                 thresholds_channel = np.add(distances_median_channel, np.multiply(mad_allowed, distances_mad_channel))
 
@@ -363,7 +363,7 @@ class FlowSOM:
                     np.abs(
                         np.subtract(
                             self.mudata["cell_data"].X[self.mudata["cell_data"].obs["clustering"] == cl + 1, channel_i],
-                            fsom_ref.mudata["cell_data"].uns["n_nodes"][cl, channel_i],
+                            fsom_reference.mudata["cell_data"].uns["n_nodes"][cl, channel_i],
                         )
                     )
                     for cl in range(self.mudata["cell_data"].uns["n_nodes"])
@@ -397,8 +397,20 @@ class FlowSOM:
         fsom_new.get_cell_data().obs["metaclustering"] = np.asarray(
             [np.array(metaclusters)[int(i)] for i in np.asarray(fsom_new.get_cell_data().obs["clustering"])]
         )
-        # test_outliers = fsom_new.test_outliers(mad_allowed = mad_allowed, fsom_reference = self)
+        test_outliers = fsom_new.test_outliers(mad_allowed=mad_allowed, fsom_reference=self)
+        fsom_new.mudata["cluster_data"].uns["outliers"] = test_outliers
         return fsom_new
+
+    def subset(self, ids):
+        """Take a subset from a FlowSOM object
+
+        :param ids: An array of ids to subset
+        :type ids: np.array
+        """
+        fsom_subset = self
+        fsom_subset.mudata.mod["cell_data"] = fsom_subset.mudata["cell_data"][ids, :]
+        fsom_subset = fsom_subset.update_derived_values()
+        return fsom_subset
 
     def get_cell_data(self):
         return self.mudata["cell_data"]
@@ -499,7 +511,211 @@ def get_markers(obj, channels, exact=True):
     return markernames
 
 
-def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False, silent=False):
+def get_counts(fsom, level="metaclusters"):
+    assert level in ["metaclusters", "clusters"], f"Level should be 'metaclusters' or 'clusters'"
+    if level == "metaclusters":
+        counts = {
+            "C" + str(i): (fsom.get_cell_data().obs["metaclustering"] == i).sum()
+            for i in range(fsom.get_cell_data().uns["n_metaclusters"])
+        }
+    elif level == "clusters":
+        counts = {
+            "C" + str(i): (fsom.get_cell_data().obs["clustering"] == i).sum()
+            for i in range(fsom.get_cell_data().uns["n_nodes"])
+        }
+    return pd.DataFrame(counts, index=["counts"]).T
+
+
+def get_percentages(fsom, level="metaclusters"):
+    assert level in ["metaclusters", "clusters"], f"Level should be 'metaclusters' or 'clusters'"
+    counts = get_counts(fsom, level=level)
+    percentages = counts / counts.sum()
+    return percentages
+
+
+def get_cluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_colnames=False):
+    cl_per_cell = fsom.get_cell_data().obs["clustering"]
+    clusters = np.arange(0, fsom.get_cell_data().uns["n_nodes"])
+    if "cols_used" not in fsom.get_cell_data().var.columns:
+        cols_used = False
+    if "pretty_colnames" not in fsom.get_cell_data().var.columns:
+        pretty_colnames = False
+    channels = get_channels(fsom, list(cutoffs.keys()))
+    if cols_used and not pretty_colnames:
+        markers_bool = fsom.get_cell_data().var["cols_used"]
+        markers = fsom.get_cell_data().var_names[markers_bool]
+        channels = {key: value for key, value in channels.items() if key in markers}
+
+    perc_pos = np.empty((len(clusters), len(channels)))
+    perc_pos.fill(np.NaN)
+    for i, cluster in enumerate(clusters):
+        data_per_cluster = fsom.get_cell_data().to_df().loc[cl_per_cell == cluster, channels]
+        if data_per_cluster.shape[0] != 0:
+            for j, column in enumerate(data_per_cluster.columns):
+                cutoff = cutoffs[channels[column]]
+                num_above_cutoff = data_per_cluster[column].gt(cutoff).sum()
+                percentage_above_cutoff = num_above_cutoff / data_per_cluster[column].shape[0]
+                perc_pos[i, j] = percentage_above_cutoff
+    if pretty_colnames:
+        column_names = fsom.get_cell_data().var["pretty_colnames"].loc[list(channels.keys())]
+    else:
+        column_names = channels.values()
+    return pd.DataFrame(perc_pos, columns=column_names)
+
+
+def get_metacluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_colnames=False):
+    mcl_per_cell = fsom.get_cell_data().obs["metaclustering"]
+    metaclusters = np.arange(0, fsom.get_cell_data().uns["n_metaclusters"])
+    if "cols_used" not in fsom.get_cell_data().var.columns:
+        cols_used = False
+    if "pretty_colnames" not in fsom.get_cell_data().var.columns:
+        pretty_colnames = False
+    channels = get_channels(fsom, list(cutoffs.keys()))
+    if cols_used and not pretty_colnames:
+        markers_bool = fsom.get_cell_data().var["cols_used"]
+        markers = fsom.get_cell_data().var_names[markers_bool]
+        channels = {key: value for key, value in channels.items() if key in markers}
+
+    perc_pos = np.empty((len(metaclusters), len(channels)))
+    perc_pos.fill(np.NaN)
+    for i, cluster in enumerate(metaclusters):
+        data_per_metacluster = fsom.get_cell_data().to_df().loc[mcl_per_cell == cluster, channels]
+        if data_per_metacluster.shape[0] != 0:
+            for j, column in enumerate(data_per_metacluster.columns):
+                cutoff = cutoffs[channels[column]]
+                num_above_cutoff = data_per_metacluster[column].gt(cutoff).sum()
+                percentage_above_cutoff = num_above_cutoff / data_per_metacluster[column].shape[0]
+                perc_pos[i, j] = percentage_above_cutoff
+    if pretty_colnames:
+        column_names = fsom.get_cell_data().var["pretty_colnames"].loc[list(channels.keys())]
+    else:
+        column_names = channels.values()
+    return pd.DataFrame(perc_pos, columns=column_names)
+
+
+def get_features(
+    fsom,
+    files,
+    level=np.array(["clusters", "metaclusters"]),
+    type=np.array(["counts"]),
+    MFI=None,
+    positive_cutoffs=None,
+    filenames=None,
+):
+    n_clus = fsom.get_cell_data().uns["n_nodes"]
+    nfiles = len(files)
+    i = 0
+    if filenames is not None:
+        assert len(filenames) != nfiles, f"The number of file names should be equal to the number of files"
+    assert all([i in ["metaclusters", "clusters"] for i in level]), f"Level should be 'metaclusters' or 'clusters'"
+    assert all(
+        [i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type]
+    ), f"Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"
+    if "MFIs" in type:
+        assert MFI is not None, f"If type is 'MFIs', MFI should be provided"
+        MFI = list(get_channels(fsom, MFI).keys())
+    if "percentages_positive" in type:
+        assert positive_cutoffs is not None, f"If type is 'percentages_positive', positive_cutoffs should be provided"
+        assert isinstance(positive_cutoffs, dict), f"positive_cutoffs should be a dictionary"
+
+    matrices = dict()
+
+    # Prepare matrices
+    if filenames is None:
+        if all([isinstance(i, str) for i in files]):
+            filenames = files
+        else:
+            filenames = [str(i) for i in range(nfiles)]
+
+    C_counts = np.zeros((nfiles, n_clus))
+    C_outliers = np.zeros((nfiles, n_clus))
+
+    if "MFIs" in type:
+        n_mcl = fsom.get_cell_data().uns["n_metaclusters"]
+        n_marker = len(MFI)
+        C_MFIs = np.zeros((nfiles, n_marker * n_clus))
+        MC_MFIs = np.zeros((nfiles, n_marker * n_mcl))
+
+    if "percentages_positive" in type:
+        n_mcl = fsom.get_cell_data().uns["n_metaclusters"]
+        n_marker = len(positive_cutoffs)
+        C_perc_pos = np.zeros((nfiles, n_marker * n_clus))
+        MC_perc_pos = np.zeros((nfiles, n_marker * n_mcl))
+
+    # Loop over every file
+    for i, file in enumerate(files):
+        fsom_tmp = fsom.new_data(file)
+
+        counts_t = fsom_tmp.get_cell_data().obs["clustering"].value_counts()
+        C_counts[i, counts_t.index.astype(int)] = counts_t.values
+        outliers_t = fsom_tmp.get_cluster_data().uns["outliers"]["number_of_outliers"]
+        if outliers_t.shape[0] != 0:
+            C_outliers[i, outliers_t.index.astype(int)] = outliers_t.values
+
+        if "MFIs" in type:
+            if "clusters" in level:
+                C_MFIs[i,] = fsom_tmp.get_cluster_data().to_df().loc[:, MFI].to_numpy().flatten()
+            if "metaclusters" in level:
+                MFI_i = [i for i, x in enumerate(fsom_tmp.get_cluster_data().var_names) if x in MFI]
+                MC_MFIs[i,] = fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI_i].to_numpy().flatten()
+
+        if "percentages_positive" in type:
+            if "clusters" in level:
+                C_perc_pos[i,] = get_cluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
+            if "metaclusters" in level:
+                MC_perc_pos[i,] = get_metacluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
+
+    # Add matrices to dictionary
+    if "clusters" in level:
+        cluster_names = ["C" + str(i) for i in np.arange(0, n_clus)]
+        if "counts" in type:
+            matrices["cluster_counts"] = pd.DataFrame(C_counts, index=filenames, columns=cluster_names)
+        if "percentages" in type:
+            C_percentages = np.true_divide(C_counts, C_counts.sum(axis=1, keepdims=True))
+            matrices["cluster_percentages"] = pd.DataFrame(C_percentages, index=filenames, columns=cluster_names)
+        if "MFIs" in type:
+            MFI_names = [i + " " + j for i in cluster_names for j in MFI]
+            matrices["cluster_MFIs"] = pd.DataFrame(C_MFIs, index=filenames, columns=MFI_names)
+        if "percentages_positive" in type:
+            pretty_colnames = (
+                fsom.get_cell_data()
+                .var["pretty_colnames"]
+                .loc[get_channels(fsom, list(positive_cutoffs.keys())).keys()]
+            )
+            perc_pos_names = [i + " " + j for i in cluster_names for j in pretty_colnames]
+            matrices["cluster_percantages_pos"] = pd.DataFrame(C_perc_pos, columns=perc_pos_names)
+    if "metaclusters" in level:
+        MC_counts = (
+            pd.concat(
+                [pd.DataFrame(C_counts).T, fsom.get_cluster_data().obs.metaclustering.reset_index(drop=True)], axis=1
+            )
+            .groupby("metaclustering")
+            .sum()
+            .to_numpy()
+            .T
+        )
+        if "counts" in type:
+            MC_names = ["MC" + str(i) for i in np.arange(0, n_mcl)]
+            matrices["metacluster_counts"] = pd.DataFrame(MC_counts, index=filenames, columns=MC_names)
+        if "percentages" in type:
+            MC_percentages = np.true_divide(MC_counts, MC_counts.sum(axis=1, keepdims=True))
+            matrices["metacluster_percentages"] = pd.DataFrame(MC_percentages, index=filenames, columns=MC_names)
+        if "MFIs" in type:
+            MFI_names = [i + " " + j for i in MC_names for j in MFI]
+            matrices["metacluster_MFIs"] = pd.DataFrame(MC_MFIs, index=filenames, columns=MFI_names)
+        if "percentages_positive" in type:
+            pretty_colnames = (
+                fsom.get_cell_data()
+                .var["pretty_colnames"]
+                .loc[get_channels(fsom, list(positive_cutoffs.keys())).keys()]
+            )
+            perc_pos_names = [i + " " + j for i in MC_names for j in pretty_colnames]
+            matrices["metacluster_percantages_pos"] = pd.DataFrame(MC_perc_pos, columns=perc_pos_names)
+
+    return matrices
+
+
+def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
     """Aggregate multiple FCS files together
     :param filenames: An array containing full paths to the FCS files
     :type filenames: np.array
@@ -521,7 +737,8 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False, si
     flow_frame = []
     for i, file_path in enumerate(filenames):
         f = read_FCS(file_path)
-
+        if channels is not None:
+            f = f[:, list(get_markers(f, channels).keys())]
         cPerFile = min([f.X.shape[0], cFile])
 
         # Random sampling
@@ -542,7 +759,7 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False, si
     return flow_frame
 
 
-def read_FCS(filepath, truncate_max_range=False):
+def read_FCS(filepath):
     """Reads in an FCS file
     :param filepath: An array containing a full path to the FCS file
     :type filepath: str
@@ -551,6 +768,8 @@ def read_FCS(filepath, truncate_max_range=False):
         f = pm.io.read_fcs(filepath)
         f.var.n = f.var.n.astype(int)
         f.var = f.var.sort_values(by="n")
+        f.uns["meta"]["channels"].index = f.uns["meta"]["channels"].index.astype(int)
+        f.uns["meta"]["channels"] = f.uns["meta"]["channels"].sort_index()
     except:
         f = pm.io.read_fcs(filepath, reindex=False)
         markers = dict(

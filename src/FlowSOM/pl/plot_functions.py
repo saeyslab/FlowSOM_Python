@@ -66,6 +66,7 @@ def plot_2D_scatters(
     assert (
         "marker" in xy_labels or "channel" in xy_labels
     ), f'xy_labels should be a list containing "marker" and/or "channel".'
+
     metacluster = fsom.get_cell_data().obs["metaclustering"]
 
     cell_cluster = fsom.get_cell_data().obs["clustering"]
@@ -127,17 +128,24 @@ def plot_2D_scatters(
 def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black", title=None, **kwargs):
     """Plot labels for each cluster
 
-    :param fsom:
-    :type fsom:
-    :param labels:
-    :type labels:
-    :param max_node_size:
-    :type max_node_size:
-    :param text_size:
-    :type text_size: int
-    :param text_color:
-    :type text_color:
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param labels: An array of labels for every node
+    :type labels: np.array
+    :param max_node_size: Determines the maximum node size. Default = 0.
+    :type max_node_size: float
+    :param text_size: Determines the size of the text. Default = 20.
+    :type text_size: float
+    :param text_color: Determines the color of the text. Default = "black".
+    :type text_color: str
+    :param title: Title of the plot
+    :type title: str
     """
+    if not isinstance(labels, np.ndarray):
+        labels = np.asarray(labels)
+    assert (
+        labels.shape[0] == fsom.get_cell_data().uns["n_nodes"]
+    ), f"Length of labels should be the same as the number of nodes in your FlowSOM object"
     fig, ax, layout, _ = plot_FlowSOM(fsom=fsom, max_node_size=max_node_size, **kwargs)
     ax = add_text(ax, layout, labels, text_size, text_color)
     ax.axis("equal")
@@ -149,11 +157,12 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
 
 def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     """Plot cluster ids for each cluster
-
-    :param level:
-    :type level:
-    :param max_node_size:
-    :type max_node_size: int
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param level: Should be either "clusters" (default) or "metaclusters".
+    :type level: str
+    :param max_node_size: Determines the maximum node size. Default is 0.
+    :type max_node_size: float
     """
     assert level in ["clusters", "metaclusters"], f"level should be clusters or metaclusters"
     if level == "clusters":
@@ -166,16 +175,22 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
 def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, **kwargs):
     """Plot FlowSOM grid or tree, colored by node values given in variable
 
-    :param fsom:
-    :type fsom:
-    :param variable:
-    :type variable:
-    :param cmap:
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param variable: An array containing a value for every cluster
+    :type variable: np.array
+    :param cmap: A colormap to use
     :type cmap:
-    :param lim:
-    :type lim:
+    :param lim: Limits for the color scale
+    :type lim: tuple
+    :param title: Title of the plot
+    :type title: str
     """
-    # assert isinstance(variable, list) and len(variable) == fsom.nClusters(), f"Length of variable should be the same as the number of nodes in your FlowSOM object"
+    if not isinstance(variable, np.ndarray):
+        variable = np.asarray(variable)
+    assert (
+        variable.shape[0] == fsom.get_cell_data().uns["n_nodes"]
+    ), f"Length of variable should be the same as the number of nodes in your FlowSOM object"
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     nodes = add_nodes(layout, scaled_node_size)
     n = mc.PatchCollection(nodes, cmap=cmap)
@@ -199,20 +214,21 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
 def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(), **kwargs):
     """Plot FlowSOM grid or tree, colored by node values for a specific marker
 
-    :param fsom:
-    :type fsom:
-    :param marker:
-    :type marker:
-    :param ref_markers:
-    :type ref_markers:
-    :param lim:
-    :type lim:
-    :param cmap:
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param marker: A marker to plot. Can be a channel/marker/index.
+    :type marker: str, int
+    :param ref_markers: Is used to determine relative scale of the marker that will be plotted. Default are all markers used in the clustering.
+    :type ref_markers: np.array
+    :param lim: Limits for the color scale
+    :type lim: tuple
+    :param cmap: A colormap to use
     :type cmap:
     """
     if ref_markers is None:
         ref_markers_bool = fsom.get_cell_data().var["cols_used"]
         ref_markers = fsom.get_cell_data().var_names[ref_markers_bool]
+
     mfis = fsom.get_cluster_data().X
     ref_markers = list(get_channels(fsom, ref_markers).keys())
     indices_markers = (np.asarray(fsom.get_cell_data().var_names)[:, None] == ref_markers).argmax(axis=0)
@@ -227,16 +243,20 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
     """Plot star charts
 
-    :param fsom:
-    :type fsom:
-    :param markers:
-    :type markers:
-    :param cmap:
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param markers: Markers, channels or indices to plot
+    :type markers: np.array
+    :param cmap: A colormap to use
     :type cmap:
+    :param title: Title of the plot
+    :type title: str
     """
     if markers is None:
         markers_bool = fsom.get_cell_data().var["cols_used"]
         markers = fsom.get_cell_data().var_names[markers_bool]
+    if not isinstance(markers, np.ndarray):
+        markers = np.asarray(markers)
     pretty_markers = fsom.get_cell_data()[:, markers].var["pretty_colnames"]
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     max_x, max_y = np.max(layout, axis=0)
@@ -276,15 +296,20 @@ def plot_pies(
     """Plot FlowSOM grid or tree, with pies indicating another clustering or
     manual gating result
 
-    :param fsom:
-    :type fsom:
-    :param cell_types:
-    :type cell_types:
-    :param cmap:
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param cell_types:  An array containing a value for every cell
+    :type cell_types: np.array
+    :param cmap: A colormap to use
     :type cmap:
+    :param title: Title of the plot
+    :type title: str
     """
     if not isinstance(cell_types, np.ndarray):
         cell_types = np.asarray(cell_types)
+    assert (
+        cell_types.shape[0] == fsom.get_cell_data().shape[0]
+    ), f"Length of cell_types should be the same as the number of cells in your FlowSOM object"
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     unique_cell_types = np.unique(cell_types)
     color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))
