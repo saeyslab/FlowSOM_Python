@@ -285,14 +285,14 @@ class FlowSOM:
     def test_outliers(self, mad_allowed: int = 4, fsom_reference=None, plot_file=None, channels=None):
         """Test if any cells are too far from their cluster centers
 
-        :param mad_allowed:
+        :param mad_allowed: Number of median absolute deviations allowed. Default = 4.
         :type mad_allowed: int
-        :param fsom_reference:
-        :type fsom_reference:
+        :param fsom_reference: FlowSOM object to use as reference. If NULL (default), the original fsom object is used.
+        :type fsom_reference: FlowSOM
         :param plot_file:
         :type plot_file:
-        :param channels:
-        :type channels:
+        :param channels:If channels are given, the number of outliers in the original space for those channels will be calculated and added to the final results table.
+        :type channels: np.array
         """
         if fsom_reference is None:
             fsom_reference = self
@@ -377,6 +377,17 @@ class FlowSOM:
         return result
 
     def new_data(self, inp, mad_allowed=4):
+        """Map new data to a FlowSOM grid
+
+        :param inp: An anndata or filepath to an FCS file
+        :type inp: ad.AnnData / str
+        :param mad_allowed: A warning is generated if the distance of the new
+        data points to their closest cluster center is too big. This is computed
+        based on the typical distance of the points from the original dataset
+        assigned to that cluster, the threshold being set to median +
+        madAllowed * MAD. Default is 4.
+        :type mad_allowed: int
+        """
         fsom_new = FlowSOM(inp)
         fsom_new.get_cell_data().var["pretty_colnames"] = self.get_cell_data().var["pretty_colnames"]
         fsom_new.get_cell_data().var["cols_used"] = self.get_cell_data().var["cols_used"]
@@ -512,6 +523,13 @@ def get_markers(obj, channels, exact=True):
 
 
 def get_counts(fsom, level="metaclusters"):
+    """Get counts of number of cells in clusters or metaclusters
+
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param level: The level to get counts for. Should be 'metaclusters' or 'clusters'
+    :type level: str
+    """
     assert level in ["metaclusters", "clusters"], f"Level should be 'metaclusters' or 'clusters'"
     if level == "metaclusters":
         counts = {
@@ -527,6 +545,13 @@ def get_counts(fsom, level="metaclusters"):
 
 
 def get_percentages(fsom, level="metaclusters"):
+    """Get percentages of number of cells in clusters or metaclusters
+
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param level: The level to get counts for. Should be 'metaclusters' or 'clusters'
+    :type level: str
+    """
     assert level in ["metaclusters", "clusters"], f"Level should be 'metaclusters' or 'clusters'"
     counts = get_counts(fsom, level=level)
     percentages = counts / counts.sum()
@@ -534,6 +559,17 @@ def get_percentages(fsom, level="metaclusters"):
 
 
 def get_cluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_colnames=False):
+    """Get percentage-positive values for all clusters
+
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param cutoffs: A dictionary with channels/markers as keys and cutoffs as values
+    :type cutoffs: dict
+    :param cols_used: If True, only the columns that were used for clustering are used
+    :type cols_used: boolean
+    :param pretty_colnames: If True, the pretty column names are used
+    :type pretty_colnames: boolean
+    """
     cl_per_cell = fsom.get_cell_data().obs["clustering"]
     clusters = np.arange(0, fsom.get_cell_data().uns["n_nodes"])
     if "cols_used" not in fsom.get_cell_data().var.columns:
@@ -564,6 +600,17 @@ def get_cluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_coln
 
 
 def get_metacluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_colnames=False):
+    """Get percentage-positive values for all metaclusters
+
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param cutoffs: A dictionary with channels/markers as keys and cutoffs as values
+    :type cutoffs: dict
+    :param cols_used: If True, only the columns that were used for clustering are used
+    :type cols_used: boolean
+    :param pretty_colnames: If True, the pretty column names are used
+    :type pretty_colnames: boolean
+    """
     mcl_per_cell = fsom.get_cell_data().obs["metaclustering"]
     metaclusters = np.arange(0, fsom.get_cell_data().uns["n_metaclusters"])
     if "cols_used" not in fsom.get_cell_data().var.columns:
@@ -602,6 +649,22 @@ def get_features(
     positive_cutoffs=None,
     filenames=None,
 ):
+    """Map FCS files on an existing FlowSOM object
+
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param files: A list of FCS files
+    :type files: list
+    :param level: The level(s) to get features for. Should be 'metaclusters' and/or 'clusters'
+    :type level: np.array
+    :param type: The type(s) of features to get. Should be 'counts', 'percentages', 'MFIs' and/or 'percentages_positive'
+    :type type: np.array
+    :param MFI: A array of markers to get MFIs for
+    :type MFI: np.array
+    :param positive_cutoffs: A dictionary with channels/markers as keys and cutoffs as values
+    :type positive_cutoffs: dict
+    :param filenames: A list of file names
+    """
     n_clus = fsom.get_cell_data().uns["n_nodes"]
     nfiles = len(files)
     i = 0
