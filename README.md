@@ -50,7 +50,7 @@ ff = fs.main.read_FCS("./tests/data/ff.fcs")
 fsom = fs.main.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], xdim=10, ydim=10, n_clus=10)
 
 # Plot the FlowSOM results
-p = fs.pl.plot_stars(fsom, background_values=fsom.get_cluster_data().obs.metaclustering
+p = fs.pl.plot_stars(fsom, background_values=fsom.get_cluster_data().obs.metaclustering)
 p.show()
 ```
 
