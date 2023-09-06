@@ -49,6 +49,13 @@ def test_new_data(fcs):
     assert fsom_new.get_cell_data().shape == (999, 18)
 
 
+def test_flowsom_clustering(fcs):
+    inp = fs.flowsom_clustering(fcs, cols_to_use=[8, 11, 13, 14, 15, 16, 17])
+    assert "FlowSOM_clusters" in inp.obs.keys()
+    assert "FlowSOM_metaclusters" in inp.obs.keys()
+    assert "FlowSOM" in inp.uns.keys()
+
+
 def test_aggregate_flowframes():
     new_ff = fs.pp.aggregate_flowframes(
         ["./tests/data/ff.fcs", "./tests/data/ff.fcs"], c_total=5000, channels=[8, 11, 13, 14, 15, 16, 17]

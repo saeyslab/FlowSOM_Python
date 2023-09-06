@@ -21,7 +21,7 @@ class FlowSOM:
 
     """
 
-    def __init__(self, inp, cols_to_use: np.array = None, n_clus=10, max_meta=None, seed: int = None, **kwargs):
+    def __init__(self, inp, cols_to_use: np.array = None, n_clus=10, seed: int = None, **kwargs):
         """Initialize the FlowSOM AnnData object
 
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
@@ -30,8 +30,6 @@ class FlowSOM:
         :type cols_to_use: np.array
         :param n_clus: The number of metacluster
         :type n_clus: int
-        :param max_meta: To be adapted
-        :type max_meta: int
         :param seed: A fixed seed
         :type seed: int
         """
@@ -423,3 +421,17 @@ class FlowSOM:
 
     def get_cluster_data(self):
         return self.mudata["cluster_data"]
+
+
+def flowsom_clustering(inp, cols_to_use=None, n_clus=10, xdim=10, ydim=10, seed=None, **kwargs):
+    """Perform FlowSOM clustering on an anndata object and returns the anndata
+       object with the FlowSOM clusters and metaclusters added as variable
+
+    :param inp: An anndata or filepath to an FCS file
+    :type inp: ad.AnnData / str
+    """
+    fsom = FlowSOM(inp, cols_to_use=cols_to_use, n_clus=n_clus, xdim=xdim, ydim=ydim, seed=seed, **kwargs)
+    inp.obs["FlowSOM_clusters"] = fsom.mudata["cell_data"].obs["clustering"]
+    inp.obs["FlowSOM_metaclusters"] = fsom.mudata["cell_data"].obs["metaclustering"]
+    inp.uns["FlowSOM"] = {"cols_to_use": cols_to_use, "n_clus": n_clus, "xdim": xdim, "ydim": ydim, "seed": seed}
+    return inp

@@ -44,10 +44,10 @@ Starting from an FCS file that is properly transformed, compensated and checked 
 import FlowSOM as fs
 
 # Load the FCS file
-ff = fs.main.read_FCS("./tests/data/ff.fcs")
+ff = fs.io.read_FCS("./tests/data/ff.fcs")
 
 # Run the FlowSOM algorithm
-fsom = fs.main.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], xdim=10, ydim=10, n_clus=10)
+fsom = fs.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], xdim=10, ydim=10, n_clus=10)
 
 # Plot the FlowSOM results
 p = fs.pl.plot_stars(fsom, background_values=fsom.get_cluster_data().obs.metaclustering)
