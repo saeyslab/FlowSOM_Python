@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 from ..tools import get_markers
+from ..read_write import read_FCS
 
 
 def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
@@ -29,7 +30,7 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
 
     flow_frame = []
     for i, file_path in enumerate(filenames):
-        f = io.read_FCS(file_path)
+        f = read_FCS(file_path)
         if channels is not None:
             f = f[:, list(get_markers(f, channels).keys())]
         cPerFile = min([f.X.shape[0], cFile])

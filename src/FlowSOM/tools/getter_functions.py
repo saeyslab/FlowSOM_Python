@@ -3,7 +3,6 @@ import pandas as pd
 import anndata as ad
 
 import re
-from ..main import FlowSOM
 
 
 def get_channels(obj, markers, exact=True):
@@ -16,8 +15,10 @@ def get_channels(obj, markers, exact=True):
     :param exact: If True, a strict search is performed. If False, regexps can be used.
     :type exact: boolean
     """
-    assert isinstance(obj, FlowSOM) or isinstance(obj, ad.AnnData), f"Please provide an FCS file or a FlowSOM object"
-    if isinstance(obj, FlowSOM):
+    assert obj.__class__.__name__ == "FlowSOM" or isinstance(
+        obj, ad.AnnData
+    ), f"Please provide an FCS file or a FlowSOM object"
+    if obj.__class__.__name__ == "FlowSOM":
         object_markers = np.asarray(
             [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
         )
@@ -27,7 +28,7 @@ def get_channels(obj, markers, exact=True):
                 for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]
             ]
         )
-    elif isinstance(obj, ad.AnnData):
+    else:
         object_markers = np.asarray(obj.uns["meta"]["channels"]["$PnS"])
         object_channels = np.asarray(obj.uns["meta"]["channels"]["$PnN"])
 
@@ -62,8 +63,10 @@ def get_markers(obj, channels, exact=True):
     :param exact: If True, a strict search is performed. If False, regexps can be used.
     :type exact: boolean
     """
-    assert isinstance(obj, FlowSOM) or isinstance(obj, ad.AnnData), f"Please provide an FCS file or a FlowSOM object"
-    if isinstance(obj, FlowSOM):
+    assert obj.__class__.__name__ == "FlowSOM" or isinstance(
+        obj, ad.AnnData
+    ), f"Please provide an FCS file or a FlowSOM object"
+    if obj.__class__.__name__ == "FlowSOM":
         object_markers = np.asarray(
             [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
         )
@@ -73,7 +76,7 @@ def get_markers(obj, channels, exact=True):
                 for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]
             ]
         )
-    if isinstance(obj, ad.AnnData):
+    else:
         object_markers = np.asarray(obj.uns["meta"]["channels"]["$PnS"])
         object_channels = np.asarray(obj.uns["meta"]["channels"]["$PnN"])
 

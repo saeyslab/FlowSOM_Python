@@ -8,7 +8,7 @@ import random
 from ..tools import get_channels, get_markers
 from matplotlib import collections as mc
 from matplotlib import gridspec
-from .plot_helper_functions import *
+from ._plot_helper_functions import *
 
 
 def plot_2D_scatters(

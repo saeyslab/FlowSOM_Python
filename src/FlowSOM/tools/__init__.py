@@ -1,4 +1,4 @@
-from .consensus_clustering import ConsensusCluster
+from ._consensus_clustering import ConsensusCluster
 from .getter_functions import (
     get_channels,
     get_markers,
@@ -8,4 +8,4 @@ from .getter_functions import (
     get_metacluster_percentages_positive,
     get_features,
 )
-from .som import SOM, map_data_to_codes
+from ._som import SOM, map_data_to_codes

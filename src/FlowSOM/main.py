@@ -200,7 +200,7 @@ class FlowSOM:
         pctgs = dict()
         for cl in range(n_nodes):
             cluster_data = df[df[:, 0] == cl, :]  # +1 if cluster starts at 1
-            cv_values.append(np.divide(np.std(cluster_data, axis=0), np.mean(cluster_data, axis=0)))
+            cv_values.append(np.divide(np.nanstd(cluster_data, axis=0), np.nanmean(cluster_data, axis=0)))
             sd_values.append(np.std(cluster_data, axis=0))
             mad_values.append(median_abs_deviation(cluster_data, axis=0))
             pctgs[cl] = cluster_data.shape[0]
