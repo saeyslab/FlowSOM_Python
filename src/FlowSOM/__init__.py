@@ -1,8 +1,10 @@
 from importlib.metadata import version
+from . import tools as tl
+from . import read_write as io
+from . import preprocessing as pp
+from . import plotting as pl
+from .main import FlowSOM
 
-from . import pl
-from . import main
-
-__all__ = ["pl", "main"]
+__all__ = ["plotting", "main"]
 
 __version__ = version("FlowSOM")
