@@ -41,7 +41,7 @@ class FlowSOM:
         self.build_SOM(cols_to_use, **kwargs)
         self.build_MST()
         self.metacluster(n_clus)
-        self.update_derived_values()
+        self._update_derived_values()
 
     def read_input(self, inp):
         """Converts input to a FlowSOM AnnData object
@@ -84,7 +84,7 @@ class FlowSOM:
         self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
 
         self.mudata["cell_data"].uns["n_nodes"] = xdim * ydim
-        self = self.update_derived_values()
+        self = self._update_derived_values()
         self.mudata["cluster_data"].uns["xdim"] = xdim
         self.mudata["cluster_data"].uns["ydim"] = ydim
         self.mudata["cluster_data"].obsm["codes"] = np.array(codes)
@@ -166,7 +166,7 @@ class FlowSOM:
                 seed=seed,
             )
             if mst != 1:
-                nhbrdist = self.dist_mst(codes)
+                nhbrdist = self._dist_mst(codes)
 
         if map:
             clusters, dists = map_data_to_codes(data=data, codes=codes)
@@ -175,7 +175,7 @@ class FlowSOM:
 
         return codes, clusters, dists, xdim, ydim
 
-    def update_derived_values(self):
+    def _update_derived_values(self):
         """Update the derived values such as median values and CV values"""
         df = self.mudata["cell_data"].X  # [self.adata.X[:, 0].argsort()]
         df = np.c_[self.mudata["cell_data"].obs["clustering"], df]
@@ -237,7 +237,7 @@ class FlowSOM:
         self.mudata["cluster_data"].uns["graph"] = MST_graph
         return self
 
-    def dist_mst(self, codes):
+    def _dist_mst(self, codes):
         adjacency = cdist(
             codes,
             codes,
@@ -257,7 +257,6 @@ class FlowSOM:
         :param n_clus: The number of metaclusters
         :type n_clus: int
         """
-        # metaclusters = (self.hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus))
         metaclusters = self.consensus_hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
         self.mudata["cell_data"].uns["n_metaclusters"] = n_clus
         self.mudata["cluster_data"].obs["metaclustering"] = metaclusters.astype(str)
@@ -265,12 +264,6 @@ class FlowSOM:
             [np.array(metaclusters)[int(i)] for i in np.asarray(self.mudata["cell_data"].obs["clustering"])]
         )
         return self
-
-    def hierarchical_clustering(self, data, n_clus, linkage="average"):
-        average = AgglomerativeClustering(n_clusters=n_clus, linkage=linkage)
-        metaclustering = average.fit(data)
-        metaclusters = metaclustering.labels_
-        return metaclusters
 
     def consensus_hierarchical_clustering(
         self, data, n_clus, n_subsamples=100, linkage="average", resample_proportion=0.9
@@ -403,7 +396,7 @@ class FlowSOM:
         clusters, dists = map_data_to_codes(data=data, codes=self.get_cluster_data().obsm["codes"])
         fsom_new.get_cell_data().obsm["distance_to_bmu"] = np.array(dists)
         fsom_new.get_cell_data().obs["clustering"] = np.array(clusters)
-        fsom_new = fsom_new.update_derived_values()
+        fsom_new = fsom_new._update_derived_values()
         metaclusters = self.get_cluster_data().obs["metaclustering"]
         fsom_new.get_cell_data().obs["metaclustering"] = np.asarray(
             [np.array(metaclusters)[int(i)] for i in np.asarray(fsom_new.get_cell_data().obs["clustering"])]
@@ -420,7 +413,7 @@ class FlowSOM:
         """
         fsom_subset = self
         fsom_subset.mudata.mod["cell_data"] = fsom_subset.mudata["cell_data"][ids, :]
-        fsom_subset = fsom_subset.update_derived_values()
+        fsom_subset = fsom_subset._update_derived_values()
         return fsom_subset
 
     def get_cell_data(self):
@@ -848,3 +841,22 @@ def read_FCS(filepath):
         f.var.rename(index=index_markers, inplace=True)
         f.uns["meta"]["channels"]["$PnS"] = [index_markers[key] for key in f.uns["meta"]["channels"].index]
     return f
+
+
+def normalize_estimate_logicle(adata, channels, m=4.5, q=0.05):
+    assert isinstance(adata, ad.AnnData), f"Please provide an AnnData object"
+    assert isinstance(channels, list), f"Please provide a list of channels"
+    channels = list(get_markers(adata, channels).keys())
+    assert all([i in adata.var_names for i in channels]), f"Channels should be in the AnnData object"
+    neg_marker_quantiles = [
+        np.quantile(adata[:, channel].X[adata[:, channel].X < 0], q) if (adata[:, channel].X < 0).any() else 0.5
+        for channel in channels
+    ]
+    neg_marker_quantiles = pd.Series(neg_marker_quantiles, index=channels, dtype=float)
+    max_range = adata.var["$PnR"][channels].astype(float)
+    w = (m - np.log10(max_range / np.abs(neg_marker_quantiles))) / 2
+    for channel in channels:
+        adata[:, channel].X = pm.tools.normalize_logicle(
+            adata[:, channel], t=max_range[channel], m=m, a=0, w=w[channel], inplace=False
+        ).X
+    return adata
