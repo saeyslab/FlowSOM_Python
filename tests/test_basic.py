@@ -1,8 +1,8 @@
-import FlowSOM
+import FlowSOM as fs
 
 
 def test_package_has_version():
-    FlowSOM.__version__
+    fs.__version__
 
 
 def test_fcs(FlowSOM_res):
@@ -10,11 +10,11 @@ def test_fcs(FlowSOM_res):
 
 
 def test_FlowSOM_type(FlowSOM_res):
-    assert isinstance(FlowSOM_res, FlowSOM.main.FlowSOM)
+    assert isinstance(FlowSOM_res, fs.FlowSOM)
 
 
 def test_plot_stars(FlowSOM_res):
-    pl = FlowSOM.pl.plot_stars(
+    pl = fs.pl.plot_stars(
         FlowSOM_res,
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
         view="MST",
@@ -24,7 +24,7 @@ def test_plot_stars(FlowSOM_res):
 
 
 def test_plot_marker(FlowSOM_res):
-    pl = FlowSOM.pl.plot_marker(
+    pl = fs.pl.plot_marker(
         FlowSOM_res,
         marker=["CD3"],
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
@@ -35,7 +35,7 @@ def test_plot_marker(FlowSOM_res):
 
 
 def test_plot_pies(FlowSOM_res, gating_results):
-    pl = FlowSOM.pl.plot_pies(
+    pl = fs.pl.plot_pies(
         FlowSOM_res,
         cell_types=gating_results,
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
@@ -44,13 +44,13 @@ def test_plot_pies(FlowSOM_res, gating_results):
 
 
 def test_new_data(fcs):
-    fsom = FlowSOM.main.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
+    fsom = fs.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
     fsom_new = fsom.new_data(fcs[1001:2000])
     assert fsom_new.get_cell_data().shape == (999, 18)
 
 
 def test_aggregate_flowframes():
-    new_ff = FlowSOM.main.aggregate_flowframes(
+    new_ff = fs.pp.aggregate_flowframes(
         ["./tests/data/ff.fcs", "./tests/data/ff.fcs"], c_total=5000, channels=[8, 11, 13, 14, 15, 16, 17]
     )
     assert new_ff.shape == (5000, 7)
@@ -58,12 +58,12 @@ def test_aggregate_flowframes():
 
 def test_flowsom_subset(FlowSOM_res):
     fsom_subset = FlowSOM_res.subset(FlowSOM_res.get_cell_data().obs["metaclustering"] == 4)
-    FlowSOM.pl.plot_stars(fsom_subset, background_values=fsom_subset.get_cluster_data().obs["metaclustering"])
+    fs.pl.plot_stars(fsom_subset, background_values=fsom_subset.get_cluster_data().obs["metaclustering"])
     assert fsom_subset.get_cell_data().shape == (sum(FlowSOM_res.get_cell_data().obs["metaclustering"] == 4), 18)
 
 
 def test_get_features(FlowSOM_res):
-    FlowSOM.main.get_features(
+    fs.tl.get_features(
         FlowSOM_res,
         ["./tests/data/ff.fcs", "./tests/data/ff.fcs"],
         level=["clusters", "metaclusters"],
