@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import matplotlib.colors
-import random
 
 from ..tools import get_channels, get_markers
 from matplotlib import collections as mc
 from matplotlib import gridspec
 from ._plot_helper_functions import *
+from scipy.stats import gaussian_kde
 
 
 def plot_2D_scatters(
@@ -66,33 +66,30 @@ def plot_2D_scatters(
     assert (
         "marker" in xy_labels or "channel" in xy_labels
     ), f'xy_labels should be a list containing "marker" and/or "channel".'
+    assert isinstance(clusters[0], list), f"clusters should be a list of lists."
+    assert isinstance(metaclusters[0], list), f"metaclusters should be a list of lists."
+    assert isinstance(channelpairs[0], list), f"channelpairs should be a list of lists."
 
-    metacluster = fsom.get_cell_data().obs["metaclustering"]
-
+    cell_metacluster = fsom.get_cell_data().obs["metaclustering"]
+    n_metaclusters = fsom.get_cell_data().uns["n_metaclusters"]
     cell_cluster = fsom.get_cell_data().obs["clustering"]
-
-    bgI = random.sample(
-        range(fsom.get_cell_data().X.shape[0]), min([fsom.get_cell_data().X.shape[0], max_background_points])
+    metacluster = fsom.get_cluster_data().obs["metaclustering"]
+    bgI = np.random.choice(
+        range(fsom.get_cell_data().X.shape[0]),
+        min([fsom.get_cell_data().X.shape[0], max_background_points]),
+        replace=False,
     )
-
     if clusters is None:
         clusters = []
     if metaclusters is None:
         metaclusters = []
-    # fig, axs = plt.subplots(len(channelpairs), len(clusters) + len(metaclusters))
     fig = plt.figure()
     spec = gridspec.GridSpec(ncols=len(channelpairs), nrows=len(clusters) + len(metaclusters))
     subsets = {"Cluster": np.array(clusters), "Metacluster": np.array(metaclusters)}
     for i, group in enumerate(subsets.keys()):
-        if len(subsets[group] == 0):
-            next
         for j, subset in enumerate(subsets[group]):
-            """
-            color += 1
-            """
-            rowI = i + j
-            n = int(subset)
-
+            rowI = (i * len(subsets)) + j
+            n = [int(x) for x in subset]
             for k, channelpair in enumerate(channelpairs):
                 channelpair = list(get_channels(fsom, channelpair).keys())
                 df_bg = np.array(fsom.get_cell_data().X[bgI, :])
@@ -103,11 +100,29 @@ def plot_2D_scatters(
                     df_ss = fsom.get_cell_data().X[clusters_OI, :]
                     df_ss = df_ss[:, indices_markers]
                     df_ss = np.c_[df_ss, cell_cluster[clusters_OI]]
+                    col = np.asarray([gg_color_hue()(i) for i in range(n_metaclusters)])[
+                        np.array([int(i) for i in metacluster])[n]
+                    ]
+                    col_dict = {i: j for i, j in zip(np.unique(df_ss[:, 2]), col)}
+                    cols = [col_dict[i] for i in df_ss[:, 2]]
 
+                    df_c = np.c_[fsom.get_cluster_data()[n, indices_markers].X, n]
                 else:
-                    df_ss = fsom.get_cell_data().X[np.isin(metacluster.astype(int), n), :]
+                    metaclusters_OI = np.isin(cell_metacluster.astype(int), n)
+                    df_ss = fsom.get_cell_data().X[metaclusters_OI, :]
                     df_ss = df_ss[:, indices_markers]
-
+                    df_ss = np.c_[df_ss, cell_metacluster[metaclusters_OI]]
+                    col = np.asarray([gg_color_hue()(i) for i in range(n_metaclusters)])[n]
+                    col_dict = {i: j for i, j in zip(np.unique(df_ss[:, 2]), col)}
+                    cols = [col_dict[i] for i in df_ss[:, 2]]
+                    cl_in_mcl = np.where(np.isin(metacluster.astype(int), n))[0]
+                    df_c = np.c_[fsom.get_cluster_data()[cl_in_mcl, indices_markers].X, cl_in_mcl]
+                plural = "s" if len(subset) > 1 else ""
+                cl_or_mcl = group + plural + ": "
+                subset_names = (
+                    ", ".join([str(i) for i in subset]) if group == "Cluster" else ", ".join([str(i) for i in subset])
+                )
+                title = cl_or_mcl + subset_names
                 if len(xy_labels) == 1 and xy_labels[0] == "channel":
                     xy_label = list(get_channels(fsom, channelpair).keys())
                 elif len(xy_labels) == 1 and xy_labels[0] == "marker":
@@ -116,12 +131,22 @@ def plot_2D_scatters(
                     channel_label = list(get_channels(fsom, channelpair).keys())
                     marker_label = list(get_markers(fsom, channelpair).keys())
                     xy_label = [marker_label[i] + " (" + channel_label[i] + ")" for i in range(len(channel_label))]
-                ssI = random.sample(range(df_ss.shape[0]), min([df_ss.shape[0], max_points]))
+                ssI = np.random.choice(range(df_ss.shape[0]), min([df_ss.shape[0], max_points]), replace=False)
                 df_ss = df_ss[ssI, :]
-                ax = fig.add_subplot(spec[rowI + (rowI + k)])
+                cols = np.array(cols)[ssI, :]
+                ax = fig.add_subplot(spec[rowI, k])
                 ax.scatter(df_bg[:, 0], df_bg[:, 1], c="grey", s=size_background_points)
-                ax.scatter(df_ss[:, 0], df_ss[:, 1], c="red", s=size_points)
+                if density:
+                    cols = gaussian_kde(df_ss[:, [0, 1]].T)(df_ss[:, [0, 1]].T)
+                ax.scatter(df_ss[:, 0], df_ss[:, 1], c=cols, s=size_points)
+                if centers:
+                    ax.scatter(df_c[:, 0], df_c[:, 1], c="black", s=10)
                 ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
+                if x_lim is not None:
+                    ax.set_xlim(x_lim)
+                if y_lim is not None:
+                    ax.set_ylim(y_lim)
+                ax.set_title(title)
     return fig
 
 

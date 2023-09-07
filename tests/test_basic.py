@@ -43,6 +43,18 @@ def test_plot_pies(FlowSOM_res, gating_results):
     pl.savefig("plotpies.pdf")
 
 
+def test_plot_2D_scatters(FlowSOM_res):
+    pl = fs.pl.plot_2D_scatters(
+        FlowSOM_res,
+        channelpairs=[["CD3", "CD4"], ["CD19", "TCRb"]],
+        clusters=[[1, 2], [3]],
+        metaclusters=[[4], [5, 6]],
+        density=False,
+        centers=True,
+    )
+    pl.savefig("plot2Dscatters.pdf")
+
+
 def test_new_data(fcs):
     fsom = fs.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
     fsom_new = fsom.new_data(fcs[1001:2000])
