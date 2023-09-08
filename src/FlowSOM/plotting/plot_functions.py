@@ -380,3 +380,14 @@ def plot_pies(
         plt.title(title)
     plt.axis("off")
     return fig
+
+
+def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
+    """Makes a visual FlowSOMmary of a FlowSOM object
+
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param plot_file: File name of the plot
+    :type plot_file: str
+    """
+    pass
