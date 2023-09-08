@@ -7,4 +7,5 @@ from .plot_functions import (
     plot_pies,
     plot_stars,
     plot_variable,
+    FlowSOMmary,
 )

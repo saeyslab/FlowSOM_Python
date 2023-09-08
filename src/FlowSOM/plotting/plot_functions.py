@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from scanpy.plotting import embedding
+from scanpy.tools import tsne, pca
 
 import matplotlib.colors
 
@@ -197,7 +199,9 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     plot_labels(fsom=fsom, labels=numbers, max_node_size=max_node_size, **kwargs)
 
 
-def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, **kwargs):
+def plot_variable(
+    fsom, variable, cmap=FlowSOM_colors(), labels=None, text_size=5, text_color="black", lim=None, title=None, **kwargs
+):
     """Plot FlowSOM grid or tree, colored by node values given in variable
 
     :param fsom: A FlowSOM object
@@ -216,6 +220,9 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     assert (
         variable.shape[0] == fsom.get_cell_data().uns["n_nodes"]
     ), f"Length of variable should be the same as the number of nodes in your FlowSOM object"
+    if variable.dtype == "object":
+        string_to_number = {string: index for index, string in enumerate(np.unique(variable))}
+        variable = np.asarray([string_to_number[string] for string in variable])
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     nodes = add_nodes(layout, scaled_node_size)
     n = mc.PatchCollection(nodes, cmap=cmap)
@@ -226,6 +233,8 @@ def plot_variable(fsom, variable, cmap=FlowSOM_colors(), lim=None, title=None, *
     n.set_linewidth(0.5)
     n.set_zorder(2)
     ax.add_collection(n)
+    if labels is not None:
+        ax = add_text(ax, layout, labels, text_size=text_size, text_color="black", ha=["center"], va=["center"])
     ax, fig = add_legend(
         fig=fig, ax=ax, data=variable, title="Marker", cmap=cmap, location="upper left", bbox_to_anchor=(1.04, 1)
     )

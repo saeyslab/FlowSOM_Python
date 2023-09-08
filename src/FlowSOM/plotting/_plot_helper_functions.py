@@ -234,7 +234,7 @@ def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max
     e.set_linewidth(1)
     e.set_zorder(0)
     ax.add_collection(e)
-    ax = add_text(ax, dfLabels, markers, horizontal_alignment=dfLabels[:, 2], text_size=5)
+    ax = add_text(ax, dfLabels, markers, ha=dfLabels[:, 2], text_size=5)
     l = mc.PatchCollection(add_wedges(np.array((x_coord, coords[1])), star_height), cmap=cmap)
     l.set_array(range(n_markers))
     l.set_edgecolor("black")
@@ -277,11 +277,13 @@ def auto_max_node_size(layout, overlap):
     return min_distance / 2 * overlap
 
 
-def add_text(ax, layout, text, text_size=20, text_color="black", horizontal_alignment=["right"]):
-    if len(horizontal_alignment) == 1:
-        horizontal_alignment = np.repeat(horizontal_alignment, len(text))
+def add_text(ax, layout, text, text_size=20, text_color="black", ha=["right"], va=["center"]):
+    if len(ha) == 1:
+        ha = np.repeat(ha, len(text))
+    if len(va) == 1:
+        va = np.repeat(va, len(text))
     for i, row in enumerate(layout):
-        ax.text(row[0], row[1], text[i], size=text_size, horizontalalignment=horizontal_alignment[i], clip_on=False)
+        ax.text(row[0], row[1], text[i], size=text_size, ha=ha[i], va=va[i], c=text_color, clip_on=False)
     return ax
 
 

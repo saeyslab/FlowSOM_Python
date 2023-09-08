@@ -43,6 +43,16 @@ def test_plot_pies(FlowSOM_res, gating_results):
     pl.savefig("plotpies.pdf")
 
 
+def test_plot_variable(FlowSOM_res):
+    pl = fs.pl.plot_variable(
+        FlowSOM_res,
+        variable=FlowSOM_res.get_cluster_data().obs["metaclustering"],
+        labels=FlowSOM_res.get_cluster_data().obs["metaclustering"],
+        cmap=fs.pl.gg_color_hue(),
+    )
+    pl.savefig("plotvariable.pdf")
+
+
 def test_plot_2D_scatters(FlowSOM_res):
     pl = fs.pl.plot_2D_scatters(
         FlowSOM_res,
@@ -91,6 +101,10 @@ def test_get_features(FlowSOM_res):
         positive_cutoffs={"CD3": 2, "PE-A": 2},
         filenames=None,
     )
+
+
+def test_FlowSOMmary(FlowSOM_res):
+    fs.pl.FlowSOMmary(FlowSOM_res)
 
 
 def test_FlowSOM_class(FlowSOM_res):
