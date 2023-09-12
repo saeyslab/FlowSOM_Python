@@ -245,6 +245,7 @@ def get_features(
     :param filenames: A list of file names
     """
     n_clus = fsom.get_cell_data().uns["n_nodes"]
+    n_mcl = fsom.get_cell_data().uns["n_metaclusters"]
     nfiles = len(files)
     i = 0
     if filenames is not None:
@@ -273,7 +274,6 @@ def get_features(
     C_outliers = np.zeros((nfiles, n_clus))
 
     if "MFIs" in type:
-        n_mcl = fsom.get_cell_data().uns["n_metaclusters"]
         n_marker = len(MFI)
         C_MFIs = np.zeros((nfiles, n_marker * n_clus))
         MC_MFIs = np.zeros((nfiles, n_marker * n_mcl))

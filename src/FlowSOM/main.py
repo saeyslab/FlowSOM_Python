@@ -1,9 +1,8 @@
 import numpy as np
 import pandas as pd
 import anndata as ad
-import pytometry as pm
 import igraph as ig
-
+import copy
 
 import random
 
@@ -381,7 +380,7 @@ class FlowSOM:
         madAllowed * MAD. Default is 4.
         :type mad_allowed: int
         """
-        fsom_new = FlowSOM(inp)
+        fsom_new = copy.deepcopy(FlowSOM(inp))
         fsom_new.get_cell_data().var["pretty_colnames"] = self.get_cell_data().var["pretty_colnames"]
         fsom_new.get_cell_data().var["cols_used"] = self.get_cell_data().var["cols_used"]
         fsom_new.get_cluster_data().uns["xdim"] = self.get_cluster_data().uns["xdim"]
@@ -411,7 +410,7 @@ class FlowSOM:
         :param ids: An array of ids to subset
         :type ids: np.array
         """
-        fsom_subset = self
+        fsom_subset = copy.deepcopy(self)
         fsom_subset.mudata.mod["cell_data"] = fsom_subset.mudata["cell_data"][ids, :]
         fsom_subset = fsom_subset._update_derived_values()
         return fsom_subset
