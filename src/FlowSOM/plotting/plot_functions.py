@@ -15,15 +15,15 @@ from scipy.stats import gaussian_kde
 
 def plot_2D_scatters(
     fsom,
-    channelpairs: np.array,
-    clusters: np.array = None,
-    metaclusters: np.array = None,
+    channelpairs: list,
+    clusters: list = None,
+    metaclusters: list = None,
     max_background_points: int = 3000,
     size_background_points: float = 0.5,
     max_points: int = 1000,
     size_points: float = 0.5,
-    x_lim: np.array = None,
-    y_lim: np.array = None,
+    x_lim: tuple = None,
+    y_lim: tuple = None,
     xy_labels: list = ["marker"],
     density: bool = True,
     centers: bool = True,
@@ -33,32 +33,32 @@ def plot_2D_scatters(
 ):
     """Function to draw 2D scatter plots of FlowSOM (meta)clusters
 
-    :param fsom:
-    :type fsom:
-    :param channelpairs:
-    :type channelpairs:
-    :param clusters:
-    :type clusters:
-    :param metaclusters:
-    :type metaclusters:
-    :param max_background_points:
-    :type max_background_points:
-    :param size_background_points:
-    :type size_background_points:
-    :param max_points:
-    :type max_points:
-    :param size_points:
-    :type size_points:
-    :param x_lim:
-    :type x_lim:
-    :param y_lim:
-    :type y_lim:
-    :param xy_labels:
-    :type xy_labels:
-    :param density:
+    :param fsom: A FlowSOM object
+    :type fsom: FlowSOM
+    :param channelpairs: A list of list with channels/markers to plot
+    :type channelpairs: list
+    :param clusters: A list of lists with cluster ids to plot
+    :type clusters: list
+    :param metaclusters: A list of lists with metacluster ids to plot
+    :type metaclusters: list
+    :param max_background_points: Maximum number of background points to plot. Default is 3000.
+    :type max_background_points: int
+    :param size_background_points: Size of background points. Default is 0.5.
+    :type size_background_points: float
+    :param max_points: Maximum number of points to plot. Default is 1000.
+    :type max_points: int
+    :param size_points: Size of points. Default is 0.5.
+    :type size_points: float
+    :param x_lim: Limits for the x-axis. Default is None.
+    :type x_lim: tuple
+    :param y_lim: Limits for the y-axis. Default is None.
+    :type y_lim: tuple
+    :param xy_labels: Labels for the x and y axis. Default is ["marker"]. Can be 'marker' and/or 'channel'.
+    :type xy_labels: list
+    :param density: Whether to plot density or not. Default is True.
     :type density: boolean
-    :param centers:
-    :type centers:
+    :param centers: Whether to plot centers or not. Default is True.
+    :type centers: boolean
     :param colors:
     :type colors:
     :param plot_file:
@@ -68,8 +68,10 @@ def plot_2D_scatters(
     assert (
         "marker" in xy_labels or "channel" in xy_labels
     ), f'xy_labels should be a list containing "marker" and/or "channel".'
-    assert isinstance(clusters[0], list), f"clusters should be a list of lists."
-    assert isinstance(metaclusters[0], list), f"metaclusters should be a list of lists."
+    if clusters is not None:
+        assert isinstance(clusters[0], list), f"clusters should be a list of lists."
+    if metaclusters is not None:
+        assert isinstance(metaclusters[0], list), f"metaclusters should be a list of lists."
     assert isinstance(channelpairs[0], list), f"channelpairs should be a list of lists."
 
     cell_metacluster = fsom.get_cell_data().obs["metaclustering"]
@@ -86,11 +88,11 @@ def plot_2D_scatters(
     if metaclusters is None:
         metaclusters = []
     fig = plt.figure()
+    rowI = 0
     spec = gridspec.GridSpec(ncols=len(channelpairs), nrows=len(clusters) + len(metaclusters))
-    subsets = {"Cluster": np.array(clusters), "Metacluster": np.array(metaclusters)}
-    for i, group in enumerate(subsets.keys()):
-        for j, subset in enumerate(subsets[group]):
-            rowI = (i * len(subsets)) + j
+    subsets = {"Cluster": np.array(clusters, dtype="object"), "Metacluster": np.array(metaclusters, dtype="object")}
+    for group in subsets.keys():
+        for subset in subsets[group]:
             n = [int(x) for x in subset]
             for k, channelpair in enumerate(channelpairs):
                 channelpair = list(get_channels(fsom, channelpair).keys())
@@ -138,9 +140,11 @@ def plot_2D_scatters(
                 cols = np.array(cols)[ssI, :]
                 ax = fig.add_subplot(spec[rowI, k])
                 ax.scatter(df_bg[:, 0], df_bg[:, 1], c="grey", s=size_background_points)
+                cmap = None
                 if density:
                     cols = gaussian_kde(df_ss[:, [0, 1]].T)(df_ss[:, [0, 1]].T)
-                ax.scatter(df_ss[:, 0], df_ss[:, 1], c=cols, s=size_points)
+                    cmap = "jet"
+                ax.scatter(df_ss[:, 0], df_ss[:, 1], c=cols, s=size_points, cmap=cmap)
                 if centers:
                     ax.scatter(df_c[:, 0], df_c[:, 1], c="black", s=10)
                 ax.set(xlabel=xy_label[0], ylabel=xy_label[1])
@@ -149,6 +153,8 @@ def plot_2D_scatters(
                 if y_lim is not None:
                     ax.set_ylim(y_lim)
                 ax.set_title(title)
+            rowI += 1
+
     return fig
 
 
@@ -234,7 +240,7 @@ def plot_variable(
     n.set_zorder(2)
     ax.add_collection(n)
     if labels is not None:
-        ax = add_text(ax, layout, labels, text_size=text_size, text_color="black", ha=["center"], va=["center"])
+        ax = add_text(ax, layout, labels, text_size=text_size, text_color=text_color, ha=["center"], va=["center"])
     ax, fig = add_legend(
         fig=fig, ax=ax, data=variable, title="Marker", cmap=cmap, location="upper left", bbox_to_anchor=(1.04, 1)
     )
@@ -253,7 +259,7 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
     :param marker: A marker to plot. Can be a channel/marker/index.
     :type marker: str, int
     :param ref_markers: Is used to determine relative scale of the marker that will be plotted. Default are all markers used in the clustering.
-    :type ref_markers: np.array
+    :type ref_markers: np.array,  list
     :param lim: Limits for the color scale
     :type lim: tuple
     :param cmap: A colormap to use
