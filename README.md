@@ -33,7 +33,7 @@ pip install FlowSOM
 1. Install the latest development version:
 
 ```bash
-pip install git+https://github.com/artuurC/FlowSOM.git@main
+pip install git+https://github.com/saeyslab/FlowSOM_Python
 ```
 
 ## Usage
