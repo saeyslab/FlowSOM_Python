@@ -76,4 +76,4 @@ class ConsensusCluster:
         """
         Predicts on the consensus matrix, for best found cluster number
         """
-        return self.cluster_(n_clusters=n_clus, linkage=self.linkage, affinity="precomputed").fit_predict(1 - self.Mk)
+        return self.cluster_(n_clusters=n_clus, linkage=self.linkage, metric="precomputed").fit_predict(1 - self.Mk)
