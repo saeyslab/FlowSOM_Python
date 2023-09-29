@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from scanpy.plotting import embedding
-from scanpy.tools import tsne, pca
+import seaborn as sns
+import matplotlib.colors
+import matplotlib.backends.backend_pdf
 
 import matplotlib.colors
 
@@ -11,6 +12,8 @@ from matplotlib import collections as mc
 from matplotlib import gridspec
 from ._plot_helper_functions import *
 from scipy.stats import gaussian_kde
+from scanpy.tools import umap
+from scanpy.preprocessing import neighbors
 
 
 def plot_2D_scatters(
@@ -396,4 +399,132 @@ def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
     :param plot_file: File name of the plot
     :type plot_file: str
     """
-    pass
+    # Initializing
+    metacluster_present = "cluster_data" in fsom.mudata.mod.keys()
+    if metacluster_present:
+        mfis = fsom.get_cluster_data().uns["metacluster_MFIs"]
+        metaclusters = fsom.get_cell_data().obs["metaclustering"]
+        n_metaclusters = fsom.get_cell_data().uns["n_metaclusters"]
+    clusters = fsom.get_cell_data().obs["clustering"]
+    n_clusters = np.arange(fsom.get_cell_data().uns["n_nodes"])
+    file_present = False
+    plot_dict = dict()
+
+    # Plot fsom trees and grids
+    for view in ["MST", "grid"]:
+        if metacluster_present:
+            plot_dict["stars_" + view] = plot_stars(
+                fsom,
+                background_values=fsom.get_cluster_data().obs.metaclustering,
+                title="FlowSOM " + view,
+                view=view,
+            )
+
+            plot_dict["mcl_labels_" + view] = plot_variable(
+                fsom,
+                variable=fsom.get_cluster_data().obs.metaclustering,
+                equal_node_size=True,
+                view=view,
+                labels=fsom.get_cluster_data().obs.metaclustering,
+                cmap=gg_color_hue(),
+                title="FlowSOM Metaclusters",
+            )
+
+            plot_dict["cl_labels_" + view] = plot_variable(
+                fsom,
+                variable=fsom.get_cluster_data().obs.metaclustering,
+                equal_node_size=True,
+                view=view,
+                labels=np.arange(fsom.get_cell_data().uns["n_nodes"]),
+                cmap=gg_color_hue(),
+                title="FlowSOM Clusters",
+            )
+        else:
+            plot_dict["stars_" + view] = plot_stars(fsom, title="FlowSOM" + view, view=view)
+            plot_dict["labels_" + view] = plot_numbers(fsom, view=view, title="FlowSOM Clusters", equal_node_size=True)
+
+    # Plot Markers
+    ref_markers_bool = fsom.get_cell_data().var["cols_used"]
+    ref_markers = fsom.get_cell_data().var_names[ref_markers_bool]
+    for marker in ref_markers:
+        plot_dict["marker_" + marker] = plot_marker(
+            fsom,
+            [marker],
+            ref_markers=ref_markers,
+            equal_node_size=True,
+            title=list(get_markers(fsom, [marker]).keys())[0],
+        )
+
+    # File distribution
+    if file_present:
+        pass
+
+    # t-SNE
+    subset_fsom = fsom.get_cell_data()[
+        np.random.choice(range(fsom.get_cell_data().shape[0]), 5000, replace=False),
+        fsom.get_cell_data().var_names[ref_markers_bool],
+    ]
+    subset_fsom
+    neighbors(subset_fsom)
+    umap(subset_fsom)
+
+    for marker in ref_markers:
+        fig, ax = plt.subplots()
+        ax.scatter(
+            x=subset_fsom.obsm["X_umap"][:, 0],
+            y=subset_fsom.obsm["X_umap"][:, 1],
+            c=subset_fsom.to_df().loc[:, marker],
+        )
+        ax.set_title("UMAP: " + list(get_markers(fsom, [marker]).keys())[0])
+        plot_dict["umap_" + marker] = fig
+    if metacluster_present:
+        subset_fsom.obs["metaclustering"] = subset_fsom.obs["metaclustering"].astype(str)
+        colors = {
+            i: j
+            for i, j in zip(
+                np.unique(subset_fsom.obs["metaclustering"]),
+                gg_color_hue()(np.linspace(0, 1, n_metaclusters)),
+            )
+        }
+        fig, ax = plt.subplots()
+        ax.scatter(
+            x=subset_fsom.obsm["X_umap"][:, 0],
+            y=subset_fsom.obsm["X_umap"][:, 1],
+            c=subset_fsom.obs["metaclustering"].map(colors),
+        )
+        ax.set_title("UMAP: metaclustering")
+        plot_dict["umap_metaclustering"] = fig
+
+    # Heatmap
+    data_heatmap = fsom.get_cluster_data().uns["metacluster_MFIs"]
+    data_heatmap.columns = fsom.get_cluster_data().var_names
+    data_heatmap_subset = data_heatmap.loc[:, fsom.get_cell_data().var.cols_used.to_list()]
+    plot_dict["heatmap"] = sns.clustermap(data_heatmap_subset, z_score=1, annot=data_heatmap_subset, cbar=True).fig
+
+    # Tables
+    table1 = pd.DataFrame(
+        {
+            "Total number of cells": [fsom.get_cell_data().shape[0]],
+            "Total number of metaclusters": [n_metaclusters],
+            "Total number of clusters": len(n_clusters),
+            "Markers used for FlowSOM": ", ".join(
+                fsom.get_cell_data().var["pretty_colnames"][ref_markers_bool].to_list()
+            ),
+        }
+    ).transpose()
+    fig, ax = plt.subplots(1, 1)
+    ax.axis("tight")
+    ax.axis("off")
+    ax.table(
+        cellText=table1.values,
+        rowLabels=table1.index,
+        colLabels=["FlowSOMmary"],
+        loc="center",
+    )
+    plot_dict["table1"] = fig
+
+    # Plot
+    pdf = matplotlib.backends.backend_pdf.PdfPages(plot_file)
+    for fig in plot_dict.keys():
+        pdf.savefig(plot_dict[fig])
+    pdf.close()
