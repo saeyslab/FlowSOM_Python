@@ -60,8 +60,7 @@ See the [changelog][changelog].
 
 ## Contact
 
-For questions and help requests, you can reach out in the [scverse discourse][scverse-discourse].
-If you found a bug, please use the [issue tracker][issue-tracker].
+For questions and help requests or if you found a bug, please use the [issue tracker][issue-tracker].
 
 ## Citation
 If you use `FlowSOM` in your work, please cite the following paper:
@@ -70,7 +69,6 @@ If you use `FlowSOM` in your work, please cite the following paper:
 
 > DOI: 10.1002/cyto.a.22625
 
-[scverse-discourse]: https://discourse.scverse.org/
 [issue-tracker]: https://github.com/artuurC/FlowSOM/issues
 [changelog]: https://FlowSOM.readthedocs.io/latest/changelog.html
 [link-docs]: https://FlowSOM.readthedocs.io
