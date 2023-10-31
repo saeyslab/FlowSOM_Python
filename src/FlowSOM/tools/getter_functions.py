@@ -90,7 +90,10 @@ def get_markers(obj, channels, exact=True):
             i_marker = np.asarray([i for i, c in enumerate(object_channels) if re.search(channel, c) is not None])
         if len(i_marker) != 0:
             for i in i_marker:
-                markernames[object_markers[i]] = object_channels[i]
+                if len(object_markers[i]) == 0:
+                    markernames[object_channels[i]] = object_channels[i]
+                else:
+                    markernames[object_markers[i]] = object_channels[i]
         else:
             i_marker = np.asarray([i for i, m in enumerate(object_markers) if re.search(channel, m) is not None])
             if len(i_marker) != 0:
