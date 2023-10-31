@@ -2,12 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import anndata as ad
 import matplotlib.colors
 import matplotlib.backends.backend_pdf
 
 import matplotlib.colors
 
 from ..tools import get_channels, get_markers
+from ..preprocessing import aggregate_flowframes
+from ..read_write import read_FCS
 from matplotlib import collections as mc
 from matplotlib import gridspec
 from ._plot_helper_functions import *
@@ -90,7 +93,7 @@ def plot_2D_scatters(
         clusters = []
     if metaclusters is None:
         metaclusters = []
-    fig = plt.figure()
+    fig = plt.figure(figsize=(len(channelpairs) * 2, (len(clusters) + len(metaclusters)) * 2))
     rowI = 0
     spec = gridspec.GridSpec(ncols=len(channelpairs), nrows=len(clusters) + len(metaclusters))
     subsets = {"Cluster": np.array(clusters, dtype="object"), "Metacluster": np.array(metaclusters, dtype="object")}
@@ -158,6 +161,80 @@ def plot_2D_scatters(
                 ax.set_title(title)
             rowI += 1
 
+    return fig
+
+
+def plot_file_scatters(
+    input,
+    file_id="File",
+    channels=None,
+    y_lim=None,
+    y_label="marker",
+    quantiles=None,
+    names=None,
+    groups=None,
+    color=None,
+    legend=False,
+    max_points=50000,
+    n_col=None,
+    nrow=None,
+    width=None,
+    height=None,
+    silent=None,
+    plot_file="file_scatters.png",
+):
+    if color is not None and groups is not None and len(np.unique(groups)) != len(color):
+        raise ValueError("Number of colors should be equal to the number of groups")
+
+    if color is not None and groups is None and len(color) != 1:
+        raise ValueError("Number of colors should be equal to 1")
+
+    if isinstance(input, ad.AnnData):
+        if channels is None:
+            channels = input.var.channel.to_numpy()
+        ff = input
+        data = input[:, [channels, file_id]].to_df()
+        file_values = data[:, file_id]
+        input = np.unique(file_values)
+    else:
+        if channels is None:
+            channels = read_FCS(input[0]).var.channel.to_numpy()
+        ff = aggregate_flowframes(input, c_total=max_points, channels=channels)
+        data = ff.to_df()
+        file_values = ff.obs[file_id]
+
+    subset = np.random.choice(range(data.shape[0]), min([max_points, data.shape[0]]), replace=False)
+    data = data.iloc[subset, :]
+    file_values = file_values[subset]
+
+    if names is not None and len(np.unique(file_values)) != len(names):
+        raise ValueError("Number of names should be equal to the number of files")
+    if groups is not None and len(np.unique(file_values)) != len(groups):
+        raise ValueError("Number of groups should be equal to the number of files")
+
+    if names is None:
+        names = range(len(input))
+
+    if groups is None:
+        groups = np.repeat("0", len(np.unique(file_values)))
+
+    spec = gridspec.GridSpec(ncols=1, nrows=len(channels))
+    fig = plt.figure(figsize=(len(np.unique(file_values)) * 2, len(channels) * 1))
+    for i, channel in enumerate(channels):
+        if len(y_label) == 1 and y_label[0] == "channel":
+            y_label = list(get_channels(ff, [channel]).keys())
+        elif len(y_label) == 1 and y_label[0] == "marker":
+            y_label = list(get_markers(ff, [channel]).keys())
+        else:
+            channel_label = list(get_channels(ff, [channel]).keys())
+            marker_label = list(get_markers(ff, [channel]).keys())
+            y_label = [marker_label[i] + " (" + channel_label[i] + ")" for i in range(len(channel_label))]
+        ax = fig.add_subplot(spec[i, 0])
+        marker = list(get_markers(ff, [channel]).keys())[0]
+        ax.scatter(np.random.normal(file_values, 0.1, data.shape[0]), data.loc[:, marker], s=0.5)
+        if y_lim is not None:
+            ax.set_ylim(y_lim)
+        ax.set(ylabel=y_label)
     return fig
 
 

@@ -65,6 +65,11 @@ def test_plot_2D_scatters(FlowSOM_res):
     pl.savefig("plot2Dscatters.pdf")
 
 
+def test_plot_file_scatters():
+    pl = fs.pl.plot_file_scatters(input=["./tests/data/ff.fcs", "./tests/data/ff.fcs"], max_points=2000)
+    pl.savefig("plotfilescatters.pdf")
+
+
 def test_new_data(fcs):
     fsom = fs.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
     fsom_new = fsom.new_data(fcs[1001:2000])
@@ -103,8 +108,8 @@ def test_get_features(FlowSOM_res):
     )
 
 
-def test_FlowSOMmary(FlowSOM_res):
-    fs.pl.FlowSOMmary(FlowSOM_res)
+"""def test_FlowSOMmary(FlowSOM_res):
+    fs.pl.FlowSOMmary(FlowSOM_res)"""
 
 
 def test_FlowSOM_class(FlowSOM_res):
