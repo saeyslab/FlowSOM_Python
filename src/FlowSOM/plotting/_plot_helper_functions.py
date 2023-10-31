@@ -60,6 +60,8 @@ def plot_FlowSOM(
     view: str = "MST",
     background_values: np.array = None,
     background_cmap=gg_color_hue(),
+    background_size=1.5,
+    equal_background_size=False,
     node_sizes: np.array = None,
     max_node_size: int = 1,
     ref_node_size: int = None,
@@ -76,6 +78,10 @@ def plot_FlowSOM(
     :type background_values: np.array
     :param background_cmap: A colormap for the background colors
     :type background_cmap: Colormap
+    :param background_size: The size of the background nodes relative to the nodes
+    :type background_size: float
+    :param equal_background_size: If True the background nodes will be equally sized
+    :type equal_background_size: boolean
     :param node_sizes: An array with the node sizes. Will be scaled between 0
     and max_node_size and transformed with a sqrt. Default is the percentages
     :type node_sizes: np.array
@@ -124,7 +130,21 @@ def plot_FlowSOM(
 
     # Add background
     if background_values is not None:
-        background = add_nodes(layout, node_sizes * 1.5)
+        if equal_background_size:
+            background_size = np.repeat(max_node_size * background_size, len(background_values))
+        else:
+            background_size = (
+                parse_node_sizes(
+                    fsom,
+                    view=view,
+                    node_sizes=None,
+                    max_node_size=max_node_size,
+                    ref_node_size=ref_node_size,
+                    equal_node_size=False,
+                )
+                * background_size
+            )
+        background = add_nodes(layout, background_size)
         b = mc.PatchCollection(background, cmap=background_cmap)
         if background_values.dtype == np.float64 or background_values.dtype == np.int64:
             b.set_array(background_values)
