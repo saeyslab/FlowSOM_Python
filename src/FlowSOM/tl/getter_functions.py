@@ -33,7 +33,7 @@ def get_channels(obj, markers: np.ndarray, exact=True):
         object_markers = np.asarray(obj.uns["meta"]["channels"]["$PnS"])
         object_channels = np.asarray(obj.uns["meta"]["channels"]["$PnN"])
 
-    channelnames = dict()
+    channelnames = {}
     for marker in markers:
         if isinstance(marker, int):
             i_channel = [marker]
@@ -81,7 +81,7 @@ def get_markers(obj, channels, exact=True):
         object_markers = np.asarray(obj.uns["meta"]["channels"]["$PnS"])
         object_channels = np.asarray(obj.uns["meta"]["channels"]["$PnN"])
 
-    markernames = dict()
+    markernames = {}
     for channel in channels:
         if isinstance(channel, int):
             i_marker = [channel]
@@ -254,9 +254,9 @@ def get_features(
     i = 0
     if filenames is not None:
         assert len(filenames) != nfiles, "The number of file names should be equal to the number of files"
-    assert all([i in ["metaclusters", "clusters"] for i in level]), "Level should be 'metaclusters' or 'clusters'"
+    assert all(i in ["metaclusters", "clusters"] for i in level), "Level should be 'metaclusters' or 'clusters'"
     assert all(
-        [i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type]
+        i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type
     ), "Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"
     if "MFIs" in type:
         assert MFI is not None, "If type is 'MFIs', MFI should be provided"
@@ -265,11 +265,11 @@ def get_features(
         assert positive_cutoffs is not None, "If type is 'percentages_positive', positive_cutoffs should be provided"
         assert isinstance(positive_cutoffs, dict), "positive_cutoffs should be a dictionary"
 
-    matrices = dict()
+    matrices = {}
 
     # Prepare matrices
     if filenames is None:
-        if all([isinstance(i, str) for i in files]):
+        if all(isinstance(i, str) for i in files):
             filenames = files
         else:
             filenames = [str(i) for i in range(nfiles)]

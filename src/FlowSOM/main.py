@@ -17,10 +17,7 @@ from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_co
 
 
 class FlowSOM:
-    """
-    A class that contains all the FlowSOM data using MuData objects.
-
-    """
+    """A class that contains all the FlowSOM data using MuData objects."""
 
     def __init__(self, inp, cols_to_use: np.array = None, n_clus=10, seed: int = None, **kwargs):
         """Initialize the FlowSOM AnnData object
@@ -193,10 +190,10 @@ class FlowSOM:
         else:
             cluster_mudata = ad.AnnData(np.delete(cluster_median_values, 0, axis=1))
         cluster_mudata.var_names = self.mudata["cell_data"].var_names
-        sd_values = list()
-        cv_values = list()
-        mad_values = list()
-        pctgs = dict()
+        sd_values = []
+        cv_values = []
+        mad_values = []
+        pctgs = {}
         for cl in range(n_nodes):
             cluster_data = df[df[:, 0] == cl, :]  # +1 if cluster starts at 1
             means = np.nanmean(cluster_data, axis=0)
@@ -333,7 +330,7 @@ class FlowSOM:
         )
 
         if channels is not None:
-            outliers_dict = dict()
+            outliers_dict = {}
             codes = fsom_reference.mudata["cluster_data"]().obsm["codes"]
             data = fsom_reference.mudata["cell_data"].X
             channels = list(get_channels(fsom_reference, channels).keys())

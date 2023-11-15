@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pytometry as pm
 
-from ..io import read_FCS
-from ..tl import get_markers
+from flowsom.io import read_FCS
+from flowsom.tl import get_markers
 
 
 def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
@@ -59,7 +59,7 @@ def normalize_estimate_logicle(adata, channels, m=4.5, q=0.05):
     assert isinstance(adata, ad.AnnData), "Please provide an AnnData object"
     assert isinstance(channels, list), "Please provide a list of channels"
     channels = list(get_markers(adata, channels).keys())
-    assert all([i in adata.var_names for i in channels]), "Channels should be in the AnnData object"
+    assert all(i in adata.var_names for i in channels), "Channels should be in the AnnData object"
     neg_marker_quantiles = [
         np.quantile(adata[:, channel].X[adata[:, channel].X < 0], q) if (adata[:, channel].X < 0).any() else 0.5
         for channel in channels

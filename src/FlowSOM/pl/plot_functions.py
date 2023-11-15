@@ -12,7 +12,8 @@ from scanpy.preprocessing import neighbors
 from scanpy.tools import umap
 from scipy.stats import gaussian_kde
 
-from ..tl import get_channels, get_markers
+from flowsom.tl import get_channels, get_markers
+
 from ._plot_helper_functions import *
 
 
@@ -27,7 +28,7 @@ def plot_2D_scatters(
     size_points: float = 0.5,
     x_lim: tuple = None,
     y_lim: tuple = None,
-    xy_labels: list = ["marker"],
+    xy_labels: list = None,
     density: bool = True,
     centers: bool = True,
     colors: np.array = None,
@@ -67,6 +68,8 @@ def plot_2D_scatters(
     :param plot_file:
     :type plot_file:
     """
+    if xy_labels is None:
+        xy_labels = ["marker"]
     assert metaclusters is not None or clusters is not None, "Please add clusters or metaclusters to plot."
     assert (
         "marker" in xy_labels or "channel" in xy_labels
@@ -110,7 +113,7 @@ def plot_2D_scatters(
                     col = np.asarray([gg_color_hue()(i) for i in range(n_metaclusters)])[
                         np.array([int(i) for i in metacluster])[n]
                     ]
-                    col_dict = {i: j for i, j in zip(np.unique(df_ss[:, 2]), col)}
+                    col_dict = dict(zip(np.unique(df_ss[:, 2]), col))
                     cols = [col_dict[i] for i in df_ss[:, 2]]
 
                     df_c = np.c_[fsom.get_cluster_data()[n, indices_markers].X, n]
@@ -120,7 +123,7 @@ def plot_2D_scatters(
                     df_ss = df_ss[:, indices_markers]
                     df_ss = np.c_[df_ss, cell_metacluster[metaclusters_OI]]
                     col = np.asarray([gg_color_hue()(i) for i in range(n_metaclusters)])[n]
-                    col_dict = {i: j for i, j in zip(np.unique(df_ss[:, 2]), col)}
+                    col_dict = dict(zip(np.unique(df_ss[:, 2]), col))
                     cols = [col_dict[i] for i in df_ss[:, 2]]
                     cl_in_mcl = np.where(np.isin(metacluster.astype(int), n))[0]
                     df_c = np.c_[fsom.get_cluster_data()[cl_in_mcl, indices_markers].X, cl_in_mcl]
@@ -402,13 +405,13 @@ def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
     # Initializing
     metacluster_present = "cluster_data" in fsom.mudata.mod.keys()
     if metacluster_present:
-        mfis = fsom.get_cluster_data().uns["metacluster_MFIs"]
-        metaclusters = fsom.get_cell_data().obs["metaclustering"]
+        fsom.get_cluster_data().uns["metacluster_MFIs"]
+        fsom.get_cell_data().obs["metaclustering"]
         n_metaclusters = fsom.get_cell_data().uns["n_metaclusters"]
-    clusters = fsom.get_cell_data().obs["clustering"]
+    fsom.get_cell_data().obs["clustering"]
     n_clusters = np.arange(fsom.get_cell_data().uns["n_nodes"])
     file_present = False
-    plot_dict = dict()
+    plot_dict = {}
 
     # Plot fsom trees and grids
     for view in ["MST", "grid"]:
@@ -479,13 +482,12 @@ def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
         plot_dict["umap_" + marker] = fig
     if metacluster_present:
         subset_fsom.obs["metaclustering"] = subset_fsom.obs["metaclustering"].astype(str)
-        colors = {
-            i: j
-            for i, j in zip(
+        colors = dict(
+            zip(
                 np.unique(subset_fsom.obs["metaclustering"]),
                 gg_color_hue()(np.linspace(0, 1, n_metaclusters)),
             )
-        }
+        )
         fig, ax = plt.subplots()
         ax.scatter(
             x=subset_fsom.obsm["X_umap"][:, 0],

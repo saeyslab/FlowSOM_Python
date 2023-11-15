@@ -276,8 +276,8 @@ def scale_star_heights(median_values, node_sizes):
 
 
 def parse_node_sizes(fsom, view="MST", node_sizes=None, max_node_size=1, ref_node_size=None, equal_node_size=False):
-    node_sizes = fsom.get_cluster_data().obs["percentages"] if node_sizes == None else node_sizes
-    ref_node_size = max(node_sizes) if ref_node_size == None else ref_node_size
+    node_sizes = fsom.get_cluster_data().obs["percentages"] if node_sizes is None else node_sizes
+    ref_node_size = max(node_sizes) if ref_node_size is None else ref_node_size
     layout = fsom.get_cluster_data().obsm["layout"] if view == "MST" else fsom.get_cluster_data().obsm["grid"]
     auto_node_size = auto_max_node_size(layout, 1 if view == "MST" else -0.3)  # overlap
     max_node_size = auto_node_size * max_node_size
@@ -297,7 +297,11 @@ def auto_max_node_size(layout, overlap):
     return min_distance / 2 * overlap
 
 
-def add_text(ax, layout, text, text_size=20, text_color="black", ha=["right"], va=["center"]):
+def add_text(ax, layout, text, text_size=20, text_color="black", ha=None, va=None):
+    if va is None:
+        va = ["center"]
+    if ha is None:
+        ha = ["right"]
     if len(ha) == 1:
         ha = np.repeat(ha, len(text))
     if len(va) == 1:

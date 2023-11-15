@@ -2,7 +2,7 @@ import flowsom as fs
 
 
 def test_package_has_version():
-    fs.__version__
+    assert fs.__version__
 
 
 def test_fcs(FlowSOM_res):

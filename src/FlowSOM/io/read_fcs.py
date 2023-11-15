@@ -7,6 +7,7 @@ import pytometry as pm
 
 def read_FCS(filepath):
     """Reads in an FCS file
+
     :param filepath: An array containing a full path to the FCS file
     :type filepath: str
     """
@@ -23,7 +24,7 @@ def read_FCS(filepath):
             for string in f.uns["meta"].keys()
             if re.match("^P[0-9]+S$", string)
         }
-        fluo_channels = [i for i in markers.keys()]
+        fluo_channels = list(markers.keys())
         non_fluo_channels = {
             i: f.uns["meta"]["channels"]["$PnN"][i] for i in f.uns["meta"]["channels"].index if i not in fluo_channels
         }
