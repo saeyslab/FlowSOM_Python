@@ -16,9 +16,7 @@ sys.path.insert(0, str(HERE / "extensions"))
 
 # -- Project information -----------------------------------------------------
 
-# NOTE: If you installed your project in editable mode, this might be stale.
-#       If this is the case, reinstall it to refresh the metadata
-info = metadata("FlowSOM")
+info = metadata("flowsom")
 project_name = info["Name"]
 author = info["Author"]
 copyright = f"{datetime.now():%Y}, {author}."

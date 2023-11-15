@@ -1,4 +1,4 @@
-import FlowSOM as fs
+import flowsom as fs
 
 
 def test_package_has_version():

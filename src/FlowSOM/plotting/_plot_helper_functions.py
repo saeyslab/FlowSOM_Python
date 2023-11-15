@@ -1,13 +1,11 @@
 import matplotlib.colors
-
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-
+import numpy as np
+import pandas as pd
+from matplotlib import collections as mc
 from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, Wedge
 from scipy.spatial.distance import pdist
-from matplotlib import collections as mc
 
 
 def FlowSOM_colors():

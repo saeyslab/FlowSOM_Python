@@ -1,8 +1,9 @@
-import pytest
 import csv
-
-import FlowSOM as fs
 from pathlib import Path
+
+import pytest
+
+import flowsom as fs
 
 
 def read_fcs_file(filename):
@@ -23,7 +24,7 @@ def FlowSOM_res(fcs):
 
 @pytest.fixture(scope="session")
 def gating_results():
-    file = open(Path("./tests/data/gating_result.csv"), "r")
+    file = open(Path("./tests/data/gating_result.csv"))
     data = list(csv.reader(file))
     file.close()
     return [i[0] for i in data]

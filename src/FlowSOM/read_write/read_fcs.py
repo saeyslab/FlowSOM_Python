@@ -1,5 +1,6 @@
-import pytometry as pm
 import re
+
+import pytometry as pm
 
 
 def read_FCS(filepath):
@@ -15,15 +16,15 @@ def read_FCS(filepath):
         f.uns["meta"]["channels"] = f.uns["meta"]["channels"].sort_index()
     except:
         f = pm.io.read_fcs(filepath, reindex=False)
-        markers = dict(
-            (str(re.sub("S$", "", re.sub("^P", "", string))), f.uns["meta"][string])
+        markers = {
+            str(re.sub("S$", "", re.sub("^P", "", string))): f.uns["meta"][string]
             for string in f.uns["meta"].keys()
             if re.match("^P[0-9]+S$", string)
-        )
+        }
         fluo_channels = [i for i in markers.keys()]
-        non_fluo_channels = dict(
-            (i, f.uns["meta"]["channels"]["$PnN"][i]) for i in f.uns["meta"]["channels"].index if i not in fluo_channels
-        )
+        non_fluo_channels = {
+            i: f.uns["meta"]["channels"]["$PnN"][i] for i in f.uns["meta"]["channels"].index if i not in fluo_channels
+        }
         index_markers = dict(markers, **non_fluo_channels)
         f.var.rename(index=index_markers, inplace=True)
         f.uns["meta"]["channels"]["$PnS"] = [index_markers[key] for key in f.uns["meta"]["channels"].index]

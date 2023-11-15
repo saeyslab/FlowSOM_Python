@@ -1,38 +1,80 @@
 # API
 
-## Preprocessing
+```{eval-rst}
+.. module:: anndata
+```
 
 ```{eval-rst}
-.. module:: FlowSOM.pp
-.. currentmodule:: FlowSOM
+.. module:: flowsom
+.. autosummary::
+    :toctree: generated
+
+    FlowSOM
+    flowsom_clustering
+```
+
+## Reading
+
+```{eval-rst}
+.. module:: flowsom.io
+.. currentmodule:: flowsom
 
 .. autosummary::
     :toctree: generated
 
-    pp.basic_preproc
+    io.read_FCS
+```
+
+## Preprocessing
+
+```{eval-rst}
+.. module:: flowsom.pp
+.. currentmodule:: flowsom
+
+.. autosummary::
+    :toctree: generated
+
+    pp.aggregate_flowframes
+    pp.normalize_estimate_logicle
 ```
 
 ## Tools
 
 ```{eval-rst}
-.. module:: FlowSOM.tl
-.. currentmodule:: FlowSOM
+.. module:: flowsom.tl
+.. currentmodule:: flowsom
 
 .. autosummary::
     :toctree: generated
 
-    tl.basic_tool
+    tl.ConsensusCluster
+    tl.SOM
+    tl.map_data_to_codes
+    tl.get_channels
+    tl.get_cluster_percentages_positive
+    tl.get_counts
+    tl.get_features
+    tl.get_markers
+    tl.get_metacluster_percentages_positive
+    tl.get_percentages
+
 ```
 
 ## Plotting
 
 ```{eval-rst}
-.. module:: FlowSOM.pl
-.. currentmodule:: FlowSOM
+.. module:: flowsom.pl
+.. currentmodule:: flowsom
 
 .. autosummary::
     :toctree: generated
 
-    pl.basic_plot
-    pl.BasicClass
+    pl.FlowSOMmary
+    pl.plot_2D_scatters
+    pl.plot_labels
+    pl.plot_numbers
+    pl.plot_variable
+    pl.plot_marker
+    pl.plot_stars
+    pl.plot_pies
 ```

@@ -6,9 +6,10 @@
 #                                             #
 ###############################################
 
-import numpy as np
-from itertools import combinations
 import bisect
+from itertools import combinations
+
+import numpy as np
 
 
 class ConsensusCluster:

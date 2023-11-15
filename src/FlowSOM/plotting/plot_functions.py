@@ -1,19 +1,17 @@
-import numpy as np
+import matplotlib.backends.backend_pdf
+import matplotlib.colors
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.colors
-import matplotlib.backends.backend_pdf
-
-import matplotlib.colors
-
-from ..tools import get_channels, get_markers
 from matplotlib import collections as mc
 from matplotlib import gridspec
-from ._plot_helper_functions import *
-from scipy.stats import gaussian_kde
-from scanpy.tools import umap
 from scanpy.preprocessing import neighbors
+from scanpy.tools import umap
+from scipy.stats import gaussian_kde
+
+from ..tools import get_channels, get_markers
+from ._plot_helper_functions import *
 
 
 def plot_2D_scatters(

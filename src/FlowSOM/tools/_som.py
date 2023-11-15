@@ -43,7 +43,7 @@ def cosine(p1, p2, px, n, ncodes):
 def SOM(data, codes, nhbrdist, alphas, radii, ncodes, rlen, distf=eucl, seed=None):
     if seed is not None:
         np.random.seed(seed)
-    xdists = np.zeros((ncodes))
+    xdists = np.zeros(ncodes)
     n = data.shape[0]
     px = data.shape[1]
     niter = rlen * n
@@ -87,8 +87,8 @@ def map_data_to_codes(data, codes, distf=eucl):
     counter = -1
     n_codes = codes.shape[0]
     nd = data.shape[0]
-    nn_codes = np.zeros((nd))
-    nn_dists = np.zeros((nd))
+    nn_codes = np.zeros(nd)
+    nn_dists = np.zeros(nd)
     for i in range(nd):
         minid = -1
         mindist = np.inf

@@ -1,17 +1,17 @@
-import numpy as np
-import pandas as pd
-import anndata as ad
-import igraph as ig
 import copy
-
 import random
 
-from scipy.stats import median_abs_deviation
-from scipy.spatial.distance import cdist, pdist, squareform
-from sklearn.cluster import AgglomerativeClustering
+import anndata as ad
+import igraph as ig
+import numpy as np
+import pandas as pd
 from mudata import MuData
+from scipy.spatial.distance import cdist, pdist, squareform
+from scipy.stats import median_abs_deviation
+from sklearn.cluster import AgglomerativeClustering
+
 from .read_write import read_FCS
-from .tools import SOM, map_data_to_codes, ConsensusCluster, get_channels, get_markers
+from .tools import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
 
 
 class FlowSOM:
@@ -168,7 +168,7 @@ class FlowSOM:
         if map:
             clusters, dists = map_data_to_codes(data=data, codes=codes)
         else:
-            clusters = dists = np.zeros((n_codes))
+            clusters = dists = np.zeros(n_codes)
 
         return codes, clusters, dists, xdim, ydim
 

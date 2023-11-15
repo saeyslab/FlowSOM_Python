@@ -1,8 +1,8 @@
+import re
+
+import anndata as ad
 import numpy as np
 import pandas as pd
-import anndata as ad
-
-import re
 
 
 def get_channels(obj, markers, exact=True):
@@ -49,7 +49,7 @@ def get_channels(obj, markers, exact=True):
                 for i in i_channel:
                     channelnames[object_channels[i]] = object_channels[i]
             else:
-                raise Exception("Marker {} could not be found!".format(marker))
+                raise Exception(f"Marker {marker} could not be found!")
     return channelnames
 
 
@@ -100,7 +100,7 @@ def get_markers(obj, channels, exact=True):
                 for i in i_marker:
                     markernames[object_markers[i]] = object_markers[i]
             else:
-                raise Exception("Channel {} could not be found!".format(channel))
+                raise Exception(f"Channel {channel} could not be found!")
     return markernames
 
 
@@ -299,16 +299,24 @@ def get_features(
 
         if "MFIs" in type:
             if "clusters" in level:
-                C_MFIs[i,] = fsom_tmp.get_cluster_data().to_df().loc[:, MFI].to_numpy().flatten()
+                C_MFIs[i,] = (
+                    fsom_tmp.get_cluster_data().to_df().loc[:, MFI].to_numpy().flatten()
+                )
             if "metaclusters" in level:
                 MFI_i = [i for i, x in enumerate(fsom_tmp.get_cluster_data().var_names) if x in MFI]
-                MC_MFIs[i,] = fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI_i].to_numpy().flatten()
+                MC_MFIs[i,] = (
+                    fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI_i].to_numpy().flatten()
+                )
 
         if "percentages_positive" in type:
             if "clusters" in level:
-                C_perc_pos[i,] = get_cluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
+                C_perc_pos[i,] = (
+                    get_cluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
+                )
             if "metaclusters" in level:
-                MC_perc_pos[i,] = get_metacluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
+                MC_perc_pos[i,] = (
+                    get_metacluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
+                )
 
     # Add matrices to dictionary
     if "clusters" in level:

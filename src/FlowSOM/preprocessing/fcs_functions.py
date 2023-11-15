@@ -1,13 +1,12 @@
 import random
 
 import anndata as ad
-import pytometry as pm
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytometry as pm
 
-from ..tools import get_markers
 from ..read_write import read_FCS
-
+from ..tools import get_markers
 
 def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
     """Aggregate multiple FCS files together
@@ -42,7 +41,9 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
 
         file_ids = np.repeat(i, cPerFile)
 
-        f = f[ids,]
+        f = f[
+            ids,
+        ]
         f.obs["Original_ID"] = np.array(ids, dtype=np.float32)
         f.obs["File"] = np.array(file_ids, dtype=np.float32)
         f.obs["File_scattered"] = np.array(
