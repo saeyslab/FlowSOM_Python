@@ -42,7 +42,7 @@ Starting from an FCS file that is properly transformed, compensated and checked 
 
 ```python
 # Import the FlowSOM package
-import FlowSOM as fs
+import flowsom as fs
 
 # Load the FCS file
 ff = fs.io.read_FCS("./tests/data/ff.fcs")
