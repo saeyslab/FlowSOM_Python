@@ -67,15 +67,15 @@ def plot_2D_scatters(
     :param plot_file:
     :type plot_file:
     """
-    assert metaclusters is not None or clusters is not None, f"Please add clusters or metaclusters to plot."
+    assert metaclusters is not None or clusters is not None, "Please add clusters or metaclusters to plot."
     assert (
         "marker" in xy_labels or "channel" in xy_labels
-    ), f'xy_labels should be a list containing "marker" and/or "channel".'
+    ), 'xy_labels should be a list containing "marker" and/or "channel".'
     if clusters is not None:
-        assert isinstance(clusters[0], list), f"clusters should be a list of lists."
+        assert isinstance(clusters[0], list), "clusters should be a list of lists."
     if metaclusters is not None:
-        assert isinstance(metaclusters[0], list), f"metaclusters should be a list of lists."
-    assert isinstance(channelpairs[0], list), f"channelpairs should be a list of lists."
+        assert isinstance(metaclusters[0], list), "metaclusters should be a list of lists."
+    assert isinstance(channelpairs[0], list), "channelpairs should be a list of lists."
 
     cell_metacluster = fsom.get_cell_data().obs["metaclustering"]
     n_metaclusters = fsom.get_cell_data().uns["n_metaclusters"]
@@ -181,7 +181,7 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
         labels = np.asarray(labels)
     assert (
         labels.shape[0] == fsom.get_cell_data().uns["n_nodes"]
-    ), f"Length of labels should be the same as the number of nodes in your FlowSOM object"
+    ), "Length of labels should be the same as the number of nodes in your FlowSOM object"
     fig, ax, layout, _ = plot_FlowSOM(fsom=fsom, max_node_size=max_node_size, **kwargs)
     ax = add_text(ax, layout, labels, text_size, text_color)
     ax.axis("equal")
@@ -200,7 +200,7 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
     :param max_node_size: Determines the maximum node size. Default is 0.
     :type max_node_size: float
     """
-    assert level in ["clusters", "metaclusters"], f"level should be clusters or metaclusters"
+    assert level in ["clusters", "metaclusters"], "level should be clusters or metaclusters"
     if level == "clusters":
         numbers = np.arange(1, fsom.get_cell_data().uns["n_nodes"] + 1)
     elif level == "metaclusters":
@@ -228,7 +228,7 @@ def plot_variable(
         variable = np.asarray(variable)
     assert (
         variable.shape[0] == fsom.get_cell_data().uns["n_nodes"]
-    ), f"Length of variable should be the same as the number of nodes in your FlowSOM object"
+    ), "Length of variable should be the same as the number of nodes in your FlowSOM object"
     if variable.dtype == "object":
         string_to_number = {string: index for index, string in enumerate(np.unique(variable))}
         variable = np.asarray([string_to_number[string] for string in variable])
@@ -352,7 +352,7 @@ def plot_pies(
         cell_types = np.asarray(cell_types)
     assert (
         cell_types.shape[0] == fsom.get_cell_data().shape[0]
-    ), f"Length of cell_types should be the same as the number of cells in your FlowSOM object"
+    ), "Length of cell_types should be the same as the number of cells in your FlowSOM object"
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     unique_cell_types = np.unique(cell_types)
     color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))

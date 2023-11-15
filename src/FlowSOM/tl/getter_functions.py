@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 import re
 
 import anndata as ad
@@ -19,7 +18,7 @@ def get_channels(obj, markers: np.ndarray, exact=True):
     """
     assert obj.__class__.__name__ == "FlowSOM" or isinstance(
         obj, ad.AnnData
-    ), f"Please provide an FCS file or a FlowSOM object"
+    ), "Please provide an FCS file or a FlowSOM object"
     if obj.__class__.__name__ == "FlowSOM":
         object_markers = np.asarray(
             [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
@@ -67,7 +66,7 @@ def get_markers(obj, channels, exact=True):
     """
     assert obj.__class__.__name__ == "FlowSOM" or isinstance(
         obj, ad.AnnData
-    ), f"Please provide an FCS file or a FlowSOM object"
+    ), "Please provide an FCS file or a FlowSOM object"
     if obj.__class__.__name__ == "FlowSOM":
         object_markers = np.asarray(
             [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
@@ -114,7 +113,7 @@ def get_counts(fsom, level="metaclusters"):
     :param level: The level to get counts for. Should be 'metaclusters' or 'clusters'
     :type level: str
     """
-    assert level in ["metaclusters", "clusters"], f"Level should be 'metaclusters' or 'clusters'"
+    assert level in ["metaclusters", "clusters"], "Level should be 'metaclusters' or 'clusters'"
     if level == "metaclusters":
         counts = {
             "C" + str(i): (fsom.get_cell_data().obs["metaclustering"] == i).sum()
@@ -136,7 +135,7 @@ def get_percentages(fsom, level="metaclusters"):
     :param level: The level to get counts for. Should be 'metaclusters' or 'clusters'
     :type level: str
     """
-    assert level in ["metaclusters", "clusters"], f"Level should be 'metaclusters' or 'clusters'"
+    assert level in ["metaclusters", "clusters"], "Level should be 'metaclusters' or 'clusters'"
     counts = get_counts(fsom, level=level)
     percentages = counts / counts.sum()
     return percentages
@@ -254,17 +253,17 @@ def get_features(
     nfiles = len(files)
     i = 0
     if filenames is not None:
-        assert len(filenames) != nfiles, f"The number of file names should be equal to the number of files"
-    assert all([i in ["metaclusters", "clusters"] for i in level]), f"Level should be 'metaclusters' or 'clusters'"
+        assert len(filenames) != nfiles, "The number of file names should be equal to the number of files"
+    assert all([i in ["metaclusters", "clusters"] for i in level]), "Level should be 'metaclusters' or 'clusters'"
     assert all(
         [i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type]
-    ), f"Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"
+    ), "Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"
     if "MFIs" in type:
-        assert MFI is not None, f"If type is 'MFIs', MFI should be provided"
+        assert MFI is not None, "If type is 'MFIs', MFI should be provided"
         MFI = list(get_channels(fsom, MFI).keys())
     if "percentages_positive" in type:
-        assert positive_cutoffs is not None, f"If type is 'percentages_positive', positive_cutoffs should be provided"
-        assert isinstance(positive_cutoffs, dict), f"positive_cutoffs should be a dictionary"
+        assert positive_cutoffs is not None, "If type is 'percentages_positive', positive_cutoffs should be provided"
+        assert isinstance(positive_cutoffs, dict), "positive_cutoffs should be a dictionary"
 
     matrices = dict()
 
@@ -301,24 +300,16 @@ def get_features(
 
         if "MFIs" in type:
             if "clusters" in level:
-                C_MFIs[i,] = (
-                    fsom_tmp.get_cluster_data().to_df().loc[:, MFI].to_numpy().flatten()
-                )
+                C_MFIs[i,] = fsom_tmp.get_cluster_data().to_df().loc[:, MFI].to_numpy().flatten()
             if "metaclusters" in level:
                 MFI_i = [i for i, x in enumerate(fsom_tmp.get_cluster_data().var_names) if x in MFI]
-                MC_MFIs[i,] = (
-                    fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI_i].to_numpy().flatten()
-                )
+                MC_MFIs[i,] = fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI_i].to_numpy().flatten()
 
         if "percentages_positive" in type:
             if "clusters" in level:
-                C_perc_pos[i,] = (
-                    get_cluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
-                )
+                C_perc_pos[i,] = get_cluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
             if "metaclusters" in level:
-                MC_perc_pos[i,] = (
-                    get_metacluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
-                )
+                MC_perc_pos[i,] = get_metacluster_percentages_positive(fsom_tmp, positive_cutoffs).to_numpy().flatten()
 
     # Add matrices to dictionary
     if "clusters" in level:

@@ -1,11 +1,13 @@
 # API
 
 Import FlowSOM as:
+
 ```
 import flowsom as fs
 ```
 
 The central class is `FlowSOM`:
+
 ```{eval-rst}
 .. module:: flowsom
 .. autosummary::

@@ -104,12 +104,12 @@ def plot_FlowSOM(
     if node_sizes is not None:
         assert nNodes == len(
             node_sizes
-        ), f'Length of "node_sizes" should be equal to number of clusters in FlowSOM object'
+        ), 'Length of "node_sizes" should be equal to number of clusters in FlowSOM object'
 
     if background_values is not None:
         assert (
             background_values.shape[0] == fsom.mudata["cell_data"].uns["n_nodes"]
-        ), f"Length of background_values should be equal to number of clusters in FlowSOM object"
+        ), "Length of background_values should be equal to number of clusters in FlowSOM object"
 
     # Node sizes
     node_sizes = parse_node_sizes(
@@ -198,7 +198,7 @@ def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max
     if isinstance(star_height, int) | isinstance(star_height, float):
         star_height = np.repeat(star_height, len(markers)).tolist()
     else:
-        assert len(star_height) == n_markers, f"Make sure star_height is an array with the same length as markers"
+        assert len(star_height) == n_markers, "Make sure star_height is an array with the same length as markers"
     star_height = np.divide(star_height, max(star_height)) * max_star_height
     x = 2 * np.pi / (n_markers * 2)
     y = 2 * np.pi / n_markers

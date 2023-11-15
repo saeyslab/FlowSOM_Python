@@ -124,7 +124,7 @@ class FlowSOM:
         if codes is not None:
             assert (codes.shape[1] == data.shape[1]) or (
                 codes.shape[0] != xdim * ydim
-            ), f"If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
+            ), "If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
 
         if importance is not None:
             data = np.stack([data[:, i] * importance[i] for i in range(len(importance))], axis=1)
