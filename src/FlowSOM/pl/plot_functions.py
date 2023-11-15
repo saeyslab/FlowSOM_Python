@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import matplotlib.backends.backend_pdf
 import matplotlib.colors
 import matplotlib.pyplot as plt
@@ -10,7 +12,7 @@ from scanpy.preprocessing import neighbors
 from scanpy.tools import umap
 from scipy.stats import gaussian_kde
 
-from ..tools import get_channels, get_markers
+from ..tl import get_channels, get_markers
 from ._plot_helper_functions import *
 
 

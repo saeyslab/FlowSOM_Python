@@ -5,6 +5,7 @@
 # github.com/ZigaSajovic/Consensus_Clustering #
 #                                             #
 ###############################################
+from __future__ import annotations
 
 import bisect
 from itertools import combinations

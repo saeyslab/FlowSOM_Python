@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+
 import re
 
 import anndata as ad
@@ -5,13 +8,12 @@ import numpy as np
 import pandas as pd
 
 
-def get_channels(obj, markers, exact=True):
+def get_channels(obj, markers: np.ndarray, exact=True):
     """Gets the channels of the provided markers based on a FlowSOM object or an FCS file
 
     :param obj: A FlowSOM object or a FCS AnnData object
     :type obj: FlowSOM / AnnData
     :param markers: An array of markers
-    :type markers: np.array
     :param exact: If True, a strict search is performed. If False, regexps can be used.
     :type exact: boolean
     """

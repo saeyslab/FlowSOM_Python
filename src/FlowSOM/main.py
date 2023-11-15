@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import copy
 import random
 
@@ -10,8 +12,8 @@ from scipy.spatial.distance import cdist, pdist, squareform
 from scipy.stats import median_abs_deviation
 from sklearn.cluster import AgglomerativeClustering
 
-from .read_write import read_FCS
-from .tools import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
+from .io import read_FCS
+from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
 
 
 class FlowSOM:

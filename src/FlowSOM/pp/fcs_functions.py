@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import random
 
 import anndata as ad
@@ -5,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pytometry as pm
 
-from ..read_write import read_FCS
-from ..tools import get_markers
+from ..io import read_FCS
+from ..tl import get_markers
 
 def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
     """Aggregate multiple FCS files together
