@@ -6,6 +6,12 @@ Import FlowSOM as:
 import flowsom as fs
 ```
 
+The functionality is organised in subpackages:
+- `io` for reading and writing FCS files
+- `pp` for preprocessing
+- `tl` for tools
+- `pl` for plotting
+
 The central class is `FlowSOM`:
 
 ```{eval-rst}
@@ -13,8 +19,8 @@ The central class is `FlowSOM`:
 .. autosummary::
     :toctree: generated
 
-    FlowSOM
-    flowsom_clustering
+    flowsom.FlowSOM
+    flowsom.flowsom_clustering
 ```
 
 ## Reading
