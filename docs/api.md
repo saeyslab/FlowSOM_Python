@@ -16,7 +16,7 @@ The central class is `FlowSOM`.
 
 ## Reading
 
-```{eval-rst}
+```
 .. module:: flowsom.io
 .. currentmodule:: flowsom
 
@@ -28,7 +28,7 @@ The central class is `FlowSOM`.
 
 ## Preprocessing
 
-```{eval-rst}
+```
 .. module:: flowsom.pp
 .. currentmodule:: flowsom
 
@@ -41,7 +41,7 @@ The central class is `FlowSOM`.
 
 ## Tools
 
-```{eval-rst}
+```
 .. module:: flowsom.tl
 .. currentmodule:: flowsom
 
@@ -63,7 +63,7 @@ The central class is `FlowSOM`.
 
 ## Plotting
 
-```{eval-rst}
+```
 .. module:: flowsom.pl
 .. currentmodule:: flowsom
 
