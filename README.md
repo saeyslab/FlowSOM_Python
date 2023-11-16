@@ -5,7 +5,7 @@
 
 [badge-tests]: https://img.shields.io/github/actions/workflow/status/saeyslab/FlowSOM_Python/test.yaml?branch=main
 [link-tests]: https://github.com/saeyslab/FlowSOM_Python/actions/workflows/test.yml
-[badge-docs]: https://img.shields.io/readthedocs/FlowSOM
+[badge-docs]: https://img.shields.io/readthedocs/flowsom
 
 The complete FlowSOM package known from R, now available in Python
 
