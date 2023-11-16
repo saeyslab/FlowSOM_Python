@@ -21,7 +21,7 @@ urls.Home-page = "https://github.com/artuurC/FlowSOM"
 dependencies = [
     "mudata", "numpy", "matplotlib", "pandas", "scipy", "pytometry",
     "scikit-learn", "python-igraph", "pytest",
-    "session-info", "pathlib", "numba", "scanpy", "seaborn"
+    "session-info", "numba", "scanpy", "seaborn", "readfcs",
 ]
 
 
