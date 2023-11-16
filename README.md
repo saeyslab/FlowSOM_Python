@@ -1,10 +1,10 @@
 # FlowSOM
 
-[![Tests][badge-tests]][link-tests]
+<!-- [![Tests][badge-tests]][link-tests] -->
 [![Documentation][badge-docs]][link-docs]
 
-[badge-tests]: https://img.shields.io/github/actions/workflow/status/artuurC/FlowSOM/test.yaml?branch=main
-[link-tests]: https://github.com/artuurC/FlowSOM/actions/workflows/test.yml
+[badge-tests]: https://img.shields.io/github/actions/workflow/status/saeyslab/FlowSOM_Python/test.yaml?branch=main
+[link-tests]: https://github.com/saeyslab/FlowSOM_Python/actions/workflows/test.yml
 [badge-docs]: https://img.shields.io/readthedocs/FlowSOM
 
 The complete FlowSOM package known from R, now available in Python
