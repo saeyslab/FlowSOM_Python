@@ -5,7 +5,7 @@
 
 [badge-tests]: https://img.shields.io/github/actions/workflow/status/saeyslab/FlowSOM_Python/test.yaml?branch=main
 [link-tests]: https://github.com/saeyslab/FlowSOM_Python/actions/workflows/test.yml
-[badge-docs]: https://img.shields.io/readthedocs/flowsom
+[badge-docs]: https://img.shields.io/readthedocs/FlowSOM
 
 The complete FlowSOM package known from R, now available in Python
 
@@ -74,6 +74,6 @@ If you use `FlowSOM` in your work, please cite the following paper:
 > DOI: 10.1002/cyto.a.22625
 
 [issue-tracker]: https://github.com/saeyslab/FlowSOM_Python/issues
-[changelog]: https://flowsom.readthedocs.io/latest/changelog.html
+[changelog]: https://flowsom.readthedocs.io/en/latest/changelog.html
 [link-docs]: https://flowsom.readthedocs.io
-[link-api]: https://flowsom.readthedocs.io/latest/api.html
+[link-api]: https://flowsom.readthedocs.io/en/latest/api.html
