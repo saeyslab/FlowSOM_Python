@@ -17,24 +17,12 @@ The central class is `FlowSOM`.
 ## Reading
 
 ```
-.. module:: flowsom.io
-.. currentmodule:: flowsom
-
-.. autosummary::
-    :toctree: generated
-
     io.read_FCS
 ```
 
 ## Preprocessing
 
 ```
-.. module:: flowsom.pp
-.. currentmodule:: flowsom
-
-.. autosummary::
-    :toctree: generated
-
     pp.aggregate_flowframes
     pp.normalize_estimate_logicle
 ```
@@ -42,12 +30,6 @@ The central class is `FlowSOM`.
 ## Tools
 
 ```
-.. module:: flowsom.tl
-.. currentmodule:: flowsom
-
-.. autosummary::
-    :toctree: generated
-
     tl.ConsensusCluster
     tl.SOM
     tl.map_data_to_codes
@@ -64,12 +46,6 @@ The central class is `FlowSOM`.
 ## Plotting
 
 ```
-.. module:: flowsom.pl
-.. currentmodule:: flowsom
-
-.. autosummary::
-    :toctree: generated
-
     pl.FlowSOMmary
     pl.plot_2D_scatters
     pl.plot_labels
