@@ -12,16 +12,7 @@ The functionality is organised in subpackages:
 - `tl` for tools
 - `pl` for plotting
 
-The central class is `FlowSOM`:
-
-```{eval-rst}
-.. module:: flowsom
-.. autosummary::
-    :toctree: generated
-
-    flowsom.FlowSOM
-    flowsom.flowsom_clustering
-```
+The central class is `FlowSOM`.
 
 ## Reading
 
