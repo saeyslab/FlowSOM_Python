@@ -1,7 +1,7 @@
 {
   "template": "https://github.com/scverse/cookiecutter-scverse",
-  "commit": "3dcfe1fd2bdfc3c1cc9cc4c2108fba1e973b9dcb",
-  "checkout": null,
+  "commit": "8e96abb5c3e2d5078c44713958da672711cf2a48",
+  "checkout": "v0.3.0",
   "context": {
     "cookiecutter": {
       "project_name": "FlowSOM",
@@ -16,6 +16,11 @@
         ".github/workflows/**.yaml",
         "docs/_templates/autosummary/**.rst"
       ],
+      "_render_devdocs": false,
+      "_jinja2_env_vars": {
+        "lstrip_blocks": true,
+        "trim_blocks": true
+      },
       "_template": "https://github.com/scverse/cookiecutter-scverse"
     }
   },

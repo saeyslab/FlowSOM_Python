@@ -42,10 +42,11 @@ doc = [
     "ipykernel",
     "ipython",
     "sphinx-copybutton",
+    "pandas",
 ]
 test = [
     "pytest",
-    "pytest-cov",
+    "coverage",
 ]
 
 [tool.hatch.build.targets.wheel]
