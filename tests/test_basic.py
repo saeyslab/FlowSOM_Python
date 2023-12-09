@@ -1,4 +1,5 @@
 import flowsom as fs
+from pathlib import Path
 
 
 def test_package_has_version():
@@ -7,6 +8,11 @@ def test_package_has_version():
 
 def test_fcs(FlowSOM_res):
     assert FlowSOM_res.get_cell_data().shape == (19225, 18)
+
+
+def test_csv():
+    ff = fs.io.read_csv(Path("./tests/data/fcs.csv"))
+    fs.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17])
 
 
 def test_FlowSOM_type(FlowSOM_res):
@@ -30,6 +36,7 @@ def test_plot_marker(FlowSOM_res):
         background_values=FlowSOM_res.get_cluster_data().obs["metaclustering"],
         view="grid",
         equal_node_size=True,
+        equal_background_size=True,
     )
     pl.savefig("plotmarker.pdf")
 

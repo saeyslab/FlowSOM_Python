@@ -131,7 +131,7 @@ def plot_FlowSOM(
     # Add background
     if background_values is not None:
         if equal_background_size:
-            background_size = np.repeat(max_node_size * background_size, len(background_values))
+            background_size = np.repeat(np.max(node_sizes) * background_size, len(background_values))
         else:
             background_size = (
                 parse_node_sizes(
@@ -217,8 +217,10 @@ def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max
     n_left_right = pd.crosstab(n_left_right, columns="x")
     if n_left_right.shape[0] != 1:
         by = 1 if len(markers) <= 8 else 0.65
-        left = np.linspace(start=0, stop=(n_left_right.x[0] - 1) * by, num=n_left_right.x[0])
-        right = np.multiply(-1, np.linspace(start=0, stop=(n_left_right.x[1] - 1) * by, num=n_left_right.x[1]))
+        left = np.linspace(start=0, stop=(n_left_right.x.iloc[0] - 1) * by, num=n_left_right.x.iloc[0])
+        right = np.multiply(
+            -1, np.linspace(start=0, stop=(n_left_right.x.iloc[1] - 1) * by, num=n_left_right.x.iloc[1])
+        )
         segments_left = segments[segments[:, 1] < 0, :]
         segments_left = segments_left[segments_left[:, 2].argsort()]
         segments_right = segments[segments[:, 1] >= 0]
@@ -266,6 +268,8 @@ def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max
 
 
 def scale_star_heights(median_values, node_sizes):
+    if isinstance(node_sizes, pd.Series):
+        node_sizes = node_sizes.to_numpy()
     max_all_nodes = median_values[~np.isnan(median_values)].max()
     min_all_nodes = median_values[~np.isnan(median_values)].min()
     scaled_row = [
@@ -297,7 +301,9 @@ def auto_max_node_size(layout, overlap):
     return min_distance / 2 * overlap
 
 
-def add_text(ax, layout, text, text_size=20, text_color="black", ha=None, va=None):
+def add_text(ax, layout, text, text_size=25, text_color="black", ha=None, va=None):
+    if isinstance(text, pd.Series):
+        text = text.to_numpy()
     if va is None:
         va = ["center"]
     if ha is None:
@@ -327,16 +333,22 @@ def parse_edges(fsom):
 
 
 def add_nodes(layout, heights):
+    if isinstance(heights, pd.Series):
+        heights = heights.to_numpy()
     patches = [Circle((row[0], row[1]), heights[i]) for i, row in enumerate(layout)]
     return patches
 
 
 def add_stars(layout, heights):
+    if isinstance(heights, pd.Series):
+        heights = heights.to_numpy()
     patches = np.hstack([add_wedges((row[0], row[1]), heights[i, :]) for i, row in enumerate(layout)])
     return patches
 
 
 def add_wedges(coord, heights, angles=None):
+    if isinstance(heights, pd.Series):
+        heights = heights.to_numpy()
     if angles is None:
         part = 360 / len(heights)
         angles = np.arange(0, 360.01, part)

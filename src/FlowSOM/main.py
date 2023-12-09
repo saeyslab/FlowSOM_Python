@@ -12,7 +12,7 @@ from scipy.spatial.distance import cdist, pdist, squareform
 from scipy.stats import median_abs_deviation
 from sklearn.cluster import AgglomerativeClustering
 
-from .io import read_FCS
+from .io import read_FCS, read_csv
 from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
 
 
@@ -48,7 +48,10 @@ class FlowSOM:
         if isinstance(inp, ad.AnnData):
             data = inp.X
         elif isinstance(inp, str):
-            inp = read_FCS(inp)
+            if inp.endswith(".csv"):
+                inp = read_csv(inp)
+            elif inp.endswith(".fcs"):
+                inp = read_FCS(inp)
             data = inp.X
         channels = np.asarray(inp.var["channel"])
         markers = np.asarray(inp.var["marker"])

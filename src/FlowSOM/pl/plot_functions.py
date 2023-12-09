@@ -369,7 +369,7 @@ def plot_pies(
             if 0 not in angles:
                 angles = np.insert(angles, 0, 0)
             row = layout[cl, :]
-            patches = add_wedges(tuple(row), heights=np.repeat(scaled_node_size[cl], len(angles)), angles=angles)
+            patches = add_wedges(tuple(row), heights=np.repeat(scaled_node_size.iloc[cl], len(angles)), angles=angles)
             p = mc.PatchCollection(patches)
             p.set_facecolor([color_dict.get(key) for key in table.index.values])
             p.set_edgecolor("black")

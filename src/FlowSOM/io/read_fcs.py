@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 
 import pytometry as pm
+import anndata as ad
+import pandas as pd
 
 
 def read_FCS(filepath):
@@ -32,3 +34,13 @@ def read_FCS(filepath):
         f.var.rename(index=index_markers, inplace=True)
         f.uns["meta"]["channels"]["$PnS"] = [index_markers[key] for key in f.uns["meta"]["channels"].index]
     return f
+
+
+def read_csv(filepath, spillover=None, **kwargs):
+    ff = ad.read_csv(filepath, **kwargs)
+    ff.var = pd.DataFrame(
+        {"n": range(ff.shape[1]), "channel": ff.var_names, "marker": ff.var_names}, index=ff.var.index
+    )
+    if spillover is not None:
+        ff.uns["meta"]["SPILL"] = pd.read_csv(spillover)
+    return ff
