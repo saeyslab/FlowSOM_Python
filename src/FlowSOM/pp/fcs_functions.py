@@ -51,7 +51,7 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
             np.add(file_ids, np.random.normal(loc=0.0, scale=0.1, size=len(file_ids))), dtype=np.float32
         )
         flow_frame.append(f)
-    flow_frame = ad.AnnData.concatenate(*flow_frame, join="outer", uns_merge="first")
+    flow_frame = ad.concat(flow_frame, join="outer", merge="first")
     return flow_frame
 
 
