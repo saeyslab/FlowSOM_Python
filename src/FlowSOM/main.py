@@ -8,11 +8,12 @@ import igraph as ig
 import numpy as np
 import pandas as pd
 from mudata import MuData
+from scipy.sparse import issparse
 from scipy.spatial.distance import cdist, pdist, squareform
 from scipy.stats import median_abs_deviation
 from sklearn.cluster import AgglomerativeClustering
 
-from .io import read_FCS, read_csv
+from .io import read_csv, read_FCS
 from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
 
 
@@ -45,21 +46,22 @@ class FlowSOM:
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
         :type inp: str / ad.AnnData
         """
-        if isinstance(inp, ad.AnnData):
-            data = inp.X
-        elif isinstance(inp, str):
+        if isinstance(inp, str):
             if inp.endswith(".csv"):
-                inp = read_csv(inp)
+                adata = read_csv(inp)
             elif inp.endswith(".fcs"):
-                inp = read_FCS(inp)
-            data = inp.X
-        channels = np.asarray(inp.var["channel"])
-        markers = np.asarray(inp.var["marker"])
+                adata = read_FCS(inp)
+        else:
+            adata = inp
+        if issparse(adata.X):
+            # sparse matrices are not supported
+            adata.X = adata.X.todense()
+        channels = np.asarray(adata.var["channel"])
+        markers = np.asarray(adata.var["marker"])
         isnan_markers = [str(marker) == "nan" or len(marker) == 0 for marker in markers]
         markers[isnan_markers] = channels[isnan_markers]
         pretty_colnames = [markers[i] + " <" + channels[i] + ">" for i in range(len(markers))]
-        fsom = np.array(data, dtype=np.float32)
-        fsom = MuData({"cell_data": ad.AnnData(fsom)})
+        fsom = MuData({"cell_data": adata})
         fsom.mod["cell_data"].var["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
         fsom.mod["cell_data"].var_names = np.asarray(channels)
         fsom.mod["cell_data"].var["markers"] = np.asarray(markers)
@@ -179,6 +181,8 @@ class FlowSOM:
         df = self.mudata["cell_data"].X  # [self.adata.X[:, 0].argsort()]
         df = np.c_[self.mudata["cell_data"].obs["clustering"], df]
         n_nodes = self.mudata["cell_data"].uns["n_nodes"]
+        
+
         cluster_median_values = np.vstack(
             [
                 np.median(df[df[:, 0] == cl], axis=0)  # cl + 1 if cluster starts with 1
