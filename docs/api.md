@@ -7,10 +7,11 @@ import flowsom as fs
 ```
 
 The functionality is organised in subpackages:
-- `io` for reading and writing FCS files
-- `pp` for preprocessing
-- `tl` for tools
-- `pl` for plotting
+
+-   `io` for reading and writing FCS files
+-   `pp` for preprocessing
+-   `tl` for tools
+-   `pl` for plotting
 
 The central class is `FlowSOM`, which can be instantiated as a class and is also the output of the convenience function `flowsom_clustering`:
 

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import re
 
-import pytometry as pm
 import anndata as ad
 import pandas as pd
+import pytometry as pm
 
 
 def read_FCS(filepath):
