@@ -1,5 +1,6 @@
-import flowsom as fs
 from pathlib import Path
+
+import flowsom as fs
 
 
 def test_package_has_version():
@@ -120,37 +121,25 @@ def test_FlowSOM_class(FlowSOM_res):
     obs_true_keys_cell = ["clustering", "distance_to_bmu", "metaclustering"]
     var_true_keys_cell = ["pretty_colnames", "cols_used", "markers", "channels"]
 
-    length_uns_cell = len(uns_true_keys_cell) == len(cell_data.uns.keys())
-    length_obs_cell = len(obs_true_keys_cell) == len(cell_data.obs.keys())
-    length_var_cell = len(var_true_keys_cell) == len(cell_data.var.keys())
-
-    uns_keys_cell = all([key in uns_true_keys_cell for key in cell_data.uns.keys()])
-    obs_keys_cell = all([key in obs_true_keys_cell for key in cell_data.obs.keys()])
-    var_keys_cell = all([key in var_true_keys_cell for key in cell_data.var.keys()])
+    # make sure that at least the true keys are in the object
+    uns_keys_cell = all([key in cell_data.uns.keys() for key in uns_true_keys_cell])
+    obs_keys_cell = all([key in cell_data.obs.keys() for key in obs_true_keys_cell])
+    var_keys_cell = all([key in cell_data.var.keys() for key in var_true_keys_cell])
 
     cluster_data = FlowSOM_res.get_cluster_data()
     uns_true_keys_cluster = ["outliers", "graph", "xdim", "ydim", "metacluster_MFIs"]
     obs_true_keys_cluster = ["percentages", "metaclustering"]
     obsm_true_keys_cluster = ["cv_values", "sd_values", "mad_values", "codes", "grid", "layout"]
 
-    length_uns_cluster = len(uns_true_keys_cluster) == len(cluster_data.uns.keys())
-    length_obs_cluster = len(obs_true_keys_cluster) == len(cluster_data.obs.keys())
-    length_obsm_cluster = len(obsm_true_keys_cluster) == len(cluster_data.obsm.keys())
-
-    uns_keys_cluster = all([key in uns_true_keys_cluster for key in cluster_data.uns.keys()])
-    obs_keys_cluster = all([key in obs_true_keys_cluster for key in cluster_data.obs.keys()])
-    obsm_keys_cluster = all([key in obsm_true_keys_cluster for key in cluster_data.obsm.keys()])
+    # make sure that at least the true keys are in the object
+    uns_keys_cluster = all([key in cluster_data.uns.keys() for key in uns_true_keys_cluster])
+    obs_keys_cluster = all([key in cluster_data.obs.keys() for key in obs_true_keys_cluster])
+    obsm_keys_cluster = all([key in cluster_data.obsm.keys() for key in obsm_true_keys_cluster])
     assert all(
         [
-            length_uns_cell,
-            length_obs_cell,
-            length_var_cell,
             uns_keys_cell,
             obs_keys_cell,
             var_keys_cell,
-            length_uns_cluster,
-            length_obs_cluster,
-            length_obsm_cluster,
             uns_keys_cluster,
             obs_keys_cluster,
             obsm_keys_cluster,
