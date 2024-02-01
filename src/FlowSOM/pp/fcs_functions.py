@@ -12,7 +12,8 @@ from flowsom.tl import get_markers
 
 
 def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
-    """Aggregate multiple FCS files together
+    """Aggregate multiple FCS files together.
+
     :param filenames: An array containing full paths to the FCS files
     :type filenames: np.array
     :param c_total: Total number of cells to write to the output file
@@ -56,6 +57,17 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
 
 
 def normalize_estimate_logicle(adata, channels, m=4.5, q=0.05):
+    """Normalize and estimate logicle parameters.
+
+    :param adata: An AnnData object
+    :type adata: AnnData
+    :param channels: Channels/markers to normalize
+    :type channels: list
+    :param m: Logicle parameter. Default=4.5
+    :type m: float
+    :param q: Quantile to use for negative values. Default=0.05
+    :type q: float
+    """
     assert isinstance(adata, ad.AnnData), "Please provide an AnnData object"
     assert isinstance(channels, list), "Please provide a list of channels"
     channels = list(get_markers(adata, channels).keys())

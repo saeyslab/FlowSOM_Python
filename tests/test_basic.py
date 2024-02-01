@@ -120,9 +120,9 @@ def test_FlowSOM_class(FlowSOM_res):
     var_true_keys_cell = ["pretty_colnames", "cols_used", "markers", "channels"]
 
     # make sure that at least the true keys are in the object
-    uns_keys_cell = all([key in cell_data.uns.keys() for key in uns_true_keys_cell])
-    obs_keys_cell = all([key in cell_data.obs.keys() for key in obs_true_keys_cell])
-    var_keys_cell = all([key in cell_data.var.keys() for key in var_true_keys_cell])
+    uns_keys_cell = all(key in cell_data.uns.keys() for key in uns_true_keys_cell)
+    obs_keys_cell = all(key in cell_data.obs.keys() for key in obs_true_keys_cell)
+    var_keys_cell = all(key in cell_data.var.keys() for key in var_true_keys_cell)
 
     cluster_data = FlowSOM_res.get_cluster_data()
     uns_true_keys_cluster = ["outliers", "graph", "xdim", "ydim", "metacluster_MFIs"]
@@ -130,9 +130,9 @@ def test_FlowSOM_class(FlowSOM_res):
     obsm_true_keys_cluster = ["cv_values", "sd_values", "mad_values", "codes", "grid", "layout"]
 
     # make sure that at least the true keys are in the object
-    uns_keys_cluster = all([key in cluster_data.uns.keys() for key in uns_true_keys_cluster])
-    obs_keys_cluster = all([key in cluster_data.obs.keys() for key in obs_true_keys_cluster])
-    obsm_keys_cluster = all([key in cluster_data.obsm.keys() for key in obsm_true_keys_cluster])
+    uns_keys_cluster = all(key in cluster_data.uns.keys() for key in uns_true_keys_cluster)
+    obs_keys_cluster = all(key in cluster_data.obs.keys() for key in obs_true_keys_cluster)
+    obsm_keys_cluster = all(key in cluster_data.obsm.keys() for key in obsm_true_keys_cluster)
     assert all(
         [
             uns_keys_cell,

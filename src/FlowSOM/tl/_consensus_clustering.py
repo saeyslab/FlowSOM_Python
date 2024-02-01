@@ -15,7 +15,9 @@ import numpy as np
 
 class ConsensusCluster:
     """
-    Implementation of Consensus clustering, following the paper
+    Implementation of Consensus clustering.
+
+    This follows the paper
     https://link.springer.com/content/pdf/10.1023%2FA%3A1023949509487.pdf
     https://github.com/ZigaSajovic/Consensus_Clustering/blob/master/consensusClustering.py
       * cluster -> clustering class
@@ -36,7 +38,8 @@ class ConsensusCluster:
         self.H_ = H
 
     def _internal_resample(self, data, proportion):
-        """
+        """Resamples the data.
+
         Args:
           * data -> (examples,attributes) format
           * proportion -> percentage to sample.

@@ -19,7 +19,7 @@ def read_FCS(filepath):
         f.var = f.var.sort_values(by="n")
         f.uns["meta"]["channels"].index = f.uns["meta"]["channels"].index.astype(int)
         f.uns["meta"]["channels"] = f.uns["meta"]["channels"].sort_index()
-    except:
+    except ValueError:
         f = pm.io.read_fcs(filepath, reindex=False)
         markers = {
             str(re.sub("S$", "", re.sub("^P", "", string))): f.uns["meta"][string]
@@ -37,6 +37,7 @@ def read_FCS(filepath):
 
 
 def read_csv(filepath, spillover=None, **kwargs):
+    """Reads in a CSV file."""
     ff = ad.read_csv(filepath, **kwargs)
     ff.var = pd.DataFrame(
         {"n": range(ff.shape[1]), "channel": ff.var_names, "marker": ff.var_names}, index=ff.var.index

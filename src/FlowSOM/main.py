@@ -290,6 +290,19 @@ class FlowSOM:
     def consensus_hierarchical_clustering(
         self, data, n_clus, n_subsamples=100, linkage="average", resample_proportion=0.9
     ):
+        """Perform a consensus hierarchical clustering.
+
+        :param data: The data to cluster
+        :type data: np.array
+        :param n_clus: The number of metaclusters
+        :type n_clus: int
+        :param n_subsamples: The number of subsamples to use for consensus clustering
+        :type n_subsamples: int
+        :param linkage: The linkage method to use for clustering
+        :type linkage: str
+        :param resample_proportion: The proportion of the data to use for subsampling
+        :type resample_proportion: float
+        """
         average = ConsensusCluster(
             AgglomerativeClustering, K=n_clus, H=n_subsamples, resample_proportion=resample_proportion, linkage=linkage
         )
@@ -439,15 +452,18 @@ class FlowSOM:
         return fsom_subset
 
     def get_cell_data(self):
+        """Get the cell data."""
         return self.mudata["cell_data"]
 
     def get_cluster_data(self):
+        """Get the cluster data."""
         return self.mudata["cluster_data"]
 
 
 def flowsom_clustering(inp, cols_to_use=None, n_clus=10, xdim=10, ydim=10, seed=None, **kwargs):
-    """Perform FlowSOM clustering on an anndata object and returns the anndata
-       object with the FlowSOM clusters and metaclusters added as variable.
+    """Perform FlowSOM clustering on an anndata object and returns the anndata object.
+
+    The FlowSOM clusters and metaclusters are added as variable.
 
     :param inp: An anndata or filepath to an FCS file
     :type inp: ad.AnnData / str
