@@ -114,9 +114,6 @@ ignore = [
 ]
 extend-include = ["*.ipynb"]
 
-[tool.ruff.format]
-docstring-code-format = true
-
 [tool.ruff.pydocstyle]
 convention = "numpy"
 

@@ -25,7 +25,7 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
     :type keep_order: boolean
     :param silent: If False, prints an update every time it starts processing a
     new file. Default = False.
-    :type silent: boolean
+    :type silent: boolean.
     """
     nFiles = len(filenames)
     cFile = int(np.ceil(c_total / nFiles))

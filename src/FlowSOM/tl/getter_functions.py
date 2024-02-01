@@ -8,7 +8,7 @@ import pandas as pd
 
 
 def get_channels(obj, markers: np.ndarray, exact=True):
-    """Gets the channels of the provided markers based on a FlowSOM object or an FCS file
+    """Gets the channels of the provided markers based on a FlowSOM object or an FCS file.
 
     :param obj: A FlowSOM object or a FCS AnnData object
     :type obj: FlowSOM / AnnData
@@ -55,7 +55,7 @@ def get_channels(obj, markers: np.ndarray, exact=True):
 
 
 def get_markers(obj, channels, exact=True):
-    """Gets the markers of the provided channels based on a FlowSOM object or an FCS file
+    """Gets the markers of the provided channels based on a FlowSOM object or an FCS file.
 
     :param obj: A FlowSOM object or a FCS AnnData object
     :type obj: FlowSOM / AnnData
@@ -106,7 +106,7 @@ def get_markers(obj, channels, exact=True):
 
 
 def get_counts(fsom, level="metaclusters"):
-    """Get counts of number of cells in clusters or metaclusters
+    """Get counts of number of cells in clusters or metaclusters.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -128,7 +128,7 @@ def get_counts(fsom, level="metaclusters"):
 
 
 def get_percentages(fsom, level="metaclusters"):
-    """Get percentages of number of cells in clusters or metaclusters
+    """Get percentages of number of cells in clusters or metaclusters.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -142,7 +142,7 @@ def get_percentages(fsom, level="metaclusters"):
 
 
 def get_cluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_colnames=False):
-    """Get percentage-positive values for all clusters
+    """Get percentage-positive values for all clusters.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -183,7 +183,7 @@ def get_cluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_coln
 
 
 def get_metacluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_colnames=False):
-    """Get percentage-positive values for all metaclusters
+    """Get percentage-positive values for all metaclusters.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -232,7 +232,7 @@ def get_features(
     positive_cutoffs=None,
     filenames=None,
 ):
-    """Map FCS files on an existing FlowSOM object
+    """Map FCS files on an existing FlowSOM object.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM

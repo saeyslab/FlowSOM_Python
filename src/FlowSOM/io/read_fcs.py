@@ -8,7 +8,7 @@ import pytometry as pm
 
 
 def read_FCS(filepath):
-    """Reads in an FCS file
+    """Reads in an FCS file.
 
     :param filepath: An array containing a full path to the FCS file
     :type filepath: str

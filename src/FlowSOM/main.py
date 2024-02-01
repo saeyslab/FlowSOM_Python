@@ -21,7 +21,7 @@ class FlowSOM:
     """A class that contains all the FlowSOM data using MuData objects."""
 
     def __init__(self, inp=None, cols_to_use: np.ndarray | None = None, n_clus=10, seed: int | None = None, **kwargs):
-        """Initialize the FlowSOM AnnData object
+        """Initialize the FlowSOM AnnData object.
 
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
         :type inp: str / ad.AnnData
@@ -42,7 +42,7 @@ class FlowSOM:
             self._update_derived_values()
 
     def read_input(self, inp):
-        """Converts input to a FlowSOM AnnData object
+        """Converts input to a FlowSOM AnnData object.
 
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
         :type inp: str / ad.AnnData
@@ -74,7 +74,7 @@ class FlowSOM:
         return self.mudata
 
     def build_SOM(self, cols_to_use: np.ndarray | None = None, outlier_MAD=4, **kwargs):
-        """Initialize the SOM clustering and update FlowSOM object
+        """Initialize the SOM clustering and update FlowSOM object.
 
         :param cols_to_use:  An array of the columns to use for clustering
         :type cols_to_use: np.array
@@ -112,7 +112,7 @@ class FlowSOM:
         importance=None,
         seed=None,
     ):
-        """Perform SOM clustering
+        """Perform SOM clustering.
 
         :param inp:  An array of the columns to use for clustering
         :type inp: np.array
@@ -181,7 +181,7 @@ class FlowSOM:
         return codes, clusters, dists, xdim, ydim
 
     def _update_derived_values(self):
-        """Update the derived values such as median values and CV values"""
+        """Update the derived values such as median values and CV values."""
         # get dataframe of intensities and cluster labels on cell level
         df = self.mudata["cell_data"].to_df()  # [self.adata.X[:, 0].argsort()]
         df = pd.concat([self.mudata["cell_data"].obs["clustering"], df], axis=1)
@@ -243,7 +243,7 @@ class FlowSOM:
             self.mudata["cluster_data"].uns["metacluster_MFIs"] = metacluster_median_values
 
     def build_MST(self):
-        """Make a minimum spanning tree"""
+        """Make a minimum spanning tree."""
         adjacency = cdist(
             self.mudata["cluster_data"].obsm["codes"],
             self.mudata["cluster_data"].obsm["codes"],
@@ -274,7 +274,7 @@ class FlowSOM:
         return codes
 
     def metacluster(self, n_clus):
-        """Perform a (consensus) hierarchical clustering
+        """Perform a (consensus) hierarchical clustering.
 
         :param n_clus: The number of metaclusters
         :type n_clus: int
@@ -298,7 +298,7 @@ class FlowSOM:
         return metaclusters
 
     def test_outliers(self, mad_allowed: int = 4, fsom_reference=None, plot_file=None, channels=None):
-        """Test if any cells are too far from their cluster centers
+        """Test if any cells are too far from their cluster centers.
 
         :param mad_allowed: Number of median absolute deviations allowed. Default = 4.
         :type mad_allowed: int
@@ -392,7 +392,7 @@ class FlowSOM:
         return result
 
     def new_data(self, inp, mad_allowed=4):
-        """Map new data to a FlowSOM grid
+        """Map new data to a FlowSOM grid.
 
         :param inp: An anndata or filepath to an FCS file
         :type inp: ad.AnnData / str
@@ -428,7 +428,7 @@ class FlowSOM:
         return fsom_new
 
     def subset(self, ids):
-        """Take a subset from a FlowSOM object
+        """Take a subset from a FlowSOM object.
 
         :param ids: An array of ids to subset
         :type ids: np.array
@@ -447,7 +447,7 @@ class FlowSOM:
 
 def flowsom_clustering(inp, cols_to_use=None, n_clus=10, xdim=10, ydim=10, seed=None, **kwargs):
     """Perform FlowSOM clustering on an anndata object and returns the anndata
-       object with the FlowSOM clusters and metaclusters added as variable
+       object with the FlowSOM clusters and metaclusters added as variable.
 
     :param inp: An anndata or filepath to an FCS file
     :type inp: ad.AnnData / str
