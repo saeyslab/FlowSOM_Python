@@ -11,8 +11,28 @@ def read_fcs_file(filename):
 
 
 @pytest.fixture(scope="session")
-def fcs():
-    file = Path("./tests/data/ff.fcs")
+def ff_path():
+    return Path("./tests/data/ff.fcs")
+
+
+@pytest.fixture(scope="session")
+def fcs_path():
+    return Path("./tests/data/fcs.csv")
+
+
+@pytest.fixture(scope="session")
+def gating_path():
+    return Path("./tests/data/gating_result.csv")
+
+
+@pytest.fixture(scope="session")
+def unprocessed_path():
+    return Path("./tests/data/not_processed.fcs")
+
+
+@pytest.fixture(scope="session")
+def fcs(ff_path):
+    file = ff_path
     return read_fcs_file(file)
 
 
@@ -23,8 +43,7 @@ def FlowSOM_res(fcs):
 
 
 @pytest.fixture(scope="session")
-def gating_results():
-    file = open(Path("./tests/data/gating_result.csv"))
-    data = list(csv.reader(file))
-    file.close()
+def gating_results(gating_path):
+    with open(gating_path) as file:
+        data = list(csv.reader(file))
     return [i[0] for i in data]
