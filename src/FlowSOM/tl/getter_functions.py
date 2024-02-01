@@ -302,7 +302,8 @@ def get_features(
             if "clusters" in level:
                 C_MFIs[i,] = fsom_tmp.get_cluster_data().to_df().loc[:, MFI].to_numpy().flatten()
             if "metaclusters" in level:
-                MC_MFIs[i,] = fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI].to_numpy().flatten()
+                MFI_i = [i for i, x in enumerate(fsom_tmp.get_cluster_data().var_names) if x in MFI]
+                MC_MFIs[i,] = fsom_tmp.get_cluster_data().uns["metacluster_MFIs"].loc[:, MFI_i].to_numpy().flatten()
 
         if "percentages_positive" in type:
             if "clusters" in level:

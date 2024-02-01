@@ -20,7 +20,7 @@ from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_co
 class FlowSOM:
     """A class that contains all the FlowSOM data using MuData objects."""
 
-    def __init__(self, inp, cols_to_use: np.array = None, n_clus=10, seed: int = None, **kwargs):
+    def __init__(self, inp=None, cols_to_use: np.ndarray | None = None, n_clus=10, seed: int | None = None, **kwargs):
         """Initialize the FlowSOM AnnData object
 
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
@@ -34,11 +34,12 @@ class FlowSOM:
         """
         if seed is not None:
             random.seed(seed)
-        self.mudata = self.read_input(inp)
-        self.build_SOM(cols_to_use, **kwargs)
-        self.build_MST()
-        self.metacluster(n_clus)
-        self._update_derived_values()
+        if inp is not None:
+            self.mudata = self.read_input(inp)
+            self.build_SOM(cols_to_use, **kwargs)
+            self.build_MST()
+            self.metacluster(n_clus)
+            self._update_derived_values()
 
     def read_input(self, inp):
         """Converts input to a FlowSOM AnnData object
@@ -56,19 +57,23 @@ class FlowSOM:
         if issparse(adata.X):
             # sparse matrices are not supported
             adata.X = adata.X.todense()
+        if "channel" not in adata.var.keys():
+            adata.var["channel"] = np.asarray(adata.var_names)
         channels = np.asarray(adata.var["channel"])
+        if "marker" not in adata.var.keys():
+            adata.var["marker"] = np.asarray(adata.var_names)
         markers = np.asarray(adata.var["marker"])
         isnan_markers = [str(marker) == "nan" or len(marker) == 0 for marker in markers]
         markers[isnan_markers] = channels[isnan_markers]
         pretty_colnames = [markers[i] + " <" + channels[i] + ">" for i in range(len(markers))]
-        fsom = MuData({"cell_data": adata})
-        fsom.mod["cell_data"].var["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
-        fsom.mod["cell_data"].var_names = np.asarray(channels)
-        fsom.mod["cell_data"].var["markers"] = np.asarray(markers)
-        fsom.mod["cell_data"].var["channels"] = np.asarray(channels)
-        return fsom
+        adata.var["pretty_colnames"] = np.asarray(pretty_colnames, dtype=str)
+        adata.var_names = np.asarray(channels)
+        adata.var["markers"] = np.asarray(markers)
+        adata.var["channels"] = np.asarray(channels)
+        self.mudata = MuData({"cell_data": adata})
+        return self.mudata
 
-    def build_SOM(self, cols_to_use: np.array = None, outlier_MAD=4, **kwargs):
+    def build_SOM(self, cols_to_use: np.ndarray | None = None, outlier_MAD=4, **kwargs):
         """Initialize the SOM clustering and update FlowSOM object
 
         :param cols_to_use:  An array of the columns to use for clustering
@@ -80,18 +85,17 @@ class FlowSOM:
             cols_to_use = self.mudata["cell_data"].var_names
         cols_to_use = list(get_channels(self, cols_to_use).keys())
         codes, clusters, dists, xdim, ydim = self.SOM(inp=self.mudata["cell_data"][:, cols_to_use].X, **kwargs)
-        self.mudata["cell_data"].obs["clustering"] = np.array(clusters)
+        self.mudata["cell_data"].obs["clustering"] = np.array(clusters, dtype=int)
         self.mudata["cell_data"].obs["distance_to_bmu"] = np.array(dists)
         self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
 
         self.mudata["cell_data"].uns["n_nodes"] = xdim * ydim
-        self = self._update_derived_values()
+        self._update_derived_values()
         self.mudata["cluster_data"].uns["xdim"] = xdim
         self.mudata["cluster_data"].uns["ydim"] = ydim
         self.mudata["cluster_data"].obsm["codes"] = np.array(codes)
         self.mudata["cluster_data"].obsm["grid"] = np.array([(x, y) for x in range(xdim) for y in range(ydim)])
         self.mudata["cluster_data"].uns["outliers"] = self.test_outliers(mad_allowed=outlier_MAD).reset_index()
-        return self
 
     def SOM(
         self,
@@ -124,8 +128,8 @@ class FlowSOM:
         """
         data = np.asarray(inp, dtype=np.float64)
         if codes is not None:
-            assert (codes.shape[1] == data.shape[1]) or (
-                codes.shape[0] != xdim * ydim
+            assert (
+                (codes.shape[1] == data.shape[1]) or (codes.shape[0] != xdim * ydim)
             ), "If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
 
         if importance is not None:
@@ -178,31 +182,46 @@ class FlowSOM:
 
     def _update_derived_values(self):
         """Update the derived values such as median values and CV values"""
-        df = self.mudata["cell_data"].X  # [self.adata.X[:, 0].argsort()]
-        df = np.c_[self.mudata["cell_data"].obs["clustering"], df]
+        # get dataframe of intensities and cluster labels on cell level
+        df = self.mudata["cell_data"].to_df()  # [self.adata.X[:, 0].argsort()]
+        df = pd.concat([self.mudata["cell_data"].obs["clustering"], df], axis=1)
         n_nodes = self.mudata["cell_data"].uns["n_nodes"]
-        
 
-        cluster_median_values = np.vstack(
-            [
-                np.median(df[df[:, 0] == cl], axis=0)  # cl + 1 if cluster starts with 1
-                if df[df[:, 0] == cl].shape[0] != 0  # cl + 1 if cluster starts with 1
-                else np.repeat(np.nan, df[df[:, 0] == cl].shape[1])  # cl + 1 if cluster starts with 1
-                for cl in range(n_nodes)
-            ]
-        )
+        # get median values per cluster on cell level
+        cluster_median_values = df.groupby("clustering").median()
+        # make sure cluster_median_values is of length n_nodes
+        # some clusters might be empty when fitting on new data
+        missing_clusters = set(range(n_nodes)) - set(cluster_median_values.index)
+        if len(missing_clusters) > 0:
+            cluster_median_values = cluster_median_values.reindex(
+                list(cluster_median_values.index) + list(missing_clusters)
+            )
+        cluster_median_values.sort_index(inplace=True)
+        # create values for cluster_data
         if "cluster_data" in self.mudata.mod.keys():
             cluster_mudata = self.mudata.mod["cluster_data"]
-            cluster_mudata.X = np.delete(cluster_median_values, 0, axis=1)
+            cluster_mudata.X = cluster_median_values.values
         else:
-            cluster_mudata = ad.AnnData(np.delete(cluster_median_values, 0, axis=1))
+            cluster_mudata = ad.AnnData(cluster_median_values.values)
         cluster_mudata.var_names = self.mudata["cell_data"].var_names
+        # standard deviation of cells per cluster
         sd_values = []
+        # coefficient of variation of cells per cluster
         cv_values = []
+        # median absolute deviation of cells per cluster
         mad_values = []
+        # percentages of cells of cells per cluster
         pctgs = {}
         for cl in range(n_nodes):
-            cluster_data = df[df[:, 0] == cl, :]  # +1 if cluster starts at 1
+            cluster_data = df[df["clustering"] == cl]
+            # if cluster is empty, set values to nan for all markers
+            if cluster_data.shape[0] == 0:
+                cluster_mudata.X[cl, :] = np.nan
+                cv_values.append([np.nan] * cluster_data.shape[1])
+                sd_values.append([np.nan] * cluster_data.shape[1])
+                mad_values.append([np.nan] * cluster_data.shape[1])
+                pctgs[cl] = 0
+                continue
             means = np.nanmean(cluster_data, axis=0)
             means[means == 0] = np.nan
             cv_values.append(np.divide(np.nanstd(cluster_data, axis=0), means))
@@ -222,8 +241,6 @@ class FlowSOM:
             df = np.c_[self.mudata["cell_data"].obs["metaclustering"], df]
             metacluster_median_values = pd.DataFrame(df).groupby(0).median()
             self.mudata["cluster_data"].uns["metacluster_MFIs"] = metacluster_median_values
-
-        return self
 
     def build_MST(self):
         """Make a minimum spanning tree"""
@@ -401,7 +418,7 @@ class FlowSOM:
         clusters, dists = map_data_to_codes(data=data, codes=self.get_cluster_data().obsm["codes"])
         fsom_new.get_cell_data().obsm["distance_to_bmu"] = np.array(dists)
         fsom_new.get_cell_data().obs["clustering"] = np.array(clusters)
-        fsom_new = fsom_new._update_derived_values()
+        fsom_new._update_derived_values()
         metaclusters = self.get_cluster_data().obs["metaclustering"]
         fsom_new.get_cell_data().obs["metaclustering"] = np.asarray(
             [np.array(metaclusters)[int(i)] for i in np.asarray(fsom_new.get_cell_data().obs["clustering"])]
@@ -418,7 +435,7 @@ class FlowSOM:
         """
         fsom_subset = copy.deepcopy(self)
         fsom_subset.mudata.mod["cell_data"] = fsom_subset.mudata["cell_data"][ids, :]
-        fsom_subset = fsom_subset._update_derived_values()
+        fsom_subset._update_derived_values()
         return fsom_subset
 
     def get_cell_data(self):
