@@ -47,8 +47,9 @@ doc = [
     "ipykernel",
     "ipython",
     "sphinx-copybutton",
+    "pandas",
 ]
-test = ["pytest", "pytest-cov"]
+test = ["pytest", "coverage"]
 
 [tool.hatch.build.targets.wheel]
 packages = ['src/flowsom']
@@ -65,14 +66,9 @@ addopts = [
 ]
 
 [tool.fawltydeps]
-code = ["src"] # Only search for imports under ./src
-deps = ["pyproject.toml"] # Only look for declared dependencies here
-ignore_undeclared = [
-    "flowsom",
-] # We use `black`, but we don't intend to import it
-
-[tool.black]
-line-length = 120
+code = ["src"]                  # Only search for imports under ./src
+deps = ["pyproject.toml"]       # Only look for declared dependencies here
+ignore_undeclared = ["flowsom"]
 
 [tool.ruff]
 src = ["src"]
@@ -91,7 +87,7 @@ select = [
     "RUF100", # Report unused noqa directives
 ]
 ignore = [
-    # line too long -> we accept long comment lines; black gets rid of long code lines
+    # line too long -> we accept long comment lines; formatter gets rid of long code lines
     "E501",
     # Do not assign a lambda expression, use a def -> lambda expression assignments are convenient
     "E731",
@@ -116,6 +112,10 @@ ignore = [
     # We want docstrings to start immediately after the opening triple quote
     "D213",
 ]
+extend-include = ["*.ipynb"]
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.pydocstyle]
 convention = "numpy"
