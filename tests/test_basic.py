@@ -109,8 +109,8 @@ def test_get_features(FlowSOM_res, ff_path):
     )
 
 
-def test_FlowSOMmary(FlowSOM_res):
-    fs.pl.FlowSOMmary(FlowSOM_res)
+def test_FlowSOMmary(FlowSOM_res, tmp_path):
+    fs.pl.FlowSOMmary(FlowSOM_res, tmp_path / "FlowSOMmary.pdf")
 
 
 def test_FlowSOM_class(FlowSOM_res):
