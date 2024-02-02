@@ -11,16 +11,26 @@ from mudata import MuData
 from scipy.sparse import issparse
 from scipy.spatial.distance import cdist, pdist, squareform
 from scipy.stats import median_abs_deviation
+from sklearn.base import BaseEstimator, ClusterMixin
 from sklearn.cluster import AgglomerativeClustering
 
 from .io import read_csv, read_FCS
 from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
 
 
-class FlowSOM:
+class FlowSOM(BaseEstimator, ClusterMixin):
     """A class that contains all the FlowSOM data using MuData objects."""
 
-    def __init__(self, inp=None, cols_to_use: np.ndarray | None = None, n_clus=10, seed: int | None = None, **kwargs):
+    def __init__(
+        self,
+        inp=None,
+        cols_to_use: np.ndarray | None = None,
+        n_clus=10,
+        n_clusters=None,
+        seed: int | None = None,
+        random_state=None,
+        **kwargs,
+    ):
         """Initialize the FlowSOM AnnData object.
 
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
@@ -34,12 +44,45 @@ class FlowSOM:
         """
         if seed is not None:
             random.seed(seed)
+        if n_clus is not None and n_clusters is None:
+            n_clusters = n_clus
+        self.n_clusters = n_clusters
+        self.mudata = None
         if inp is not None:
             self.mudata = self.read_input(inp)
             self.build_SOM(cols_to_use, **kwargs)
             self.build_MST()
-            self.metacluster(n_clus)
+            self.metacluster(self.n_clusters)
             self._update_derived_values()
+
+    @property
+    def labels_(self):
+        """Get the labels."""
+        if "cell_data" in self.mudata.mod.keys():
+            if "clustering" in self.mudata["cell_data"].obs_keys():
+                return self.mudata["cell_data"].obs["clustering"]
+        return None
+
+    @labels_.setter
+    def labels_(self, value):
+        """Set the labels."""
+        if "cell_data" in self.mudata.mod.keys():
+            self.mudata["cell_data"].obs["clustering"] = value
+        else:
+            raise ValueError("No cell data found in the MuData object.")
+
+    def fit(self, X, y=None):
+        """Fit the model."""
+        self.build_SOM(X)
+        self.build_MST()
+        self.metacluster()
+        self._update_derived_values()
+        return self
+
+    def predict(self, X, y=None):
+        """Predict the model."""
+        new_fsom = self.new_data(X)
+        return new_fsom
 
     def read_input(self, inp):
         """Converts input to a FlowSOM AnnData object.
