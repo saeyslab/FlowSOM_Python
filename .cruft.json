@@ -1,7 +1,7 @@
 {
   "template": "https://github.com/scverse/cookiecutter-scverse",
-  "commit": "3dcfe1fd2bdfc3c1cc9cc4c2108fba1e973b9dcb",
-  "checkout": null,
+  "commit": "586b1652162ff7994b0070a034023d64289ae416",
+  "checkout": "v0.3.1",
   "context": {
     "cookiecutter": {
       "project_name": "FlowSOM",
@@ -13,9 +13,15 @@
       "project_repo": "https://github.com/artuurC/FlowSOM",
       "license": "GNU General Public License Version 3",
       "_copy_without_render": [
-        ".github/workflows/**.yaml",
+        ".github/workflows/build.yaml",
+        ".github/workflows/test.yaml",
         "docs/_templates/autosummary/**.rst"
       ],
+      "_render_devdocs": false,
+      "_jinja2_env_vars": {
+        "lstrip_blocks": true,
+        "trim_blocks": true
+      },
       "_template": "https://github.com/scverse/cookiecutter-scverse"
     }
   },
