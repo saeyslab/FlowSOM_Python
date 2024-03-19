@@ -20,8 +20,8 @@ The central class is `FlowSOM`, which can be instantiated as a class and is also
 .. autosummary::
     :toctree: generated
 
-    flowsom.FlowSOM
-    flowsom.flowsom_clustering
+    FlowSOM
+    flowsom_clustering
 ```
 
 ## Reading
