@@ -4,13 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
-  schedule:
-    - cron: "0 5 1,15 * *"
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: "*"
 
 jobs:
   test:
@@ -23,14 +17,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            python: "3.9"
-          - os: ubuntu-latest
-            python: "3.11"
+          # - os: ubuntu-latest
+          #   python: "3.9"
           - os: ubuntu-latest
             python: "3.11"
-            pip-flags: "--pre"
-            name: PRE-RELEASE DEPENDENCIES
+          # - os: ubuntu-latest
+          #   python: "3.11"
+          #   pip-flags: "--pre"
+          #   name: PRE-RELEASE DEPENDENCIES
 
     name: ${{ matrix.name }} Python ${{ matrix.python }}
 
@@ -39,13 +33,13 @@ jobs:
       PYTHON: ${{ matrix.python }}
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
-          cache: "pip"
-          cache-dependency-path: "**/pyproject.toml"
+          # cache: "pip"
+          # cache-dependency-path: "**/pyproject.toml"
 
       - name: Install test dependencies
         run: |
