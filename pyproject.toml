@@ -30,6 +30,7 @@ dependencies = [
     "seaborn",
     "readfcs",
     "anndata",
+    "dask[dataframe]",
 ]
 
 
