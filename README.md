@@ -1,6 +1,7 @@
 # FlowSOM
 
 <!-- [![Tests][badge-tests]][link-tests] -->
+
 [![Documentation][badge-docs]][link-docs]
 
 [badge-tests]: https://img.shields.io/github/actions/workflow/status/saeyslab/FlowSOM_Python/test.yaml?branch=main

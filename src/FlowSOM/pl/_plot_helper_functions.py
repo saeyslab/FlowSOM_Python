@@ -11,7 +11,7 @@ from scipy.spatial.distance import pdist
 
 
 def FlowSOM_colors():
-    """Colormap of default FlowSOM colors"""
+    """Colormap of default FlowSOM colors."""
     cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
         "FlowSOM_colors",
         ["#00007F", "#0000E1", "#007FFF", "#00E1E1", "#7FFF7F", "#E1E100", "#FF7F00", "#E10000", "#7F0000"],
@@ -20,7 +20,7 @@ def FlowSOM_colors():
 
 
 def gg_color_hue():
-    """Colormap of default ggplot colors"""
+    """Colormap of default ggplot colors."""
     cmap = matplotlib.colors.ListedColormap(
         ["#F8766D", "#D89000", "#A3A500", "#39B600", "#00BF7D", "#00BFC4", "#00B0F6", "#9590FF", "#E76BF3", "#FF62BC"]
     )
@@ -67,7 +67,7 @@ def plot_FlowSOM(
     ref_node_size: int = None,
     equal_node_size: bool = False,
 ):
-    """Plots the base layer of a FlowSOM result
+    """Plots the base layer of a FlowSOM result.
 
     :param fsom: A FlowSOM object
     :type fsom: A object from the class FlowSOM
@@ -185,7 +185,7 @@ def plot_FlowSOM(
 
 
 def plot_star_legend(fig, ax, markers, coords=(0, 0), cmap=FlowSOM_colors(), max_star_height=1, star_height=1):
-    """Function makes the legend of the FlowSOM star plot
+    """Function makes the legend of the FlowSOM star plot.
 
     :param markers:
     :type markers:

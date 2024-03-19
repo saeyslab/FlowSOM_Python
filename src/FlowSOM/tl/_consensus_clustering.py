@@ -15,7 +15,9 @@ import numpy as np
 
 class ConsensusCluster:
     """
-    Implementation of Consensus clustering, following the paper
+    Implementation of Consensus clustering.
+
+    This follows the paper
     https://link.springer.com/content/pdf/10.1023%2FA%3A1023949509487.pdf
     https://github.com/ZigaSajovic/Consensus_Clustering/blob/master/consensusClustering.py
       * cluster -> clustering class
@@ -24,7 +26,7 @@ class ConsensusCluster:
       * L -> smallest number of clusters to try
       * K -> biggest number of clusters to try
       * H -> number of resamplings for each cluster number
-      * resample_proportion -> percentage to sample
+      * resample_proportion -> percentage to sample.
     """
 
     def __init__(self, cluster, K, H, resample_proportion=0.9, linkage="average"):
@@ -36,17 +38,18 @@ class ConsensusCluster:
         self.H_ = H
 
     def _internal_resample(self, data, proportion):
-        """
+        """Resamples the data.
+
         Args:
           * data -> (examples,attributes) format
-          * proportion -> percentage to sample
+          * proportion -> percentage to sample.
         """
         resampled_indices = np.random.choice(range(data.shape[0]), size=int(data.shape[0] * proportion), replace=False)
         return resampled_indices, data[resampled_indices, :]
 
     def fit(self, data):
         """
-        Fits a consensus matrix for each number of clusters
+        Fits a consensus matrix for each number of clusters.
 
         Args:
           * data -> (examples,attributes) format
@@ -75,5 +78,5 @@ class ConsensusCluster:
         self.Mk = Mk
 
     def predict(self, n_clus=10):
-        """Predicts on the consensus matrix, for best found cluster number"""
+        """Predicts on the consensus matrix, for best found cluster number."""
         return self.cluster_(n_clusters=n_clus, linkage=self.linkage, metric="precomputed").fit_predict(1 - self.Mk)

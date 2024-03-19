@@ -14,7 +14,18 @@ from scipy.stats import gaussian_kde
 
 from flowsom.tl import get_channels, get_markers
 
-from ._plot_helper_functions import *
+from ._plot_helper_functions import (
+    FlowSOM_colors,
+    add_legend,
+    add_nodes,
+    add_stars,
+    add_text,
+    add_wedges,
+    gg_color_hue,
+    plot_FlowSOM,
+    plot_star_legend,
+    scale_star_heights,
+)
 
 
 def plot_2D_scatters(
@@ -35,7 +46,7 @@ def plot_2D_scatters(
     plot_file: str = "2DScatterPlots.png",
     title=None,
 ):
-    """Function to draw 2D scatter plots of FlowSOM (meta)clusters
+    """Function to draw 2D scatter plots of FlowSOM (meta)clusters.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -165,7 +176,7 @@ def plot_2D_scatters(
 
 
 def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black", title=None, **kwargs):
-    """Plot labels for each cluster
+    """Plot labels for each cluster.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -195,13 +206,14 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
 
 
 def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
-    """Plot cluster ids for each cluster
+    """Plot cluster ids for each cluster.
+
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
     :param level: Should be either "clusters" (default) or "metaclusters".
     :type level: str
     :param max_node_size: Determines the maximum node size. Default is 0.
-    :type max_node_size: float
+    :type max_node_size: float.
     """
     assert level in ["clusters", "metaclusters"], "level should be clusters or metaclusters"
     if level == "clusters":
@@ -214,7 +226,7 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
 def plot_variable(
     fsom, variable, cmap=FlowSOM_colors(), labels=None, text_size=5, text_color="black", lim=None, title=None, **kwargs
 ):
-    """Plot FlowSOM grid or tree, colored by node values given in variable
+    """Plot FlowSOM grid or tree, colored by node values given in variable.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -258,7 +270,7 @@ def plot_variable(
 
 
 def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(), **kwargs):
-    """Plot FlowSOM grid or tree, colored by node values for a specific marker
+    """Plot FlowSOM grid or tree, colored by node values for a specific marker.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -287,7 +299,7 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
 
 
 def plot_stars(fsom, markers=None, cmap=FlowSOM_colors(), title=None, **kwargs):
-    """Plot star charts
+    """Plot star charts.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -339,8 +351,7 @@ def plot_pies(
     title=None,
     **kwargs,
 ):
-    """Plot FlowSOM grid or tree, with pies indicating another clustering or
-    manual gating result
+    """Plot FlowSOM grid or tree, with pies indicating another clustering or manual gating result.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -395,7 +406,7 @@ def plot_pies(
 
 
 def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
-    """Makes a visual FlowSOMmary of a FlowSOM object
+    """Makes a visual FlowSOMmary of a FlowSOM object.
 
     :param fsom: A FlowSOM object
     :type fsom: FlowSOM
@@ -467,7 +478,6 @@ def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
         np.random.choice(range(fsom.get_cell_data().shape[0]), 5000, replace=False),
         fsom.get_cell_data().var_names[ref_markers_bool],
     ]
-    subset_fsom
     neighbors(subset_fsom)
     umap(subset_fsom)
 
