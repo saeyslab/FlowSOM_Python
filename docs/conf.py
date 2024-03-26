@@ -21,7 +21,7 @@ project_name = info["Name"]
 author = info["Author"]
 copyright = f"{datetime.now():%Y}, {author}."
 version = info["Version"]
-urls = dict(pu.split(", ") for pu in info.get_all("Project-URL"))
+urls = dict(pu.split(", ") for pu in (info.get_all("Project-URL") or []))
 repository_url = urls["Source"]
 
 # The full version, including alpha/beta/rc tags
@@ -56,7 +56,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxext.opengraph",
-    *[p.stem for p in (HERE / "extensions").glob("*.py")],
+    *[p.stem for p in (HERE / "extensions").glob("*.py") or []],
 ]
 
 autosummary_generate = True
@@ -120,7 +120,7 @@ html_theme_options = {
 
 pygments_style = "default"
 
-nitpick_ignore = [
+nitpick_ignore: list[tuple] = [
     # If building the documentation fails because of a missing link that is outside your control,
     # you can add an exception to this list.
     #     ("py:class", "igraph.Graph"),
