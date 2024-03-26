@@ -1,10 +1,13 @@
-from flowsom.models import SOMEstimator
 from sklearn.metrics import v_measure_score
+
+from flowsom.models import SOMEstimator
+
 
 def test_clustering(X):
     som = SOMEstimator()
     y_pred: SOMEstimator = som.fit_predict(X)
     assert y_pred.shape == (100,)
+
 
 def test_clustering_v_measure(X_and_y):
     som = SOMEstimator()

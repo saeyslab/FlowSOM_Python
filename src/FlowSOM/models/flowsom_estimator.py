@@ -1,7 +1,5 @@
+from flowsom.models import ConsensusCluster, SOMEstimator
 from flowsom.models.base_flowsom_estimator import BaseFlowSOMEstimator
-
-from flowsom.models import SOMEstimator
-from flowsom.models import ConsensusCluster
 
 
 class FlowSOMEstimator(BaseFlowSOMEstimator):

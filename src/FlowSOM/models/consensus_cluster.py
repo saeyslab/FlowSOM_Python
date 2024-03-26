@@ -11,11 +11,10 @@ from __future__ import annotations
 import bisect
 from itertools import combinations
 
-from sklearn.cluster import AgglomerativeClustering
-from flowsom.models import BaseClusterEstimator
-
 import numpy as np
-from sklearn.utils.validation import check_is_fitted
+from sklearn.cluster import AgglomerativeClustering
+
+from flowsom.models import BaseClusterEstimator
 
 
 class ConsensusCluster(BaseClusterEstimator):
@@ -34,7 +33,9 @@ class ConsensusCluster(BaseClusterEstimator):
       * resample_proportion -> percentage to sample.
     """
 
-    def __init__(self, n_clusters, K=None, H=100, resample_proportion=0.9, linkage="average", cluster=AgglomerativeClustering):
+    def __init__(
+        self, n_clusters, K=None, H=100, resample_proportion=0.9, linkage="average", cluster=AgglomerativeClustering
+    ):
         super().__init__()
         assert 0 <= resample_proportion <= 1, "proportion has to be between 0 and 1"
         self.n_clusters = n_clusters

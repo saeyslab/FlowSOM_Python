@@ -1,8 +1,10 @@
-from flowsom.models import BaseClusterEstimator
 from sklearn.utils.validation import check_is_fitted
+
+from flowsom.models import BaseClusterEstimator
 
 
 class BaseFlowSOMEstimator(BaseClusterEstimator):
+    """Base class for all FlowSOM estimators in FlowSOM."""
 
     def __init__(
         self,
@@ -23,19 +25,19 @@ class BaseFlowSOMEstimator(BaseClusterEstimator):
         """Return the codes, shaped: (n_clusters, n_features)."""
         check_is_fitted(self, "_is_fitted")
         return self.cluster_model.codes
-    
+
     @property
     def distances(self):
         """Return the distances."""
         check_is_fitted(self, "_is_fitted")
         return self.cluster_model.distances
-    
+
     @property
     def cluster_labels(self):
         """Return the cluster labels."""
         check_is_fitted(self, "_is_fitted")
         return self.cluster_labels_
-    
+
     @property
     def metacluster_labels(self):
         """Return the metacluster labels."""
@@ -64,7 +66,7 @@ class BaseFlowSOMEstimator(BaseClusterEstimator):
         self.labels_ = y
         self._is_fitted = True
         return y
-    
+
     def predict(self, X):
         """Predict the clusters."""
         check_is_fitted(self, "_is_fitted")
@@ -75,17 +77,16 @@ class BaseFlowSOMEstimator(BaseClusterEstimator):
         y = self._y_codes[y_clusters]
         self.labels_ = y
         return y
-    
+
     def subset(self, indices):
         """Subset the model."""
         self.labels_ = self.labels_[indices]
         self.cluster_labels_ = self.cluster_labels_[indices]
         self.cluster_model.distances = self.cluster_model.distances[indices]
         return self
-    
+
     def set_n_clusters(self, n_clusters):
         """Set the number of clusters."""
         self.metacluster_kwargs["n_clusters"] = n_clusters
         self.metacluster_model.n_clusters = n_clusters
         return self
-

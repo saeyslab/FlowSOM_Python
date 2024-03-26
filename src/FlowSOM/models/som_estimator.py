@@ -1,11 +1,13 @@
-import numpy as np
-from flowsom.models import BaseClusterEstimator
-from scipy.spatial.distance import cdist, pdist, squareform
-from flowsom.models import SOM, map_data_to_codes
 import igraph as ig
+import numpy as np
+from scipy.spatial.distance import cdist, pdist, squareform
 from sklearn.utils.validation import check_is_fitted
 
+from flowsom.models import SOM, BaseClusterEstimator, map_data_to_codes
+
+
 class SOMEstimator(BaseClusterEstimator):
+    """Estimate a Self-Organizing Map (SOM) clustering model."""
 
     def __init__(
         self,
@@ -33,7 +35,7 @@ class SOMEstimator(BaseClusterEstimator):
         self.codes = codes
         self.importance = importance
         self.seed = seed
-        
+
     def fit(
         self,
         X,
@@ -111,16 +113,18 @@ class SOMEstimator(BaseClusterEstimator):
         self.codes, self.labels_, self.distances = codes.copy(), clusters, dists
         self._is_fitted = True
         return self
-    
+
     def predict(self, X, y=None):
+        """Predict labels using the model."""
         check_is_fitted(self)
         self.distances = cdist(X, self.codes, metric="euclidean")
         clusters, dists = map_data_to_codes(X, self.codes)
         self.labels_ = clusters.astype(int)
         self.distances = dists
         return self.labels_
-    
+
     def fit_predict(self, X, y=None):
+        """Fit the model and predict labels."""
         self.fit(X)
         return self.predict(X)
 

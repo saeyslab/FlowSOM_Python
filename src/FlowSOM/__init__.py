@@ -1,8 +1,8 @@
 from importlib.metadata import version
 
-from . import io, pl, pp, tl
-from .main import FlowSOM, flowsom_clustering
+from flowsom import io, models, pl, pp, tl
+from flowsom.main import FlowSOM, flowsom_clustering
 
-__all__ = ["FlowSOM", "flowsom_clustering", "io", "pl", "pp", "tl"]
+__all__ = ["FlowSOM", "flowsom_clustering", "io", "pl", "pp", "tl", "models"]
 
 __version__ = version("flowsom")
