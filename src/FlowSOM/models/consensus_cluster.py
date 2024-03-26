@@ -5,15 +5,20 @@
 # github.com/ZigaSajovic/Consensus_Clustering #
 #                                             #
 ###############################################
+
 from __future__ import annotations
 
 import bisect
 from itertools import combinations
 
+from sklearn.cluster import AgglomerativeClustering
+from flowsom.models import BaseClusterEstimator
+
 import numpy as np
+from sklearn.utils.validation import check_is_fitted
 
 
-class ConsensusCluster:
+class ConsensusCluster(BaseClusterEstimator):
     """
     Implementation of Consensus clustering.
 
@@ -29,13 +34,15 @@ class ConsensusCluster:
       * resample_proportion -> percentage to sample.
     """
 
-    def __init__(self, cluster, K, H, resample_proportion=0.9, linkage="average"):
+    def __init__(self, n_clusters, K=None, H=100, resample_proportion=0.9, linkage="average", cluster=AgglomerativeClustering):
+        super().__init__()
         assert 0 <= resample_proportion <= 1, "proportion has to be between 0 and 1"
-        self.cluster_ = cluster
-        self.resample_proportion_ = resample_proportion
+        self.n_clusters = n_clusters
+        self.K = K if K else n_clusters
+        self.H = H
+        self.resample_proportion = resample_proportion
+        self.cluster = cluster
         self.linkage = linkage
-        self.K_ = K
-        self.H_ = H
 
     def _internal_resample(self, data, proportion):
         """Resamples the data.
@@ -56,14 +63,14 @@ class ConsensusCluster:
         """
         Mk = np.zeros((data.shape[0], data.shape[0]))
         Is = np.zeros((data.shape[0],) * 2)
-        for _ in range(self.H_):
-            resampled_indices, resample_data = self._internal_resample(data, self.resample_proportion_)
-            Mh = self.cluster_(n_clusters=self.K_, linkage=self.linkage).fit_predict(resample_data)
+        for _ in range(self.H):
+            resampled_indices, resample_data = self._internal_resample(data, self.resample_proportion)
+            Mh = self.cluster(n_clusters=self.K, linkage=self.linkage).fit_predict(resample_data)
             index_mapping = np.array((Mh, resampled_indices)).T
             index_mapping = index_mapping[index_mapping[:, 0].argsort()]
             sorted_ = index_mapping[:, 0]
             id_clusts = index_mapping[:, 1]
-            for i in range(self.K_):
+            for i in range(self.K):
                 ia = bisect.bisect_left(sorted_, i)
                 ib = bisect.bisect_right(sorted_, i)
                 is_ = id_clusts[ia:ib]
@@ -76,7 +83,9 @@ class ConsensusCluster:
         Mk += Mk.T
         Mk[range(data.shape[0]), range(data.shape[0])] = 1
         self.Mk = Mk
+        self._is_fitted = True
+        return self
 
-    def predict(self, n_clus=10):
+    def fit_predict(self, data):
         """Predicts on the consensus matrix, for best found cluster number."""
-        return self.cluster_(n_clusters=n_clus, linkage=self.linkage, metric="precomputed").fit_predict(1 - self.Mk)
+        return self.cluster(n_clusters=self.n_clusters, linkage=self.linkage).fit_predict(data)

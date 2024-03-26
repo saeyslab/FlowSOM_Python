@@ -27,13 +27,10 @@ def gg_color_hue():
     return cmap
 
 
-def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizontal", bbox_to_anchor=None):
-    if data.dtype == np.float64 or data.dtype == np.int64:
-        norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
-        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
-        sm.set_array(data)
-        fig.colorbar(sm, ax=ax, orientation=orientation, shrink=0.4, label=title)
-    else:
+def add_legend(
+    fig, ax, data, title, cmap, location="best", orientation="horizontal", bbox_to_anchor=None, categorical=True
+):
+    if categorical:
         unique_data = sorted(np.unique(data))
         colors = cmap(np.linspace(0, 1, len(unique_data)))
         legend_elements = [
@@ -52,19 +49,24 @@ def add_legend(fig, ax, data, title, cmap, location="best", orientation="horizon
             title_fontsize=6,
         )
         plt.gca().add_artist(legend)
+    else:
+        norm = matplotlib.colors.Normalize(vmin=min(data), vmax=max(data))
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array(data)
+        fig.colorbar(sm, ax=ax, orientation=orientation, shrink=0.4, label=title)
     return ax, fig
 
 
 def plot_FlowSOM(
     fsom,
     view: str = "MST",
-    background_values: np.array = None,
+    background_values: np.array | None = None,
     background_cmap=gg_color_hue(),
     background_size=1.5,
     equal_background_size=False,
-    node_sizes: np.array = None,
+    node_sizes: np.array | None = None,
     max_node_size: int = 1,
-    ref_node_size: int = None,
+    ref_node_size: int | None = None,
     equal_node_size: bool = False,
 ):
     """Plots the base layer of a FlowSOM result.

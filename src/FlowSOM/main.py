@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import random
 
 import anndata as ad
 import igraph as ig
@@ -9,51 +8,74 @@ import numpy as np
 import pandas as pd
 from mudata import MuData
 from scipy.sparse import issparse
-from scipy.spatial.distance import cdist, pdist, squareform
+from scipy.spatial.distance import cdist
 from scipy.stats import median_abs_deviation
-from sklearn.base import BaseEstimator, ClusterMixin
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.base import check_is_fitted
+
+from flowsom.models.flowsom_estimator import FlowSOMEstimator
 
 from .io import read_csv, read_FCS
-from .tl import SOM, ConsensusCluster, get_channels, get_markers, map_data_to_codes
+from .tl import get_channels, get_markers
 
 
-class FlowSOM(BaseEstimator, ClusterMixin):
+class FlowSOM:
     """A class that contains all the FlowSOM data using MuData objects."""
 
     def __init__(
         self,
-        inp=None,
-        cols_to_use: np.ndarray | None = None,
-        n_clus=10,
-        n_clusters=None,
-        seed: int | None = None,
-        random_state=None,
-        **kwargs,
+        inp,
+        n_clusters,
+        cols_to_use=None,
+        model=FlowSOMEstimator,
+        xdim=10,
+        ydim=10,
+        rlen=10,
+        mst=1,
+        alpha=(0.05, 0.01),
+        mad_allowed=4,
     ):
         """Initialize the FlowSOM AnnData object.
 
-        :param inp: A file path to an FCS file or a AnnData FCS file to cluster
-        :type inp: str / ad.AnnData
-        :param cols_to_use:  An array of the columns to use for clustering
+        :param n_clusters: The number of clusters
+        :type n_clusters: int
+        :param xdim: The x dimension of the SOM
+        :type xdim: int
+        :param ydim: The y dimension of the SOM
+        :type ydim: int
+        :param rlen: Number of times to loop over the training data for each MST
+        :type rlen: int
+        :param mst: Number of times to loop over the training data for each MST
+        :type mst: int
+        :param alpha: The learning rate
+        :type alpha: tuple
+        :param cols_to_use: The columns to use for clustering
         :type cols_to_use: np.array
-        :param n_clus: The number of metacluster
-        :type n_clus: int
-        :param seed: A fixed seed
-        :type seed: int
         """
-        if seed is not None:
-            random.seed(seed)
-        if n_clus is not None and n_clusters is None:
-            n_clusters = n_clus
+        self.cols_to_use = cols_to_use
+        self.mad_allowed = mad_allowed
+        # cluster model params
+        self.xdim = xdim
+        self.ydim = ydim
+        self.rlen = rlen
+        self.mst = mst
+        self.alpha = alpha
+        # metacluster model params
         self.n_clusters = n_clusters
-        self.mudata = None
-        if inp is not None:
-            self.mudata = self.read_input(inp)
-            self.build_SOM(cols_to_use, **kwargs)
-            self.build_MST()
-            self.metacluster(self.n_clusters)
-            self._update_derived_values()
+
+        self.model = model(
+            cluster_kwargs={"xdim": xdim, "ydim": ydim, "rlen": rlen, "mst": mst, "alpha": alpha},
+            metacluster_kwargs={"n_clusters": n_clusters},
+        )
+        self.mudata = MuData(
+            {
+                "cell_data": ad.AnnData(),
+                "cluster_data": ad.AnnData(),
+            }
+        )
+        self.read_input(inp)
+        self.build_SOM()
+        self.metacluster()
+        self._update_derived_values()
 
     @property
     def labels_(self):
@@ -71,32 +93,37 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         else:
             raise ValueError("No cell data found in the MuData object.")
 
-    def fit(self, X, y=None):
-        """Fit the model."""
-        self.build_SOM(X)
-        self.build_MST()
-        self.metacluster()
-        self._update_derived_values()
-        return self
-
-    def predict(self, X, y=None):
-        """Predict the model."""
-        new_fsom = self.new_data(X)
-        return new_fsom
-
-    def read_input(self, inp):
+    def read_input(
+        self,
+        inp=None,
+        cols_to_use=None,
+    ):
         """Converts input to a FlowSOM AnnData object.
 
         :param inp: A file path to an FCS file or a AnnData FCS file to cluster
         :type inp: str / ad.AnnData
         """
+        if cols_to_use is not None:
+            self.cols_to_use = cols_to_use
         if isinstance(inp, str):
             if inp.endswith(".csv"):
                 adata = read_csv(inp)
             elif inp.endswith(".fcs"):
                 adata = read_FCS(inp)
-        else:
+        elif isinstance(inp, ad.AnnData):
             adata = inp
+        else:
+            adata = ad.AnnData(inp)
+        self.mudata.mod["cell_data"] = adata
+        self.clean_anndata()
+        if self.cols_to_use is not None:
+            self.cols_to_use = list(get_channels(self, self.cols_to_use).keys())
+        if self.cols_to_use is None:
+            self.cols_to_use = self.mudata["cell_data"].var_names
+
+    def clean_anndata(self):
+        """Cleans marker and channel names."""
+        adata = self.get_cell_data()
         if issparse(adata.X):
             # sparse matrices are not supported
             adata.X = adata.X.todense()
@@ -113,118 +140,24 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         adata.var_names = np.asarray(channels)
         adata.var["markers"] = np.asarray(markers)
         adata.var["channels"] = np.asarray(channels)
-        self.mudata = MuData({"cell_data": adata})
+        self.mudata.mod["cell_data"] = adata
         return self.mudata
 
-    def build_SOM(self, cols_to_use: np.ndarray | None = None, outlier_MAD=4, **kwargs):
-        """Initialize the SOM clustering and update FlowSOM object.
-
-        :param cols_to_use:  An array of the columns to use for clustering
-        :type cols_to_use: np.array
-        :param outlier_MAD: To be adapted
-        :type outlier_MAD: int
-        """
-        if cols_to_use is None:
-            cols_to_use = self.mudata["cell_data"].var_names
-        cols_to_use = list(get_channels(self, cols_to_use).keys())
-        codes, clusters, dists, xdim, ydim = self.SOM(inp=self.mudata["cell_data"][:, cols_to_use].X, **kwargs)
-        self.mudata["cell_data"].obs["clustering"] = np.array(clusters, dtype=int)
-        self.mudata["cell_data"].obs["distance_to_bmu"] = np.array(dists)
-        self.mudata["cell_data"].var["cols_used"] = [x in cols_to_use for x in self.mudata["cell_data"].var_names]
-
-        self.mudata["cell_data"].uns["n_nodes"] = xdim * ydim
-        self._update_derived_values()
-        self.mudata["cluster_data"].uns["xdim"] = xdim
-        self.mudata["cluster_data"].uns["ydim"] = ydim
-        self.mudata["cluster_data"].obsm["codes"] = np.array(codes)
-        self.mudata["cluster_data"].obsm["grid"] = np.array([(x, y) for x in range(xdim) for y in range(ydim)])
-        self.mudata["cluster_data"].uns["outliers"] = self.test_outliers(mad_allowed=outlier_MAD).reset_index()
-
-    def SOM(
-        self,
-        inp,
-        xdim=10,
-        ydim=10,
-        rlen=10,
-        mst=1,
-        alpha=(0.05, 0.01),
-        init=False,
-        initf=None,
-        map=True,
-        codes=None,
-        importance=None,
-        seed=None,
-    ):
-        """Perform SOM clustering.
-
-        :param inp:  An array of the columns to use for clustering
-        :type inp: np.array
-        :param xdim: x dimension of SOM
-        :type xdim: int
-        :param ydim: y dimension of SOM
-        :type ydim: int
-        :param rlen: Number of times to loop over the training data for each MST
-        :type rlen: int
-        :param importance: Array with numeric values. Parameters will be scaled
-        according to importance
-        :type importance: np.array
-        """
-        data = np.asarray(inp, dtype=np.float64)
-        if codes is not None:
-            assert (
-                (codes.shape[1] == data.shape[1]) or (codes.shape[0] != xdim * ydim)
-            ), "If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
-
-        if importance is not None:
-            data = np.stack([data[:, i] * importance[i] for i in range(len(importance))], axis=1)
-
-        # Initialize the grid
-        grid = [(x, y) for x in range(xdim) for y in range(ydim)]
-        n_codes = len(grid)
-        if codes is None:
-            if init:
-                codes = initf(data, xdim, ydim)
-            else:
-                codes = data[np.random.choice(data.shape[0], n_codes, replace=False), :]
-
-        # Initialize the neighbourhood
-        nhbrdist = squareform(pdist(grid, metric="chebyshev"))
-
-        # Initialize the radius
-        radius = (np.quantile(nhbrdist, 0.67), 0)
-        if mst == 1:
-            radius = [radius]
-            alpha = [alpha]
-        else:
-            radius = np.linspace(radius[0], radius[1], num=mst + 1)
-            radius = [tuple(radius[i : i + 2]) for i in range(mst)]
-            alpha = np.linspace(alpha[0], alpha[1], num=mst + 1)
-            alpha = [tuple(alpha[i : i + 2]) for i in range(mst)]
-
-        # Compute the SOM
-        for i in range(mst):
-            codes = SOM(
-                data,
-                codes,
-                nhbrdist,
-                alphas=alpha[i],
-                radii=radius[i],
-                ncodes=n_codes,
-                rlen=rlen,
-                seed=seed,
-            )
-            if mst != 1:
-                nhbrdist = self._dist_mst(codes)
-
-        if map:
-            clusters, dists = map_data_to_codes(data=data, codes=codes)
-        else:
-            clusters = dists = np.zeros(n_codes)
-
-        return codes, clusters, dists, xdim, ydim
+    def build_SOM(self):
+        """Run the model on the input data."""
+        X = self.mudata["cell_data"][:, self.cols_to_use].X
+        self.model.fit_predict(X)
 
     def _update_derived_values(self):
         """Update the derived values such as median values and CV values."""
+        self.mudata["cell_data"].obs["clustering"] = self.model.cluster_labels
+        self.mudata["cell_data"].obs["distance_to_bmu"] = self.model.distances
+        self.mudata["cell_data"].uns["n_nodes"] = self.xdim * self.ydim
+        self.mudata["cell_data"].var["cols_used"] = np.array(
+            col in self.cols_to_use for col in self.mudata["cell_data"].var_names
+        )
+        self.mudata["cell_data"].uns["n_metaclusters"] = self.n_clusters
+        self.mudata["cell_data"].obs["metaclustering"] = self.model.metacluster_labels
         # get dataframe of intensities and cluster labels on cell level
         df = self.mudata["cell_data"].to_df()  # [self.adata.X[:, 0].argsort()]
         df = pd.concat([self.mudata["cell_data"].obs["clustering"], df], axis=1)
@@ -241,11 +174,7 @@ class FlowSOM(BaseEstimator, ClusterMixin):
             )
         cluster_median_values.sort_index(inplace=True)
         # create values for cluster_data
-        if "cluster_data" in self.mudata.mod.keys():
-            cluster_mudata = self.mudata.mod["cluster_data"]
-            cluster_mudata.X = cluster_median_values.values
-        else:
-            cluster_mudata = ad.AnnData(cluster_median_values.values)
+        cluster_mudata = ad.AnnData(cluster_median_values.values)
         cluster_mudata.var_names = self.mudata["cell_data"].var_names
         # standard deviation of cells per cluster
         sd_values = []
@@ -277,19 +206,27 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         cluster_mudata.obsm["mad_values"] = np.vstack(mad_values)
         pctgs = np.divide(list(pctgs.values()), np.sum(list(pctgs.values())))
         cluster_mudata.obs["percentages"] = pctgs
+        cluster_mudata.obs["metaclustering"] = self.model._y_codes
+        cluster_mudata.uns["xdim"] = self.xdim
+        cluster_mudata.uns["ydim"] = self.ydim
+        cluster_mudata.obsm["codes"] = self.model.codes
+        cluster_mudata.obsm["grid"] = np.array([(x, y) for x in range(self.xdim) for y in range(self.ydim)])
+        cluster_mudata.uns["outliers"] = self.test_outliers(mad_allowed=self.mad_allowed).reset_index()
+        # update metacluster values
 
         self.mudata.mod["cluster_data"] = cluster_mudata
-        if "metaclustering" in self.mudata["cell_data"].obs_keys():
-            df = self.mudata["cell_data"].X[self.mudata["cell_data"].X[:, 0].argsort()]
-            df = np.c_[self.mudata["cell_data"].obs["metaclustering"], df]
-            metacluster_median_values = pd.DataFrame(df).groupby(0).median()
-            self.mudata["cluster_data"].uns["metacluster_MFIs"] = metacluster_median_values
+        df = self.mudata["cell_data"].X[self.mudata["cell_data"].X[:, 0].argsort()]
+        df = np.c_[self.mudata["cell_data"].obs["metaclustering"], df]
+        metacluster_median_values: pd.DataFrame = pd.DataFrame(df).groupby(0).median()
+        self.mudata["cluster_data"].uns["metacluster_MFIs"] = metacluster_median_values
+        self.build_MST()
 
     def build_MST(self):
         """Make a minimum spanning tree."""
+        check_is_fitted(self.model)
         adjacency = cdist(
-            self.mudata["cluster_data"].obsm["codes"],
-            self.mudata["cluster_data"].obsm["codes"],
+            self.model.codes,
+            self.model.codes,
             metric="euclidean",
         )
         full_graph = ig.Graph.Weighted_Adjacency(adjacency, mode="undirected", loops=False)
@@ -316,42 +253,17 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         ]
         return codes
 
-    def metacluster(self, n_clus):
+    def metacluster(self, n_clusters=None):
         """Perform a (consensus) hierarchical clustering.
 
-        :param n_clus: The number of metaclusters
-        :type n_clus: int
+        :param n_clusters: The number of metaclusters
+        :type n_clusters: int
         """
-        metaclusters = self.consensus_hierarchical_clustering(self.mudata["cluster_data"].obsm["codes"], n_clus)
-        self.mudata["cell_data"].uns["n_metaclusters"] = n_clus
-        self.mudata["cluster_data"].obs["metaclustering"] = metaclusters.astype(str)
-        self.mudata["cell_data"].obs["metaclustering"] = np.asarray(
-            [np.array(metaclusters)[int(i)] for i in np.asarray(self.mudata["cell_data"].obs["clustering"])]
-        )
+        if n_clusters is None:
+            n_clusters = self.n_clusters
+            self.model.set_n_clusters(n_clusters)
+        self.model.metacluster_model.fit_predict(self.model.codes)
         return self
-
-    def consensus_hierarchical_clustering(
-        self, data, n_clus, n_subsamples=100, linkage="average", resample_proportion=0.9
-    ):
-        """Perform a consensus hierarchical clustering.
-
-        :param data: The data to cluster
-        :type data: np.array
-        :param n_clus: The number of metaclusters
-        :type n_clus: int
-        :param n_subsamples: The number of subsamples to use for consensus clustering
-        :type n_subsamples: int
-        :param linkage: The linkage method to use for clustering
-        :type linkage: str
-        :param resample_proportion: The proportion of the data to use for subsampling
-        :type resample_proportion: float
-        """
-        average = ConsensusCluster(
-            AgglomerativeClustering, K=n_clus, H=n_subsamples, resample_proportion=resample_proportion, linkage=linkage
-        )
-        average.fit(data)
-        metaclusters = average.predict(n_clus=n_clus)
-        return metaclusters
 
     def test_outliers(self, mad_allowed: int = 4, fsom_reference=None, plot_file=None, channels=None):
         """Test if any cells are too far from their cluster centers.
@@ -459,28 +371,12 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         madAllowed * MAD. Default is 4.
         :type mad_allowed: int
         """
-        fsom_new = copy.deepcopy(FlowSOM(inp))
-        fsom_new.get_cell_data().var["pretty_colnames"] = self.get_cell_data().var["pretty_colnames"]
-        fsom_new.get_cell_data().var["cols_used"] = self.get_cell_data().var["cols_used"]
-        fsom_new.get_cluster_data().uns["xdim"] = self.get_cluster_data().uns["xdim"]
-        fsom_new.get_cluster_data().uns["ydim"] = self.get_cluster_data().uns["ydim"]
-        fsom_new.get_cell_data().uns["n_nodes"] = self.get_cell_data().uns["n_nodes"]
-        fsom_new.get_cell_data().uns["n_metaclusters"] = self.get_cell_data().uns["n_metaclusters"]
-        fsom_new.mudata.mod["cluster_data"] = self.get_cluster_data()
-
-        markers_bool = self.get_cell_data().var["cols_used"]
-        markers = self.get_cell_data().var_names[markers_bool]
-        data = fsom_new.get_cell_data()[:, markers].X
-        clusters, dists = map_data_to_codes(data=data, codes=self.get_cluster_data().obsm["codes"])
-        fsom_new.get_cell_data().obsm["distance_to_bmu"] = np.array(dists)
-        fsom_new.get_cell_data().obs["clustering"] = np.array(clusters)
+        fsom_new = copy.deepcopy(self)
+        fsom_new.read_input(inp)
+        fsom_new.mad_allowed = mad_allowed
+        X = fsom_new.get_cell_data()[:, self.cols_to_use].X
+        fsom_new.model.predict(X)
         fsom_new._update_derived_values()
-        metaclusters = self.get_cluster_data().obs["metaclustering"]
-        fsom_new.get_cell_data().obs["metaclustering"] = np.asarray(
-            [np.array(metaclusters)[int(i)] for i in np.asarray(fsom_new.get_cell_data().obs["clustering"])]
-        )
-        test_outliers = fsom_new.test_outliers(mad_allowed=mad_allowed, fsom_reference=self)
-        fsom_new.mudata["cluster_data"].uns["outliers"] = test_outliers
         return fsom_new
 
     def subset(self, ids):
@@ -490,7 +386,8 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         :type ids: np.array
         """
         fsom_subset = copy.deepcopy(self)
-        fsom_subset.mudata.mod["cell_data"] = fsom_subset.mudata["cell_data"][ids, :]
+        fsom_subset.mudata.mod["cell_data"] = fsom_subset.mudata["cell_data"][ids, :].copy()
+        fsom_subset.model.subset(ids)
         fsom_subset._update_derived_values()
         return fsom_subset
 
@@ -503,7 +400,7 @@ class FlowSOM(BaseEstimator, ClusterMixin):
         return self.mudata["cluster_data"]
 
 
-def flowsom_clustering(inp, cols_to_use=None, n_clus=10, xdim=10, ydim=10, seed=None, **kwargs):
+def flowsom_clustering(inp, cols_to_use=None, n_clusters=10, xdim=10, ydim=10, **kwargs):
     """Perform FlowSOM clustering on an anndata object and returns the anndata object.
 
     The FlowSOM clusters and metaclusters are added as variable.
@@ -511,8 +408,8 @@ def flowsom_clustering(inp, cols_to_use=None, n_clus=10, xdim=10, ydim=10, seed=
     :param inp: An anndata or filepath to an FCS file
     :type inp: ad.AnnData / str
     """
-    fsom = FlowSOM(inp, cols_to_use=cols_to_use, n_clus=n_clus, xdim=xdim, ydim=ydim, seed=seed, **kwargs)
+    fsom = FlowSOM(inp, cols_to_use=cols_to_use, n_clusters=n_clusters, xdim=xdim, ydim=ydim, **kwargs)
     inp.obs["FlowSOM_clusters"] = fsom.mudata["cell_data"].obs["clustering"]
     inp.obs["FlowSOM_metaclusters"] = fsom.mudata["cell_data"].obs["metaclustering"]
-    inp.uns["FlowSOM"] = {"cols_to_use": cols_to_use, "n_clus": n_clus, "xdim": xdim, "ydim": ydim, "seed": seed}
+    inp.uns["FlowSOM"] = {"cols_to_use": cols_to_use, "n_clus": n_clusters, "xdim": xdim, "ydim": ydim}
     return inp

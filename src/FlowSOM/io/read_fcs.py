@@ -4,7 +4,6 @@ import re
 
 import anndata as ad
 import pandas as pd
-import pytometry as pm
 
 
 def read_FCS(filepath):
@@ -13,6 +12,8 @@ def read_FCS(filepath):
     :param filepath: An array containing a full path to the FCS file
     :type filepath: str
     """
+    import pytometry as pm
+
     try:
         f = pm.io.read_fcs(filepath)
         f.var.n = f.var.n.astype(int)
