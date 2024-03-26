@@ -38,7 +38,7 @@ def fcs(ff_path):
 
 @pytest.fixture(scope="session")
 def FlowSOM_res(fcs):
-    fsom = fs.FlowSOM(fcs, cols_to_use=[8, 11, 13, 14, 15, 16, 17])
+    fsom = fs.FlowSOM(fcs, cols_to_use=[8, 11, 13, 14, 15, 16, 17], n_clusters=10)
     return fsom
 
 
@@ -47,3 +47,19 @@ def gating_results(gating_path):
     with open(gating_path) as file:
         data = list(csv.reader(file))
     return [i[0] for i in data]
+
+
+@pytest.fixture(scope="session")
+def X():
+    from sklearn.datasets import make_blobs
+
+    X, _ = make_blobs(n_samples=100, centers=3, n_features=2, random_state=0)
+    return X
+
+
+@pytest.fixture(scope="session")
+def X_and_y():
+    from sklearn.datasets import make_blobs
+
+    X, y = make_blobs(n_samples=1000, centers=10, n_features=20, random_state=0)
+    return X, y

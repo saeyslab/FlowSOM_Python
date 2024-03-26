@@ -11,7 +11,7 @@ def test_fcs(FlowSOM_res):
 
 def test_csv(fcs_path):
     ff = fs.io.read_csv(fcs_path)
-    fs.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17])
+    fs.FlowSOM(ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], n_clusters=10)
 
 
 def test_FlowSOM_type(FlowSOM_res):
@@ -72,7 +72,7 @@ def test_plot_2D_scatters(FlowSOM_res, tmp_path):
 
 
 def test_new_data(fcs):
-    fsom = fs.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17])
+    fsom = fs.FlowSOM(fcs[0:5000, :], cols_to_use=[8, 11, 13, 14, 15, 16, 17], n_clusters=10)
     fsom_new = fsom.new_data(fcs[1001:2000])
     assert fsom_new.get_cell_data().shape == (999, 18)
 
@@ -92,9 +92,9 @@ def test_aggregate_flowframes(ff_path):
 
 
 def test_flowsom_subset(FlowSOM_res):
-    fsom_subset = FlowSOM_res.subset(FlowSOM_res.get_cell_data().obs["metaclustering"] == 4)
+    fsom_subset = FlowSOM_res.subset(FlowSOM_res.get_cell_data().obs["metaclustering"] == 1)
     fs.pl.plot_stars(fsom_subset, background_values=fsom_subset.get_cluster_data().obs["metaclustering"])
-    assert fsom_subset.get_cell_data().shape == (sum(FlowSOM_res.get_cell_data().obs["metaclustering"] == 4), 18)
+    assert fsom_subset.get_cell_data().shape == (sum(FlowSOM_res.get_cell_data().obs["metaclustering"] == 1), 18)
 
 
 def test_get_features(FlowSOM_res, ff_path):
