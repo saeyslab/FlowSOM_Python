@@ -1,6 +1,6 @@
 from sklearn.utils.validation import check_is_fitted
 
-from flowsom.models import BaseClusterEstimator
+from . import BaseClusterEstimator
 
 
 class BaseFlowSOMEstimator(BaseClusterEstimator):

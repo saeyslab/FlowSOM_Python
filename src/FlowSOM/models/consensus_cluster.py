@@ -14,7 +14,7 @@ from itertools import combinations
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 
-from flowsom.models import BaseClusterEstimator
+from . import BaseClusterEstimator
 
 
 class ConsensusCluster(BaseClusterEstimator):

@@ -13,10 +13,9 @@ from scipy.spatial.distance import cdist
 from scipy.stats import median_abs_deviation
 from sklearn.base import check_is_fitted
 
+from flowsom.io import read_csv, read_FCS
 from flowsom.models.flowsom_estimator import FlowSOMEstimator
-
-from .io import read_csv, read_FCS
-from .tl import get_channels, get_markers
+from flowsom.tl import get_channels, get_markers
 
 
 class FlowSOM:

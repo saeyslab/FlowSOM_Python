@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial.distance import cdist, pdist, squareform
 from sklearn.utils.validation import check_is_fitted
 
-from flowsom.models import SOM, BaseClusterEstimator, map_data_to_codes
+from . import SOM, BaseClusterEstimator, map_data_to_codes
 
 
 class SOMEstimator(BaseClusterEstimator):
