@@ -6,6 +6,7 @@ import anndata as ad
 import igraph as ig
 import numpy as np
 import pandas as pd
+from loguru import logger
 from mudata import MuData
 from scipy.sparse import issparse
 from scipy.spatial.distance import cdist
@@ -72,9 +73,11 @@ class FlowSOM:
                 "cluster_data": ad.AnnData(),
             }
         )
+        logger.debug("Reading input.")
         self.read_input(inp)
-        self.build_SOM()
-        self.metacluster()
+        logger.debug("Fitting model: clustering and metaclustering.")
+        self.run_model()
+        logger.debug("Updating derived values.")
         self._update_derived_values()
 
     @property
@@ -119,7 +122,7 @@ class FlowSOM:
         if self.cols_to_use is not None:
             self.cols_to_use = list(get_channels(self, self.cols_to_use).keys())
         if self.cols_to_use is None:
-            self.cols_to_use = self.mudata["cell_data"].var_names
+            self.cols_to_use = self.mudata["cell_data"].var_names.values
 
     def clean_anndata(self):
         """Cleans marker and channel names."""
@@ -143,7 +146,7 @@ class FlowSOM:
         self.mudata.mod["cell_data"] = adata
         return self.mudata
 
-    def build_SOM(self):
+    def run_model(self):
         """Run the model on the input data."""
         X = self.mudata["cell_data"][:, self.cols_to_use].X
         self.model.fit_predict(X)
@@ -400,7 +403,7 @@ class FlowSOM:
         return self.mudata["cluster_data"]
 
 
-def flowsom_clustering(inp, cols_to_use=None, n_clusters=10, xdim=10, ydim=10, **kwargs):
+def flowsom_clustering(inp: ad.AnnData, cols_to_use=None, n_clusters=10, xdim=10, ydim=10, **kwargs):
     """Perform FlowSOM clustering on an anndata object and returns the anndata object.
 
     The FlowSOM clusters and metaclusters are added as variable.
@@ -408,8 +411,13 @@ def flowsom_clustering(inp, cols_to_use=None, n_clusters=10, xdim=10, ydim=10, *
     :param inp: An anndata or filepath to an FCS file
     :type inp: ad.AnnData / str
     """
-    fsom = FlowSOM(inp, cols_to_use=cols_to_use, n_clusters=n_clusters, xdim=xdim, ydim=ydim, **kwargs)
+    fsom = FlowSOM(inp.copy(), cols_to_use=cols_to_use, n_clusters=n_clusters, xdim=xdim, ydim=ydim, **kwargs)
     inp.obs["FlowSOM_clusters"] = fsom.mudata["cell_data"].obs["clustering"]
     inp.obs["FlowSOM_metaclusters"] = fsom.mudata["cell_data"].obs["metaclustering"]
-    inp.uns["FlowSOM"] = {"cols_to_use": cols_to_use, "n_clus": n_clusters, "xdim": xdim, "ydim": ydim}
+    d = kwargs
+    d["cols_to_use"] = cols_to_use
+    d["n_clusters"] = n_clusters
+    d["xdim"] = xdim
+    d["ydim"] = ydim
+    inp.uns["FlowSOM"] = d
     return inp
