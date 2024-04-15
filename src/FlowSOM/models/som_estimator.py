@@ -1,6 +1,5 @@
 import igraph as ig
 import numpy as np
-from numba import jit
 from scipy.spatial.distance import cdist, pdist, squareform
 from sklearn.utils.validation import check_is_fitted
 
