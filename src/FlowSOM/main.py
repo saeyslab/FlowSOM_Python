@@ -14,6 +14,7 @@ from scipy.stats import median_abs_deviation
 from sklearn.base import check_is_fitted
 
 from flowsom.io import read_csv, read_FCS
+from flowsom.models.base_flowsom_estimator import BaseFlowSOMEstimator
 from flowsom.models.flowsom_estimator import FlowSOMEstimator
 from flowsom.tl import get_channels, get_markers
 
@@ -24,37 +25,31 @@ class FlowSOM:
     def __init__(
         self,
         inp,
-        n_clusters,
-        cols_to_use=None,
-        model=FlowSOMEstimator,
-        xdim=10,
-        ydim=10,
-        rlen=10,
-        mst=1,
-        alpha=(0.05, 0.01),
+        n_clusters: int,
+        cols_to_use: np.ndarray | None = None,
+        model: type[BaseFlowSOMEstimator] = FlowSOMEstimator,
+        xdim: int = 10,
+        ydim: int = 10,
+        rlen: int = 10,
+        mst: int = 1,
+        alpha: tuple[float, float] = (0.05, 0.01),
+        seed: int | None = None,
         mad_allowed=4,
         **kwargs,
     ):
         """Initialize the FlowSOM AnnData object.
 
+        :param inp: An AnnData or filepath to an FCS file
         :param n_clusters: The number of clusters
-        :type n_clusters: int
         :param xdim: The x dimension of the SOM
-        :type xdim: int
         :param ydim: The y dimension of the SOM
-        :type ydim: int
         :param rlen: Number of times to loop over the training data for each MST
-        :type rlen: int
         :param mst: Number of times to loop over the training data for each MST
-        :type mst: int
         :param alpha: The learning rate
-        :type alpha: tuple
+        :param seed: The random seed to use
         :param cols_to_use: The columns to use for clustering
-        :type cols_to_use: np.array
         :param mad_allowed: Number of median absolute deviations allowed
-        :type mad_allowed: int
         :param model: The model to use
-        :type model: FlowSOMEstimator
         :param kwargs: Additional keyword arguments. See documentation of the cluster_model and metacluster_model for more information.
         :type kwargs: dict
         """
@@ -66,6 +61,7 @@ class FlowSOM:
         self.rlen = rlen
         self.mst = mst
         self.alpha = alpha
+        self.seed = seed
         # metacluster model params
         self.n_clusters = n_clusters
 
@@ -75,6 +71,7 @@ class FlowSOM:
             rlen=rlen,
             mst=mst,
             alpha=alpha,
+            seed=seed,
             n_clusters=n_clusters,
             **kwargs,
         )
