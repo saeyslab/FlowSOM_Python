@@ -74,6 +74,10 @@ class SOMEstimator(BaseClusterEstimator):
         # Initialize the grid
         grid = [(x, y) for x in range(xdim) for y in range(ydim)]
         n_codes = len(grid)
+
+        if self.seed is not None:
+            np.random.seed(self.seed)
+
         if codes is None:
             if init:
                 codes = self.initf(X, xdim, ydim)
