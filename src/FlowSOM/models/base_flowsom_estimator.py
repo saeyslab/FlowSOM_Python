@@ -1,24 +1,28 @@
+import inspect
+
+from sklearn.base import BaseEstimator
 from sklearn.utils.validation import check_is_fitted
 
 from . import BaseClusterEstimator
 
 
-class BaseFlowSOMEstimator(BaseClusterEstimator):
+class BaseFlowSOMEstimator(BaseEstimator):
     """Base class for all FlowSOM estimators in FlowSOM."""
 
     def __init__(
         self,
-        cluster_kwargs,
-        metacluster_kwargs,
-        cluster_model,
-        metacluster_model,
+        cluster_model: type[BaseClusterEstimator],
+        metacluster_model: type[BaseClusterEstimator],
+        **kwargs,
     ):
         """Initialize the FlowSOMEstimator object."""
         super().__init__()
-        self.cluster_kwargs = cluster_kwargs
-        self.metacluster_kwargs = metacluster_kwargs
-        self.cluster_model = cluster_model(**cluster_kwargs)
-        self.metacluster_model = metacluster_model(**metacluster_kwargs)
+        cluster_args = list(inspect.signature(cluster_model).parameters)
+        cluster_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k in cluster_args}
+        self.cluster_model = cluster_model(**cluster_dict)
+        metacluster_args = list(inspect.signature(metacluster_model).parameters)
+        metacluster_dict = {k: kwargs.pop(k) for k in dict(kwargs) if k in metacluster_args}
+        self.metacluster_model = metacluster_model(**metacluster_dict)
 
     @property
     def codes(self):
@@ -87,6 +91,5 @@ class BaseFlowSOMEstimator(BaseClusterEstimator):
 
     def set_n_clusters(self, n_clusters):
         """Set the number of clusters."""
-        self.metacluster_kwargs["n_clusters"] = n_clusters
         self.metacluster_model.n_clusters = n_clusters
         return self
