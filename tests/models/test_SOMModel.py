@@ -10,7 +10,7 @@ def test_clustering(X):
 
 
 def test_clustering_v_measure(X_and_y):
-    som = SOMEstimator()
+    som = SOMEstimator(seed=1)
     X, y_true = X_and_y
     y_pred = som.fit_predict(X)
     score = v_measure_score(y_true, y_pred)
@@ -18,8 +18,8 @@ def test_clustering_v_measure(X_and_y):
 
 
 def test_reproducibility_no_seed(X):
-    som_1 = SOMEstimator(seed = None)
-    som_2 = SOMEstimator(seed = None)
+    som_1 = SOMEstimator(seed=None)
+    som_2 = SOMEstimator(seed=None)
     codes_1 = som_1.fit(X).codes.flatten()
     codes_2 = som_2.fit(X).codes.flatten()
 
@@ -27,11 +27,9 @@ def test_reproducibility_no_seed(X):
 
 
 def test_reproducibility_seed(X):
-    som_1 = SOMEstimator(seed = 1)
-    som_2 = SOMEstimator(seed = 1)
+    som_1 = SOMEstimator(seed=1)
+    som_2 = SOMEstimator(seed=1)
     codes_1 = som_1.fit(X).codes.flatten()
     codes_2 = som_2.fit(X).codes.flatten()
 
     assert all(codes_1 == codes_2)
-
-
