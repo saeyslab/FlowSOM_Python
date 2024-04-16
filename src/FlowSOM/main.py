@@ -33,6 +33,7 @@ class FlowSOM:
         mst=1,
         alpha=(0.05, 0.01),
         mad_allowed=4,
+        **kwargs,
     ):
         """Initialize the FlowSOM AnnData object.
 
@@ -50,6 +51,12 @@ class FlowSOM:
         :type alpha: tuple
         :param cols_to_use: The columns to use for clustering
         :type cols_to_use: np.array
+        :param mad_allowed: Number of median absolute deviations allowed
+        :type mad_allowed: int
+        :param model: The model to use
+        :type model: FlowSOMEstimator
+        :param kwargs: Additional keyword arguments. See documentation of the cluster_model and metacluster_model for more information.
+        :type kwargs: dict
         """
         self.cols_to_use = cols_to_use
         self.mad_allowed = mad_allowed
@@ -63,8 +70,13 @@ class FlowSOM:
         self.n_clusters = n_clusters
 
         self.model = model(
-            cluster_kwargs={"xdim": xdim, "ydim": ydim, "rlen": rlen, "mst": mst, "alpha": alpha},
-            metacluster_kwargs={"n_clusters": n_clusters},
+            xdim=xdim,
+            ydim=ydim,
+            rlen=rlen,
+            mst=mst,
+            alpha=alpha,
+            n_clusters=n_clusters,
+            **kwargs,
         )
         self.mudata = MuData(
             {

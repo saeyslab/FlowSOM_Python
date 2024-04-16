@@ -6,15 +6,13 @@ class FlowSOMEstimator(BaseFlowSOMEstimator):
 
     def __init__(
         self,
-        cluster_kwargs,
-        metacluster_kwargs,
         cluster_model=SOMEstimator,
         metacluster_model=ConsensusCluster,
+        **kwargs,
     ):
         """Initialize the FlowSOMEstimator object."""
         super().__init__(
-            cluster_kwargs=cluster_kwargs,
-            metacluster_kwargs=metacluster_kwargs,
             cluster_model=cluster_model,
             metacluster_model=metacluster_model,
+            **kwargs,
         )
