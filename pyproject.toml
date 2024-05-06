@@ -31,6 +31,7 @@ dependencies = [
     "pandas",
     "scipy",
     "readfcs",
+    "pytometry",
     "scikit-learn",
     "python-igraph",
     "session-info",
