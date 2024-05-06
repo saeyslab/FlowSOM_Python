@@ -89,18 +89,34 @@ class FlowSOM:
         self._update_derived_values()
 
     @property
-    def labels_(self):
-        """Get the labels."""
+    def cluster_labels(self):
+        """Get the cluster labels."""
         if "cell_data" in self.mudata.mod.keys():
             if "clustering" in self.mudata["cell_data"].obs_keys():
                 return self.mudata["cell_data"].obs["clustering"]
         return None
 
-    @labels_.setter
-    def labels_(self, value):
-        """Set the labels."""
+    @cluster_labels.setter
+    def cluster_labels(self, value):
+        """Set the cluster labels."""
         if "cell_data" in self.mudata.mod.keys():
             self.mudata["cell_data"].obs["clustering"] = value
+        else:
+            raise ValueError("No cell data found in the MuData object.")
+
+    @property
+    def metacluster_labels(self):
+        """Get the metacluster labels."""
+        if "cell_data" in self.mudata.mod.keys():
+            if "clustering" in self.mudata["cell_data"].obs_keys():
+                return self.mudata["cell_data"].obs["metaclustering"]
+        return None
+
+    @metacluster_labels.setter
+    def metacluster_labels(self, value):
+        """Set the metacluster labels."""
+        if "cell_data" in self.mudata.mod.keys():
+            self.mudata["cell_data"].obs["metaclustering"] = value
         else:
             raise ValueError("No cell data found in the MuData object.")
 

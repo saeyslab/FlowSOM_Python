@@ -1,3 +1,5 @@
+import numpy as np
+
 import flowsom as fs
 
 
@@ -16,6 +18,14 @@ def test_csv(fcs_path):
 
 def test_FlowSOM_type(FlowSOM_res):
     assert isinstance(FlowSOM_res, fs.FlowSOM)
+
+
+def test_FlowSOM_cluster_labels(FlowSOM_res):
+    assert len(np.unique(FlowSOM_res.cluster_labels)) == 100
+
+
+def test_FlowSOM_metacluster_labels(FlowSOM_res):
+    assert len(np.unique(FlowSOM_res.metacluster_labels)) == 10
 
 
 def test_plot_stars(FlowSOM_res, tmp_path):
