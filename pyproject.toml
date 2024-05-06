@@ -56,7 +56,6 @@ doc = [
     "ipykernel",
     "ipython",
     "sphinx-copybutton",
-    "pandas",
 ]
 test = ["pytest", "coverage"]
 
