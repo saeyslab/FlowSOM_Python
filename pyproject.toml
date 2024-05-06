@@ -33,7 +33,7 @@ dependencies = [
     "readfcs",
     "pytometry",
     "scikit-learn",
-    "python-igraph",
+    "igraph",
     "session-info",
     "numba",
     "scanpy",
