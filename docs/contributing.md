@@ -100,10 +100,10 @@ Specify `vX.X.X` as a tag name and create a release. For more information, see [
 Please write documentation for new or changed features and use-cases. This project uses [sphinx][] with the following features:
 
 -   the [myst][] extension allows to write documentation in markdown/Markedly Structured Text
--   [Numpy-style docstrings][numpydoc] (through the [napoloen][numpydoc-napoleon] extension).
+-   [Numpy-style docstrings][numpydoc] (through the [napoleon][numpydoc-napoleon] extension).
 -   Jupyter notebooks as tutorials through [myst-nb][] (See [Tutorials with myst-nb](#tutorials-with-myst-nb-and-jupyter-notebooks))
 -   [Sphinx autodoc typehints][], to automatically reference annotated input and output types
--   Citations (like {cite:p}`Virshup_2023`) can be included with [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/)
+-   Citations (like {cite:p}`van_gassen_flowsom_2015`) can be included with [sphinxcontrib-bibtex](https://sphinxcontrib-bibtex.readthedocs.io/)
 
 See the [scanpy developer docs](https://scanpy.readthedocs.io/en/latest/dev/documentation.html) for more information
 on how to write documentation.

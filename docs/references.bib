@@ -26,7 +26,6 @@
 	abstract = {The dimensionality of cytometry data has strongly increased in the last decade, and in many situations the traditional manual downstream analysis becomes insufficient. The field is therefore slowly moving toward more automated approaches, and in this paper we describe the protocol for analyzing high-dimensional cytometry data using FlowSOM, a clustering and visualization algorithm based on a self-organizing map. FlowSOM is used to distinguish cell populations from cytometry data in an unsupervised way and can help to gain deeper insights in fields such as immunology and oncology. Since the original FlowSOM publication (2015), we have validated the tool on a wide variety of datasets, and to write this protocol, we made use of this experience to improve the user-friendliness of the package (e.g., comprehensive functions replacing commonly required scripts). Where the original paper focused mainly on the algorithm description, this protocol offers user guidelines on how to implement the procedure, detailed parameter descriptions and troubleshooting recommendations. The protocol provides clearly annotated R code, and is therefore relevant for all scientists interested in computational high-dimensional analyses without requiring a strong bioinformatics background. We demonstrate the complete workflow, starting from data preparation (such as compensation, transformation and quality control), including detailed discussion of the different FlowSOM parameters and visualization options, and concluding with how the results can be further used to answer biological questions, such as statistical comparison between groups of interest. An average FlowSOM analysis takes 1–3 h to complete, though quality issues can increase this time considerably.},
 	language = {en},
 	number = {8},
-	urldate = {2022-08-26},
 	journal = {Nature Protocols},
 	author = {Quintelier, Katrien and Couckuyt, Artuur and Emmaneel, Annelies and Aerts, Joachim and Saeys, Yvan and Van Gassen, Sofie},
 	month = aug,
@@ -34,4 +33,14 @@
 	note = {Number: 8 Publisher: Nature Publishing Group},
 	keywords = {Software, Flow cytometry, Data processing},
 	pages = {3775--3801},
+}
+@article{couckuyt_efficient_2024,
+	title = {Efficient cytometry analysis with {FlowSOM} in Python boosts interoperability with other single-cell tools},
+	volume = {40},
+	issn = {1367-4811},
+	url = {https://doi.org/10.1093/bioinformatics/btae179},
+	doi = {10.1093/bioinformatics/btae179},
+	journal = {Bioinformatics},
+	year = {2024},
+	author = {Couckuyt, Artuur and Rombaut, Benjamin and Saeys, Yvan and Van Gassen, Sofie},
 }

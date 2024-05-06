@@ -8,13 +8,14 @@
 [link-tests]: https://github.com/saeyslab/FlowSOM_Python/actions/workflows/test.yml
 [badge-docs]: https://img.shields.io/readthedocs/flowsom
 
-The complete FlowSOM package known from R, now available in Python
+The complete FlowSOM package known from R, now available in Python!
 
 ## Getting started
 
 Please refer to the [documentation][link-docs]. In particular, the
 
--   [API documentation][link-api].
+-   [Example FlowSOM notebook][link-docs-example]
+-   [API documentation][link-api]
 
 ## Installation
 
@@ -68,13 +69,14 @@ For questions and help requests or if you found a bug, please use the [issue tra
 
 ## Citation
 
-If you use `FlowSOM` in your work, please cite the following paper:
+If you use `FlowSOM` in your work, please cite the following papers:
 
-> Sofie Van Gassen, Britt Callebaut, Mary J. Van Helden, Bart N. Lambrecht, Piet Demeester, Tom Dhaene and Yvan Saeys. FlowSOM: Using self-organizing maps for visualization and interpretation of cytometry data. Cytometry A 2015, volume 87.7 (p. 636-645)
+> A. Couckuyt, B. Rombaut, Y. Saeys, and S. Van Gassen, “Efficient cytometry analysis with FlowSOM in Python boosts interoperability with other single-cell tools,” Bioinformatics, vol. 40, no. 4, p. btae179, Apr. 2024, doi: [10.1093/bioinformatics/btae179](https://doi.org/10.1093/bioinformatics/btae179).
 
-> DOI: 10.1002/cyto.a.22625
+> S. Van Gassen et al., “FlowSOM: Using self-organizing maps for visualization and interpretation of cytometry data,” Cytometry Part A, vol. 87, no. 7, pp. 636–645, 2015, doi: [10.1002/cyto.a.22625](https://doi.org/10.1002/cyto.a.22625).
 
 [issue-tracker]: https://github.com/saeyslab/FlowSOM_Python/issues
 [changelog]: https://flowsom.readthedocs.io/en/latest/changelog.html
 [link-docs]: https://flowsom.readthedocs.io
+[link-docs-example]: https://flowsom.readthedocs.io/en/latest/notebooks/example.html
 [link-api]: https://flowsom.readthedocs.io/en/latest/api.html

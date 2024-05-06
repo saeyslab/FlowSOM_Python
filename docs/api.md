@@ -14,7 +14,9 @@ The functionality is organised in subpackages:
 -   `tl` for tools
 -   `pl` for plotting
 
-The central class is `FlowSOM`, which can be used to read in data and directly perform the FlowSOM algorithm. There is also a convenience function `flowsom_clustering` which performs the same steps but directly on an existing AnnData object. For more low-level control, the `FlowSOMEstimator` class with a scikit-learn Estimator API can be used.:
+The central class is `FlowSOM`, which can be used to read in data and directly perform the FlowSOM algorithm {cite:p}`van_gassen_flowsom_2015`. There is also a convenience function `flowsom_clustering` which performs the same steps but directly on an existing AnnData object. For more low-level control, the `FlowSOMEstimator` class with a scikit-learn Estimator API can be used.
+
+For more background information, see the paper for this software package {cite:p}`couckuyt_efficient_2024` and the Nature Protocols paper {cite:p}`quintelier_analyzing_2021` on applying FlowSOM in practice.
 
 ```{eval-rst}
 .. module:: flowsom
