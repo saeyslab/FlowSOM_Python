@@ -18,9 +18,9 @@ sys.path.insert(0, str(HERE / "extensions"))
 
 info = metadata("flowsom")
 project_name = info["Name"]
-author = info["Author"]
-copyright = f"{datetime.now():%Y}, {author}."
-version = info["Version"]
+author = project_name + " authors"
+copyright = f"{datetime.now():%Y}, {author}"
+version: str = info["Version"]
 urls = dict(pu.split(", ") for pu in (info.get_all("Project-URL") or []))
 repository_url = urls["Source"]
 
