@@ -52,7 +52,7 @@ ff = fs.io.read_FCS("./tests/data/ff.fcs")
 
 # Run the FlowSOM algorithm
 fsom = fs.FlowSOM(
-    ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], xdim=10, ydim=10, n_clus=10
+    ff, cols_to_use=[8, 11, 13, 14, 15, 16, 17], xdim=10, ydim=10, n_clusters=10, seed=42
 )
 
 # Plot the FlowSOM results
