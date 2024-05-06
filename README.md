@@ -12,10 +12,11 @@ The complete FlowSOM package known from R, now available in Python!
 
 ## Getting started
 
-Please refer to the [documentation][link-docs]. In particular, the
+Please refer to the [documentation][link-docs]. In particular, the following resources are available:
 
 -   [Example FlowSOM notebook][link-docs-example]
 -   [API documentation][link-api]
+-   [FlowSOM Python Cheatsheet][cheatsheet]
 
 ## Installation
 
@@ -80,3 +81,4 @@ If you use `FlowSOM` in your work, please cite the following papers:
 [link-docs]: https://flowsom.readthedocs.io
 [link-docs-example]: https://flowsom.readthedocs.io/en/latest/notebooks/example.html
 [link-api]: https://flowsom.readthedocs.io/en/latest/api.html
+[cheatsheet]: https://flowsom.readthedocs.io/en/latest/_static/FlowSOM_CheatSheet_Python.pdf
