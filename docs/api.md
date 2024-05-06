@@ -10,10 +10,11 @@ The functionality is organised in subpackages:
 
 -   `io` for reading and writing FCS files
 -   `pp` for preprocessing
+-   `models` for models
 -   `tl` for tools
 -   `pl` for plotting
 
-The central class is `FlowSOM`, which can be instantiated as a class and is also the output of the convenience function `flowsom_clustering`:
+The central class is `FlowSOM`, which can be used to read in data and directly perform the FlowSOM algorithm. There is also a convenience function `flowsom_clustering` which performs the same steps but directly on an existing AnnData object. For more low-level control, the `FlowSOMEstimator` class with a scikit-learn Estimator API can be used.:
 
 ```{eval-rst}
 .. module:: flowsom
@@ -34,6 +35,7 @@ The central class is `FlowSOM`, which can be instantiated as a class and is also
     :toctree: generated
 
     io.read_FCS
+    io.read_csv
 ```
 
 ## Preprocessing
@@ -49,6 +51,24 @@ The central class is `FlowSOM`, which can be instantiated as a class and is also
     pp.normalize_estimate_logicle
 ```
 
+## Models
+
+```{eval-rst}
+.. module:: flowsom.models
+.. currentmodule:: flowsom
+
+.. autosummary::
+    :toctree: generated
+
+    models.FlowSOMEstimator
+    models.SOMEstimator
+    models.ConsensusCluster
+    models.BaseClusterEstimator
+    models.BaseFlowSOMEstimator
+    models.SOM
+    models.map_data_to_codes
+```
+
 ## Tools
 
 ```{eval-rst}
@@ -58,9 +78,6 @@ The central class is `FlowSOM`, which can be instantiated as a class and is also
 .. autosummary::
     :toctree: generated
 
-    tl.ConsensusCluster
-    tl.SOM
-    tl.map_data_to_codes
     tl.get_channels
     tl.get_cluster_percentages_positive
     tl.get_counts
