@@ -5,22 +5,32 @@ requires = ["hatchling"]
 [project]
 name = "flowsom"
 version = "0.0.1"
-description = "The complete FlowSOM package known from R, now available in Python"
+description = "The complete FlowSOM package known from R, now available in Python!"
 readme = "README.md"
 requires-python = ">=3.9"
 license = { file = "LICENSE" }
-authors = [{ name = "Artuur Couckuyt" }]
-maintainers = [{ name = "Artuur Couckuyt", email = "artuur.couckuyt@ugent.be" }]
-urls.Documentation = "https://FlowSOM.readthedocs.io/"
-urls.Source = "https://github.com/artuurC/FlowSOM"
-urls.Home-page = "https://github.com/artuurC/FlowSOM"
+authors = [
+    { name = "Artuur Couckuyt", email = "Artuur.Couckuyt@ugent.be" },
+    { name = "Benjamin Rombaut", email = "Benjamin.Rombaut@ugent.be" },
+    { name = "Yvan Saeys", email = "Yvan.Saeys@UGent.be" },
+    { name = "Sofie Van Gassen", email = "Sofie.VanGassen@UGent.be" },
+]
+maintainers = [
+    { name = "Artuur Couckuyt", email = "Artuur.Couckuyt@ugent.be" },
+    { name = "Benjamin Rombaut", email = "Benjamin.Rombaut@ugent.be" },
+    { name = "Yvan Saeys", email = "Yvan.Saeys@UGent.be" },
+    { name = "Sofie Van Gassen", email = "Sofie.VanGassen@UGent.be" },
+]
+urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
+urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
+urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 dependencies = [
     "mudata",
     "numpy",
     "matplotlib",
     "pandas",
     "scipy",
-    "pytometry",
+    "readfcs",
     "scikit-learn",
     "python-igraph",
     "pytest",
@@ -28,9 +38,7 @@ dependencies = [
     "numba",
     "scanpy",
     "seaborn",
-    "readfcs",
     "anndata",
-    "dask[dataframe]",
     "loguru",
 ]
 

@@ -4,6 +4,7 @@ import re
 
 import anndata as ad
 import pandas as pd
+import readfcs
 
 
 def read_FCS(filepath):
@@ -12,16 +13,14 @@ def read_FCS(filepath):
     :param filepath: An array containing a full path to the FCS file
     :type filepath: str
     """
-    import pytometry as pm
-
     try:
-        f = pm.io.read_fcs(filepath)
+        f = readfcs.read(filepath, reindex=True)
         f.var.n = f.var.n.astype(int)
         f.var = f.var.sort_values(by="n")
         f.uns["meta"]["channels"].index = f.uns["meta"]["channels"].index.astype(int)
         f.uns["meta"]["channels"] = f.uns["meta"]["channels"].sort_index()
     except ValueError:
-        f = pm.io.read_fcs(filepath, reindex=False)
+        f = readfcs.read(filepath, reindex=False)
         markers = {
             str(re.sub("S$", "", re.sub("^P", "", string))): f.uns["meta"][string]
             for string in f.uns["meta"].keys()
