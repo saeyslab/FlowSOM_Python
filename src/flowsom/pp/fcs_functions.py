@@ -4,8 +4,6 @@ import random
 
 import anndata as ad
 import numpy as np
-import pandas as pd
-import pytometry as pm
 
 from flowsom.io import read_FCS
 from flowsom.tl import get_markers
@@ -54,33 +52,3 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
         flow_frame.append(f)
     flow_frame = ad.concat(flow_frame, join="outer", uns_merge="first")
     return flow_frame
-
-
-def normalize_estimate_logicle(adata, channels, m=4.5, q=0.05):
-    """Normalize and estimate logicle parameters.
-
-    :param adata: An AnnData object
-    :type adata: AnnData
-    :param channels: Channels/markers to normalize
-    :type channels: list
-    :param m: Logicle parameter. Default=4.5
-    :type m: float
-    :param q: Quantile to use for negative values. Default=0.05
-    :type q: float
-    """
-    assert isinstance(adata, ad.AnnData), "Please provide an AnnData object"
-    assert isinstance(channels, list), "Please provide a list of channels"
-    channels = list(get_markers(adata, channels).keys())
-    assert all(i in adata.var_names for i in channels), "Channels should be in the AnnData object"
-    neg_marker_quantiles = [
-        np.quantile(adata[:, channel].X[adata[:, channel].X < 0], q) if (adata[:, channel].X < 0).any() else 0.5
-        for channel in channels
-    ]
-    neg_marker_quantiles = pd.Series(neg_marker_quantiles, index=channels, dtype=float)
-    max_range = adata.var["$PnR"][channels].astype(float)
-    w = (m - np.log10(max_range / np.abs(neg_marker_quantiles))) / 2
-    for channel in channels:
-        adata[:, channel].X = pm.tools.normalize_logicle(
-            adata[:, channel], t=max_range[channel], m=m, a=0, w=w[channel], inplace=False
-        ).X
-    return adata

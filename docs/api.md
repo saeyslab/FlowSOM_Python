@@ -50,7 +50,6 @@ For more background information, see the paper for this software package {cite:p
     :toctree: generated
 
     pp.aggregate_flowframes
-    pp.normalize_estimate_logicle
 ```
 
 ## Models
