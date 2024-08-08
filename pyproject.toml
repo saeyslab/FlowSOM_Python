@@ -57,8 +57,7 @@ doc = [
     "ipython",
     "sphinx-copybutton",
     # For example notebooks
-    # TODO: pin to >0.1.5
-    "pytometry",
+    "pytometry>=0.1.5",
 ]
 test = ["pytest", "coverage"]
 
