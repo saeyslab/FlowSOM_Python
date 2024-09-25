@@ -1,5 +1,5 @@
-from . import PyFlowSOM_SOMEstimator
 from . import BaseFlowSOMEstimator, ConsensusCluster
+from .pyFlowSOM_som_estimator import PyFlowSOM_SOMEstimator
 
 
 class PyFlowSOMEstimator(BaseFlowSOMEstimator):
@@ -11,7 +11,6 @@ class PyFlowSOMEstimator(BaseFlowSOMEstimator):
         metacluster_model=ConsensusCluster,
         **kwargs,
     ):
-        """Initialize the FlowSOMEstimator object."""
         super().__init__(
             cluster_model=cluster_model,
             metacluster_model=metacluster_model,

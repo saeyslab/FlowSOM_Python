@@ -8,7 +8,7 @@ from flowsom.models.base_cluster_estimator import BaseClusterEstimator
 from . import SOM_Batch, map_data_to_codes
 
 
-class SOMEstimator_batch_init(BaseClusterEstimator):
+class BatchSOMEstimator(BaseClusterEstimator):
     """Estimate a Self-Organizing Map (SOM) clustering model."""
 
     def __init__(
@@ -23,6 +23,7 @@ class SOMEstimator_batch_init(BaseClusterEstimator):
         map=True,
         codes=None,
         importance=None,
+        num_batches=10,
         seed=None,
     ):
         super().__init__()
@@ -36,6 +37,7 @@ class SOMEstimator_batch_init(BaseClusterEstimator):
         self.map = map
         self.codes = codes
         self.importance = importance
+        self.num_batches = num_batches
         self.seed = seed
 
     # Core of the algorithm, where the SOM is executed
@@ -109,15 +111,15 @@ class SOMEstimator_batch_init(BaseClusterEstimator):
             alpha = [tuple(alpha[i : i + 2]) for i in range(mst)]
 
         # Define the number of batches
-        nr_batches = 10
+        num_batches = self.num_batches
 
         # Split the data for the different batches, where batch with number 0 contains datapoint 0, batch_size, 2*batch_size, ...
         data = []
-        for i in range(nr_batches):
-            data.append(X[i::nr_batches, :])
+        for i in range(num_batches):
+            data.append(X[i::num_batches, :])
 
         # Make sure all the batches have the same amount of data, if not add the last data point to the last batch
-        for i in range(nr_batches):
+        for i in range(num_batches):
             if data[i].shape[0] < data[0].shape[0]:
                 data[i] = np.vstack([data[i], X[-1, :]])
 
@@ -132,7 +134,7 @@ class SOMEstimator_batch_init(BaseClusterEstimator):
                 ncodes=n_codes,
                 rlen=self.rlen,
                 seed=self.seed,
-                nr_batches=nr_batches,
+                num_batches=num_batches,
             )
             if mst != 1:
                 nhbrdist: list[list[int]] = _dist_mst(codes)
@@ -159,7 +161,7 @@ class SOMEstimator_batch_init(BaseClusterEstimator):
         return self.labels_
 
 
-def _dist_mst(codes):
+def _dist_mst(codes) -> list[list[int]]:
     adjacency = cdist(
         codes,
         codes,

@@ -1,5 +1,5 @@
-from . import BaseFlowSOMEstimator, ConsensusCluster # isort:skip
-from .batch import SOMEstimator_batch_init # isort:skip
+from . import BaseFlowSOMEstimator, ConsensusCluster  # isort:skip
+from .batch import BatchSOMEstimator  # isort:skip
 
 
 class BatchFlowSOMEstimator(BaseFlowSOMEstimator):
@@ -7,7 +7,7 @@ class BatchFlowSOMEstimator(BaseFlowSOMEstimator):
 
     def __init__(
         self,
-        cluster_model=SOMEstimator_batch_init,
+        cluster_model=BatchSOMEstimator,
         metacluster_model=ConsensusCluster,
         **kwargs,
     ):

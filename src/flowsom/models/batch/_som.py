@@ -43,7 +43,7 @@ def SOM_Batch(
     radii: tuple,
     ncodes: int,
     rlen: int,
-    nr_batches: int = 10,
+    num_batches: int = 10,
     distf: Callable[[np.ndarray, np.ndarray], float] = eucl_without_sqrt,
     seed=None,
 ):
@@ -57,7 +57,7 @@ def SOM_Batch(
         radii (tuple): The radii.
         ncodes (int): The number of codes.
         rlen (int): The number of iterations.
-        nr_batches (int): The number of batches.
+        num_batches (int): The number of batches.
         distf (function): The distance function.
         seed (int): The seed for the random number generator.
 
@@ -82,7 +82,7 @@ def SOM_Batch(
     treshold_step = (radii[0] - radii[1]) / niter
 
     # Keep the temporary codes, using the given codes as the initial codes, for every batch
-    tmp_codes_all = np.empty((nr_batches, ncodes, px), dtype=np.float64)
+    tmp_codes_all = np.empty((num_batches, ncodes, px), dtype=np.float64)
 
     # Copy the codes as a float64, because the codes are updated in the algorithm
     copy_codes = codes.copy().astype(np.float64)
@@ -117,14 +117,14 @@ def SOM_Batch(
         init_threshold -= treshold_step
 
     # Choose random data points, for the different batches, and the rlen iterations
-    data_points_random = np.random.choice(n, nr_batches * rlen * n, replace=True)
+    data_points_random = np.random.choice(n, num_batches * rlen * n, replace=True)
 
     # Decrease the number of iterations, because the first iterations are already done
     rlen = int(rlen / 2)
 
     for iteration in range(rlen):
         # Execute the batches in parallel
-        for batch_nr in prange(nr_batches):
+        for batch_nr in prange(num_batches):
             # Keep the temporary codes, using the given codes as the initial codes
             tmp_codes = copy_codes.copy()
 
