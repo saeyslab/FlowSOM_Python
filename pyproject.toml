@@ -31,7 +31,6 @@ dependencies = [
     "pandas",
     "scipy",
     "readfcs",
-    "pytometry",
     "scikit-learn",
     "igraph",
     "session-info",
@@ -57,6 +56,8 @@ doc = [
     "ipykernel",
     "ipython",
     "sphinx-copybutton",
+    # For example notebooks
+    "pytometry>=0.1.5",
 ]
 test = ["pytest", "coverage"]
 
