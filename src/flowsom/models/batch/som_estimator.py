@@ -8,6 +8,7 @@ from flowsom.models.base_cluster_estimator import BaseClusterEstimator
 from . import SOM_Batch, map_data_to_codes
 
 
+# TODO: try to use the same code for both SOMEstimator and BatchSOMEstimator
 class BatchSOMEstimator(BaseClusterEstimator):
     """Estimate a Self-Organizing Map (SOM) clustering model."""
 

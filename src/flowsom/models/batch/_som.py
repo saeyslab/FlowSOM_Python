@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Code adapted from student assignment Computational Biology 2024, Ghent University."""
 
 from typing import Callable
 
