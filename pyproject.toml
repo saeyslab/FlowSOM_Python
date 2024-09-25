@@ -25,7 +25,7 @@ urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
 urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
 urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 dependencies = [
-    "mudata",
+    "mudata<=0.2.4",
     "numpy",
     "matplotlib",
     "pandas",
@@ -37,7 +37,7 @@ dependencies = [
     "numba",
     "scanpy",
     "seaborn",
-    "anndata",
+    "anndata<=0.10.8",
     "loguru",
 ]
 
