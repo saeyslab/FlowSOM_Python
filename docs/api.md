@@ -62,7 +62,9 @@ For more background information, see the paper for this software package {cite:p
     :toctree: generated
 
     models.FlowSOMEstimator
+    models.BatchFlowSOMEstimator
     models.SOMEstimator
+    models.BatchSOMEstimator
     models.ConsensusCluster
     models.BaseClusterEstimator
     models.BaseFlowSOMEstimator
