@@ -224,7 +224,16 @@ def plot_numbers(fsom, level="clusters", max_node_size=0, **kwargs):
 
 
 def plot_variable(
-    fsom, variable, cmap=FlowSOM_colors(), labels=None, text_size=5, text_color="black", lim=None, title=None, **kwargs
+    fsom,
+    variable,
+    cmap=FlowSOM_colors(),
+    labels=None,
+    text_size=5,
+    text_color="black",
+    lim=None,
+    title=None,
+    categorical=True,
+    **kwargs,
 ):
     """Plot FlowSOM grid or tree, colored by node values given in variable.
 
@@ -260,7 +269,14 @@ def plot_variable(
     if labels is not None:
         ax = add_text(ax, layout, labels, text_size=text_size, text_color=text_color, ha=["center"], va=["center"])
     ax, fig = add_legend(
-        fig=fig, ax=ax, data=variable, title="Marker", cmap=cmap, location="upper left", bbox_to_anchor=(1.04, 1)
+        fig=fig,
+        ax=ax,
+        data=variable,
+        title="Marker",
+        cmap=cmap,
+        location="upper left",
+        bbox_to_anchor=(1.04, 1),
+        categorical=categorical,
     )
     ax.axis("equal")
     if title is not None:
@@ -294,7 +310,7 @@ def plot_marker(fsom, marker, ref_markers=None, lim=None, cmap=FlowSOM_colors(),
         lim = (mfis[:, indices_markers].min(), mfis[:, indices_markers].max())
     marker = list(get_channels(fsom, marker).keys())[0]
     marker_index = np.where(fsom.get_cell_data().var_names == marker)[0][0]
-    fig = plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, **kwargs)
+    fig = plot_variable(fsom, variable=mfis[:, marker_index], cmap=cmap, lim=lim, categorical=False, **kwargs)
     return fig
 
 
