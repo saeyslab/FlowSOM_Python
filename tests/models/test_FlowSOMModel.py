@@ -35,6 +35,7 @@ def test_reproducibility_seed(X):
 
     assert all(y_pred_1 == y_pred_2)
 
+
 def test_metacluster(X):
     fsom = FlowSOM(X, n_clusters=10)
     assert 10 == fsom.model.metacluster_model.n_clusters
