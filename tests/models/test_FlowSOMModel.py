@@ -1,5 +1,6 @@
 from sklearn.metrics import v_measure_score
 
+from flowsom.main import FlowSOM
 from flowsom.models import FlowSOMEstimator
 
 
@@ -33,3 +34,9 @@ def test_reproducibility_seed(X):
     y_pred_2 = fsom_2.fit_predict(X)
 
     assert all(y_pred_1 == y_pred_2)
+
+def test_metacluster(X):
+    fsom = FlowSOM(X, n_clusters=10)
+    assert 10 == fsom.model.metacluster_model.n_clusters
+    fsom.metacluster(n_clusters=5)
+    assert 5 == fsom.model.metacluster_model.n_clusters

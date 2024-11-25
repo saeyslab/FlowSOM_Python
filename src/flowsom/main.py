@@ -288,7 +288,7 @@ class FlowSOM:
         """
         if n_clusters is None:
             n_clusters = self.n_clusters
-            self.model.set_n_clusters(n_clusters)
+        self.model.set_n_clusters(n_clusters)
         self.model.metacluster_model.fit_predict(self.model.codes)
         return self
 
