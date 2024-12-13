@@ -12,6 +12,7 @@ import bisect
 from itertools import combinations
 
 import numpy as np
+from scipy.stats import zscore
 from sklearn.cluster import AgglomerativeClustering
 
 from . import BaseClusterEstimator
@@ -62,6 +63,9 @@ class ConsensusCluster(BaseClusterEstimator):
         Args:
           * data -> (examples,attributes) format
         """
+        # zscore and clip
+        data = zscore(data, axis=0)
+        data = np.clip(data, a_min=-3, a_max=3)
         Mk = np.zeros((data.shape[0], data.shape[0]))
         Is = np.zeros((data.shape[0],) * 2)
         for _ in range(self.H):
@@ -89,4 +93,6 @@ class ConsensusCluster(BaseClusterEstimator):
 
     def fit_predict(self, data):
         """Predicts on the consensus matrix, for best found cluster number."""
+        data = zscore(data, axis=0)
+        data = np.clip(data, a_min=-3, a_max=3)
         return self.cluster(n_clusters=self.n_clusters, linkage=self.linkage).fit_predict(data)
