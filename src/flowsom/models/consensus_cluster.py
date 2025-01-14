@@ -12,6 +12,7 @@ import bisect
 from itertools import combinations
 
 import numpy as np
+from scipy.stats import zscore
 from sklearn.cluster import AgglomerativeClustering
 
 from . import BaseClusterEstimator
@@ -34,7 +35,15 @@ class ConsensusCluster(BaseClusterEstimator):
     """
 
     def __init__(
-        self, n_clusters, K=None, H=100, resample_proportion=0.9, linkage="average", cluster=AgglomerativeClustering
+        self,
+        n_clusters,
+        K=None,
+        H=100,
+        resample_proportion=0.9,
+        linkage="average",
+        z_score=False,
+        z_cap=3,  # ignored if z_score is False
+        cluster=AgglomerativeClustering,
     ):
         super().__init__()
         assert 0 <= resample_proportion <= 1, "proportion has to be between 0 and 1"
@@ -44,6 +53,9 @@ class ConsensusCluster(BaseClusterEstimator):
         self.resample_proportion = resample_proportion
         self.cluster = cluster
         self.linkage = linkage
+        self.z_score = z_score
+        assert z_cap > 0, f"z_cap should be stricly positive, but got {z_cap}"
+        self.z_cap = z_cap
 
     def _internal_resample(self, data, proportion):
         """Resamples the data.
@@ -62,6 +74,9 @@ class ConsensusCluster(BaseClusterEstimator):
         Args:
           * data -> (examples,attributes) format
         """
+        # zscore and clip
+        if self.z_score:
+            data = self._z_score(data)
         Mk = np.zeros((data.shape[0], data.shape[0]))
         Is = np.zeros((data.shape[0],) * 2)
         for _ in range(self.H):
@@ -89,4 +104,11 @@ class ConsensusCluster(BaseClusterEstimator):
 
     def fit_predict(self, data):
         """Predicts on the consensus matrix, for best found cluster number."""
+        if self.z_score:
+            data = self._z_score(data)
         return self.cluster(n_clusters=self.n_clusters, linkage=self.linkage).fit_predict(data)
+
+    def _z_score(self, data):
+        data = zscore(data, axis=0)
+        data = np.clip(data, a_min=-self.z_cap, a_max=self.z_cap)
+        return data
