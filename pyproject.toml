@@ -30,7 +30,7 @@ dependencies = [
     "matplotlib",
     "pandas",
     "scipy",
-    "readfcs",
+    "readfcs<2",
     "scikit-learn",
     "igraph",
     "session-info",
