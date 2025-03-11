@@ -30,8 +30,8 @@ def get_channels(obj, markers: np.ndarray, exact=True):
             ]
         )
     else:
-        object_markers = np.asarray(obj.uns["meta"]["channels"]["$PnS"])
-        object_channels = np.asarray(obj.uns["meta"]["channels"]["$PnN"])
+        object_markers = np.asarray(obj.var["marker"])
+        object_channels = np.asarray(obj.var["channel"])
 
     channelnames = {}
     for marker in markers:
@@ -78,8 +78,8 @@ def get_markers(obj, channels, exact=True):
             ]
         )
     else:
-        object_markers = np.asarray(obj.uns["meta"]["channels"]["$PnS"])
-        object_channels = np.asarray(obj.uns["meta"]["channels"]["$PnN"])
+        object_markers = np.asarray(obj.var["marker"])
+        object_channels = np.asarray(obj.var["channel"])
 
     markernames = {}
     for channel in channels:

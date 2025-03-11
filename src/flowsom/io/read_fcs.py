@@ -17,22 +17,22 @@ def read_FCS(filepath):
         f = readfcs.read(filepath, reindex=True)
         f.var.n = f.var.n.astype(int)
         f.var = f.var.sort_values(by="n")
-        f.uns["meta"]["channels"].index = f.uns["meta"]["channels"].index.astype(int)
-        f.uns["meta"]["channels"] = f.uns["meta"]["channels"].sort_index()
+        #f.uns["meta"]["channels"].index = f.uns["meta"]["channels"].index.astype(int)
+        #f.uns["meta"]["channels"] = f.uns["meta"]["channels"].sort_index()
     except ValueError:
         f = readfcs.read(filepath, reindex=False)
         markers = {
             str(re.sub("S$", "", re.sub("^P", "", string))): f.uns["meta"][string]
             for string in f.uns["meta"].keys()
-            if re.match("^P[0-9]+S$", string)
+            if re.match("^p[0-9]+s$", string)
         }
         fluo_channels = list(markers.keys())
         non_fluo_channels = {
-            i: f.uns["meta"]["channels"]["$PnN"][i] for i in f.uns["meta"]["channels"].index if i not in fluo_channels
+            i: f.var["channel"][i] for i in f.var.index if i not in fluo_channels
         }
         index_markers = dict(markers, **non_fluo_channels)
         f.var.rename(index=index_markers, inplace=True)
-        f.uns["meta"]["channels"]["$PnS"] = [index_markers[key] for key in f.uns["meta"]["channels"].index]
+        #f.uns["meta"]["channels"]["$PnS"] = [index_markers[key] for key in f.uns["meta"]["channels"].index]
     return f
 
 
