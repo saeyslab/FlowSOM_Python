@@ -166,7 +166,7 @@ def get_cluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_coln
         channels = {key: value for key, value in channels.items() if key in markers}
 
     perc_pos = np.empty((len(clusters), len(channels)))
-    perc_pos.fill(np.NaN)
+    perc_pos.fill(np.nan)
     for i, cluster in enumerate(clusters):
         data_per_cluster = fsom.get_cell_data().to_df().loc[cl_per_cell == cluster, list(channels.keys())]
         if data_per_cluster.shape[0] != 0:
@@ -207,7 +207,7 @@ def get_metacluster_percentages_positive(fsom, cutoffs, cols_used=False, pretty_
         channels = {key: value for key, value in channels.items() if key in markers}
 
     perc_pos = np.empty((len(metaclusters), len(channels)))
-    perc_pos.fill(np.NaN)
+    perc_pos.fill(np.nan)
     for i, cluster in enumerate(metaclusters):
         data_per_metacluster = fsom.get_cell_data().to_df().loc[mcl_per_cell == cluster, list(channels.keys())]
         if data_per_metacluster.shape[0] != 0:
