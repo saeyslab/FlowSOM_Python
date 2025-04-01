@@ -13,9 +13,9 @@ The complete FlowSOM package known from R, now available in Python!
 
 Please refer to the [documentation][link-docs]. In particular, the following resources are available:
 
--   [Example FlowSOM notebook][link-docs-example]
--   [API documentation][link-api]
--   [FlowSOM Python Cheatsheet][cheatsheet]
+- [Example FlowSOM notebook][link-docs-example]
+- [API documentation][link-api]
+- [FlowSOM Python Cheatsheet][cheatsheet]
 
 ## Installation
 

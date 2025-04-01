@@ -8,11 +8,11 @@ import flowsom as fs
 
 The functionality is organised in subpackages:
 
--   `io` for reading and writing FCS files
--   `pp` for preprocessing
--   `models` for models
--   `tl` for tools
--   `pl` for plotting
+- `io` for reading and writing FCS files
+- `pp` for preprocessing
+- `models` for models
+- `tl` for tools
+- `pl` for plotting
 
 The central class is `FlowSOM`, which can be used to read in data and directly perform the FlowSOM algorithm {cite:p}`van_gassen_flowsom_2015`. There is also a convenience function `flowsom_clustering` which performs the same steps but directly on an existing AnnData object. For more low-level control, the `FlowSOMEstimator` class with a scikit-learn Estimator API can be used.
 

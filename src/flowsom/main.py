@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import copy
-
 import anndata as ad
 import igraph as ig
 import numpy as np
@@ -425,17 +423,18 @@ class FlowSOM:
     def get_cluster_data(self):
         """Get the cluster data."""
         return self.mudata["cluster_data"]
-    
+
     def copy(self):
         """
         Returns a copy of the FlowSOM instance, leveraging MuData's built-in copy method.
-            
-        Returns:
+
+        Returns
+        -------
             FlowSOM: A new instance of FlowSOM with all data copied.
         """
         # Create a new instance without calling __init__
         fsom_copy = self.__class__.__new__(self.__class__)
-        
+
         # Copy attributes
         fsom_copy.cols_to_use = self.cols_to_use
         fsom_copy.mad_allowed = self.mad_allowed
@@ -449,7 +448,6 @@ class FlowSOM:
         fsom_copy.model = self.model
         fsom_copy.mudata = self.mudata.copy()
         return fsom_copy
-
 
 
 def flowsom_clustering(inp: ad.AnnData, cols_to_use=None, n_clusters=10, xdim=10, ydim=10, **kwargs):
