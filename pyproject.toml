@@ -4,7 +4,7 @@ requires = ["hatchling"]
 
 [project]
 name = "flowsom"
-version = "0.0.3"
+version = "0.2.0"
 description = "The complete FlowSOM package known from R, now available in Python!"
 readme = "README.md"
 requires-python = ">=3.9"
