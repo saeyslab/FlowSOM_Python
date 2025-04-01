@@ -1,13 +1,29 @@
 # FlowSOM
 
-[![Tests][badge-tests]][link-tests]
+[![PyPI version][badge-pypi]][link-pypi]
+[![Conda version][badge-conda]][link-conda]
 [![Documentation][badge-docs]][link-docs]
+[![Tests][badge-tests]][link-tests]
+[![codecov][badge-codecov]][link-codecov]
+[![DOI][badge-doi]][link-doi]
 
 [badge-tests]: https://img.shields.io/github/actions/workflow/status/saeyslab/FlowSOM_Python/test.yaml?branch=main
 [link-tests]: https://github.com/saeyslab/FlowSOM_Python/actions/workflows/test.yaml
 [badge-docs]: https://img.shields.io/readthedocs/flowsom
+[link-docs]: https://flowsom.readthedocs.io/en/latest/
+[badge-pypi]: https://img.shields.io/pypi/v/flowsom
+[link-pypi]: https://pypi.org/project/flowsom/
+[badge-conda]: https://img.shields.io/conda/vn/conda-forge/flowsom
+[link-conda]: https://anaconda.org/conda-forge/flowsom
+[badge-doi]: https://img.shields.io/badge/DOI-10.1093%2Fbioinformatics%2Fbtae179-blue
+[link-doi]: https://doi.org/10.1093/bioinformatics/btae179
+[badge-codecov]: https://codecov.io/gh/saeyslab/FlowSOM_Python/branch/main/graph/badge.svg
+[link-codecov]: https://codecov.io/gh/saeyslab/FlowSOM_Python
 
-The complete FlowSOM package known from R, now available in Python!
+The complete FlowSOM package known from R and [Bioconductor](https://www.bioconductor.org/packages/release/bioc/html/FlowSOM.html), now available in Python with [scverse](https://scverse.org/) integration!
+
+FlowSOM is a clustering and visualization algorithm originally based on a self-organizing map (SOM). FlowSOM is used to distinguish cell populations from cytometry data in an unsupervised way and
+can help to gain deeper insights in fields such as immunology and oncology.
 
 ## Getting started
 
@@ -19,23 +35,24 @@ Please refer to the [documentation][link-docs]. In particular, the following res
 
 ## Installation
 
-You need to have Python 3.9 or newer installed on your system. If you don't have
-Python installed, we recommend installing [Mambaforge](https://github.com/conda-forge/miniforge#mambaforge).
+You need to have Python 3.9 or newer installed on your system. There are several options to install FlowSOM:
 
-There are several alternative options to install FlowSOM:
-
-<!--
-1) Install the latest release of `FlowSOM` from `PyPI <https://pypi.org/project/FlowSOM/>`_:
+**Recommended installation**: install the latest release of FlowSOM from [PyPI](https://pypi.org/project/FlowSOM/):
 
 ```bash
-pip install FlowSOM
+pip install flowsom
 ```
--->
 
-1. Install the latest development version:
+Alternative 1: install the development version from the GitHub repository:
 
 ```bash
 pip install git+https://github.com/saeyslab/FlowSOM_Python
+```
+
+Alternative 2: install the [FlowSOM Conda package](https://anaconda.org/conda-forge/flowsom) via the Conda package manager:
+
+```bash
+conda install -c conda-forge flowsom
 ```
 
 ## Usage
