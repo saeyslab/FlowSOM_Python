@@ -6,11 +6,10 @@
 :hidden: true
 :maxdepth: 1
 
+notebooks/example
+notebooks/parallel
 api.md
 changelog.md
-template_usage.md
 contributing.md
 references.md
-
-notebooks/example
 ```

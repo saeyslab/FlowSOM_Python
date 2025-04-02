@@ -29,7 +29,7 @@ hatch run docs:build  # defined in the table [tool.hatch.envs.docs]
 If you prefer managing environments manually, you can use `pip`:
 
 ```bash
-cd FlowSOM
+cd FlowSOM_Python
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,test,doc]"
@@ -74,9 +74,11 @@ Consider enabling this option for [ruff][ruff-editors] and [biome][biome-editors
 [ruff-editors]: https://docs.astral.sh/ruff/integrations/
 [biome-editors]: https://biomejs.dev/guides/integrate-in-editor/
 
+
 (writing-tests)=
 
 ## Writing tests
+
 
 This package uses [pytest][] for automated testing.
 Please write {doc}`scanpy:dev/testing` for every function added to the package.
@@ -137,6 +139,7 @@ Please adhere to [Semantic Versioning][semver], in brief
 > 1. MAJOR version when you make incompatible API changes,
 > 2. MINOR version when you add functionality in a backwards compatible manner, and
 > 3. PATCH version when you make backwards compatible bug fixes.
+
 >
 > Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
 
@@ -148,6 +151,7 @@ This will automatically create a git tag and trigger a Github workflow that crea
 [semver]: https://semver.org/
 [managing GitHub releases]: https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
 [pypi]: https://pypi.org/
+
 
 ## Writing documentation
 
@@ -188,6 +192,7 @@ please check out [this feature request][issue-render-notebooks] in the `cookiecu
   you can add an entry to the `nitpick_ignore` list in `docs/conf.py`
 
 (docs-building)=
+
 
 #### Building the docs locally
 

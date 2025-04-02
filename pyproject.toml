@@ -3,17 +3,10 @@ build-backend = "hatchling.build"
 requires = [ "hatchling" ]
 
 [project]
-name = "FlowSOM"
-version = "0.0.1"
-description = "The complete FlowSOM package known from R, now available in Python"
+name = "flowsom"
+version = "0.2.1"
+description = "The complete FlowSOM package known from R, now available in Python!"
 readme = "README.md"
-license = { file = "LICENSE" }
-maintainers = [
-  { name = "Artuur Couckuyt", email = "artuur.couckuyt@ugent.be" },
-]
-authors = [
-  { name = "Artuur Couckuyt" },
-]
 requires-python = ">=3.10"
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
@@ -22,42 +15,65 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
+license = { file = "LICENSE" }
+authors = [
+    { name = "Artuur Couckuyt", email = "Artuur.Couckuyt@ugent.be" },
+    { name = "Benjamin Rombaut", email = "Benjamin.Rombaut@ugent.be" },
+    { name = "Yvan Saeys", email = "Yvan.Saeys@UGent.be" },
+    { name = "Sofie Van Gassen", email = "Sofie.VanGassen@UGent.be" },
+]
+maintainers = [
+    { name = "Artuur Couckuyt", email = "Artuur.Couckuyt@ugent.be" },
+    { name = "Benjamin Rombaut", email = "Benjamin.Rombaut@ugent.be" },
+    { name = "Yvan Saeys", email = "Yvan.Saeys@UGent.be" },
+    { name = "Sofie Van Gassen", email = "Sofie.VanGassen@UGent.be" },
+]
+urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
+urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
+urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 dependencies = [
-  "anndata",
-  # for debug logging (referenced from the issue template)
-  "session-info2",
+    "mudata",
+    "numpy",
+    "matplotlib",
+    "pandas",
+    "scipy",
+    "readfcs",
+    "scikit-learn",
+    "igraph",
+    # for debug logging (referenced from the issue template)
+    "session-info2",
+    "numba",
+    "scanpy",
+    "seaborn",
+    "anndata",
+    "loguru",
 ]
-optional-dependencies.dev = [
-  "pre-commit",
-  "twine>=4.0.2",
+
+[project.optional-dependencies]
+dev = ["pre-commit", "twine>=4.0.2"]
+doc = [
+    "docutils>=0.8,!=0.18.*,!=0.19.*",
+    "sphinx>=4",
+    "sphinx-book-theme>=1",
+    "myst-nb>=1.1",
+    "sphinxcontrib-bibtex>=1",
+    "sphinx-autodoc-typehints",
+    "sphinxext-opengraph",
+    "sphinx-copybutton",
+    "sphinx-tabs",
+    "pandas",
+     # Until pybtex >0.24.0 releases: https://bitbucket.org/pybtex-devs/pybtex/issues/169/
+    "setuptools",
+    # For notebooks
+    "ipykernel",
+    "ipython",
+    # For example notebooks
+    "pytometry>=0.1.5",
 ]
-optional-dependencies.doc = [
-  "docutils>=0.8,!=0.18.*,!=0.19.*",
-  "ipykernel",
-  "ipython",
-  "myst-nb>=1.1",
-  "pandas",
-  # Until pybtex >0.24.0 releases: https://bitbucket.org/pybtex-devs/pybtex/issues/169/
-  "setuptools",
-  "sphinx>=4",
-  "sphinx-autodoc-typehints",
-  "sphinx-book-theme>=1",
-  "sphinx-copybutton",
-  "sphinx-tabs",
-  "sphinxcontrib-bibtex>=1",
-  "sphinxext-opengraph",
-]
-optional-dependencies.test = [
-  "coverage",
-  "pytest",
-]
-# https://docs.pypi.org/project_metadata/#project-urls
-urls.Documentation = "https://FlowSOM.readthedocs.io/"
-urls.Homepage = "https://github.com/artuurC/FlowSOM"
-urls.Source = "https://github.com/artuurC/FlowSOM"
+test = ["pytest", "coverage"]
 
 [tool.hatch.build.targets.wheel]
-packages = [ "src/FlowSOM" ]
+packages = ['src/flowsom']
 
 [tool.hatch.envs.default]
 installer = "uv"
@@ -72,14 +88,32 @@ scripts.clean = "git clean -fdX -- {args:docs}"
 [tool.hatch.envs.hatch-test]
 features = [ "test" ]
 
+[tool.coverage.run]
+source = ["flowsom"]
+omit = ["**/test_*.py"]
+
+[tool.pytest.ini_options]
+testpaths = [ "tests" ]
+xfail_strict = true
+addopts = [
+    "--import-mode=importlib", # allow using test files with same name
+]
+
+[tool.fawltydeps]
+code = ["src"]                  # Only search for imports under ./src
+deps = ["pyproject.toml"]       # Only look for declared dependencies here
+ignore_undeclared = ["flowsom"]
+
 [tool.ruff]
 line-length = 120
-src = [ "src" ]
-extend-include = [ "*.ipynb" ]
+src = ["src"]
+extend-include = ["*.ipynb"]
 
-format.docstring-code-format = true
+[tool.ruff.format]
+docstring-code-format = true
 
-lint.select = [
+[tool.ruff.lint]
+select = [
   "B",      # flake8-bugbear
   "BLE",    # flake8-blind-except
   "C4",     # flake8-comprehensions
@@ -92,7 +126,7 @@ lint.select = [
   "UP",     # pyupgrade
   "W",      # Warning detected by Pycodestyle
 ]
-lint.ignore = [
+ignore = [
   "B008", # Errors from function calls in argument defaults. These are fine when the result is immutable.
   "D100", # Missing docstring in public module
   "D104", # Missing docstring in public package
@@ -107,32 +141,23 @@ lint.ignore = [
   "E731", # Do not assign a lambda expression, use a def -> lambda expression assignments are convenient
   "E741", # allow I, O, l as variable names -> I is the identity matrix
 ]
-lint.per-file-ignores."*/__init__.py" = [ "F401" ]
-lint.per-file-ignores."docs/*" = [ "I" ]
-lint.per-file-ignores."tests/*" = [ "D" ]
-lint.pydocstyle.convention = "numpy"
 
-[tool.pytest.ini_options]
-testpaths = [ "tests" ]
-xfail_strict = true
-addopts = [
-  "--import-mode=importlib", # allow using test files with same name
-]
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
-[tool.coverage.run]
-source = [ "FlowSOM" ]
-omit = [
-  "**/test_*.py",
-]
+[tool.ruff.lint.per-file-ignores]
+"docs/*" = ["I"]
+"tests/*" = ["D"]
+"*/__init__.py" = ["F401"]
 
 [tool.cruft]
 skip = [
-  "tests",
-  "src/**/__init__.py",
-  "src/**/basic.py",
-  "docs/api.md",
-  "docs/changelog.md",
-  "docs/references.bib",
-  "docs/references.md",
-  "docs/notebooks/example.ipynb",
+    "tests",
+    "src/**/__init__.py",
+    "src/**/basic.py",
+    "docs/api.md",
+    "docs/changelog.md",
+    "docs/references.bib",
+    "docs/references.md",
+    "docs/notebooks/example.ipynb",
 ]

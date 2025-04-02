@@ -17,6 +17,7 @@ defaults:
     # to fail on error in multiline statements (-e), in pipes (-o pipefail), and on unset variables (-u).
     shell: bash -euo pipefail {0}
 
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
@@ -57,3 +58,5 @@ jobs:
         run: uvx hatch test --cover --python ${{ matrix.python }}
       - name: Upload coverage
         uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
