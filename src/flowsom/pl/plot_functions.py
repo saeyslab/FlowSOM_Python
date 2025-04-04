@@ -82,9 +82,9 @@ def plot_2D_scatters(
     if xy_labels is None:
         xy_labels = ["marker"]
     assert metaclusters is not None or clusters is not None, "Please add clusters or metaclusters to plot."
-    assert (
-        "marker" in xy_labels or "channel" in xy_labels
-    ), 'xy_labels should be a list containing "marker" and/or "channel".'
+    assert "marker" in xy_labels or "channel" in xy_labels, (
+        'xy_labels should be a list containing "marker" and/or "channel".'
+    )
     if clusters is not None:
         assert isinstance(clusters[0], list), "clusters should be a list of lists."
     if metaclusters is not None:
@@ -124,7 +124,7 @@ def plot_2D_scatters(
                     col = np.asarray([gg_color_hue()(i) for i in range(n_metaclusters)])[
                         np.array([int(i) for i in metacluster])[n]
                     ]
-                    col_dict = dict(zip(np.unique(df_ss[:, 2]), col))
+                    col_dict = dict(zip(np.unique(df_ss[:, 2]), col, strict=False))
                     cols = [col_dict[i] for i in df_ss[:, 2]]
 
                     df_c = np.c_[fsom.get_cluster_data()[n, indices_markers].X, n]
@@ -134,7 +134,7 @@ def plot_2D_scatters(
                     df_ss = df_ss[:, indices_markers]
                     df_ss = np.c_[df_ss, cell_metacluster[metaclusters_OI]]
                     col = np.asarray([gg_color_hue()(i) for i in range(n_metaclusters)])[n]
-                    col_dict = dict(zip(np.unique(df_ss[:, 2]), col))
+                    col_dict = dict(zip(np.unique(df_ss[:, 2]), col, strict=False))
                     cols = [col_dict[i] for i in df_ss[:, 2]]
                     cl_in_mcl = np.where(np.isin(metacluster.astype(int), n))[0]
                     df_c = np.c_[fsom.get_cluster_data()[cl_in_mcl, indices_markers].X, cl_in_mcl]
@@ -193,9 +193,9 @@ def plot_labels(fsom, labels, max_node_size=0, text_size=20, text_color="black",
     """
     if not isinstance(labels, np.ndarray):
         labels = np.asarray(labels)
-    assert (
-        labels.shape[0] == fsom.get_cell_data().uns["n_nodes"]
-    ), "Length of labels should be the same as the number of nodes in your FlowSOM object"
+    assert labels.shape[0] == fsom.get_cell_data().uns["n_nodes"], (
+        "Length of labels should be the same as the number of nodes in your FlowSOM object"
+    )
     fig, ax, layout, _ = plot_FlowSOM(fsom=fsom, max_node_size=max_node_size, **kwargs)
     ax = add_text(ax, layout, labels, text_size, text_color)
     ax.axis("equal")
@@ -250,9 +250,9 @@ def plot_variable(
     """
     if not isinstance(variable, np.ndarray):
         variable = np.asarray(variable)
-    assert (
-        variable.shape[0] == fsom.get_cell_data().uns["n_nodes"]
-    ), "Length of variable should be the same as the number of nodes in your FlowSOM object"
+    assert variable.shape[0] == fsom.get_cell_data().uns["n_nodes"], (
+        "Length of variable should be the same as the number of nodes in your FlowSOM object"
+    )
     if variable.dtype == "object":
         string_to_number = {string: index for index, string in enumerate(np.unique(variable))}
         variable = np.asarray([string_to_number[string] for string in variable])
@@ -380,12 +380,12 @@ def plot_pies(
     """
     if not isinstance(cell_types, np.ndarray):
         cell_types = np.asarray(cell_types)
-    assert (
-        cell_types.shape[0] == fsom.get_cell_data().shape[0]
-    ), "Length of cell_types should be the same as the number of cells in your FlowSOM object"
+    assert cell_types.shape[0] == fsom.get_cell_data().shape[0], (
+        "Length of cell_types should be the same as the number of cells in your FlowSOM object"
+    )
     fig, ax, layout, scaled_node_size = plot_FlowSOM(fsom, **kwargs)
     unique_cell_types = np.unique(cell_types)
-    color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types)))))
+    color_dict = dict(zip(unique_cell_types, cmap(np.linspace(0, 1, len(unique_cell_types))), strict=False))
 
     for cl in range(fsom.get_cell_data().uns["n_nodes"]):
         node_cell_types = cell_types[fsom.get_cell_data().obs["clustering"] == cl]
@@ -512,6 +512,7 @@ def FlowSOMmary(fsom, plot_file="./FlowSOMmary.pdf"):
             zip(
                 np.unique(subset_fsom.obs["metaclustering"]),
                 gg_color_hue()(np.linspace(0, 1, n_metaclusters)),
+                strict=False,
             )
         )
         fig, ax = plt.subplots()

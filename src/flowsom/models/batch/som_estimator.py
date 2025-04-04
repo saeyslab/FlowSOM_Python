@@ -70,9 +70,9 @@ class BatchSOMEstimator(BaseClusterEstimator):
         alpha = self.alpha
 
         if codes is not None:
-            assert (
-                (codes.shape[1] == X.shape[1]) and (codes.shape[0] == xdim * ydim)
-            ), "If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
+            assert (codes.shape[1] == X.shape[1]) and (codes.shape[0] == xdim * ydim), (
+                "If codes is not NULL, it should have the same number of columns as the data and the number of rows should correspond with xdim*ydim"
+            )
 
         if importance is not None:
             X = np.stack([X[:, i] * importance[i] for i in range(len(importance))], axis=1)

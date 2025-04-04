@@ -16,9 +16,9 @@ def get_channels(obj, markers: np.ndarray, exact=True):
     :param exact: If True, a strict search is performed. If False, regexps can be used.
     :type exact: boolean
     """
-    assert obj.__class__.__name__ == "FlowSOM" or isinstance(
-        obj, ad.AnnData
-    ), "Please provide an FCS file or a FlowSOM object"
+    assert obj.__class__.__name__ == "FlowSOM" or isinstance(obj, ad.AnnData), (
+        "Please provide an FCS file or a FlowSOM object"
+    )
     if obj.__class__.__name__ == "FlowSOM":
         object_markers = np.asarray(
             [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
@@ -64,9 +64,9 @@ def get_markers(obj, channels, exact=True):
     :param exact: If True, a strict search is performed. If False, regexps can be used.
     :type exact: boolean
     """
-    assert obj.__class__.__name__ == "FlowSOM" or isinstance(
-        obj, ad.AnnData
-    ), "Please provide an FCS file or a FlowSOM object"
+    assert obj.__class__.__name__ == "FlowSOM" or isinstance(obj, ad.AnnData), (
+        "Please provide an FCS file or a FlowSOM object"
+    )
     if obj.__class__.__name__ == "FlowSOM":
         object_markers = np.asarray(
             [re.sub(" <.*", "", pretty_colname) for pretty_colname in obj.mudata["cell_data"].var["pretty_colnames"]]
@@ -255,9 +255,9 @@ def get_features(
     if filenames is not None:
         assert len(filenames) != nfiles, "The number of file names should be equal to the number of files"
     assert all(i in ["metaclusters", "clusters"] for i in level), "Level should be 'metaclusters' or 'clusters'"
-    assert all(
-        i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type
-    ), "Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"
+    assert all(i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type), (
+        "Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"
+    )
     if "MFIs" in type:
         assert MFI is not None, "If type is 'MFIs', MFI should be provided"
         MFI = list(get_channels(fsom, MFI).keys())

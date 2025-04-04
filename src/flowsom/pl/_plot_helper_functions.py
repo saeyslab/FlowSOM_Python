@@ -104,14 +104,14 @@ def plot_FlowSOM(
 
     # Warnings
     if node_sizes is not None:
-        assert nNodes == len(
-            node_sizes
-        ), 'Length of "node_sizes" should be equal to number of clusters in FlowSOM object'
+        assert nNodes == len(node_sizes), (
+            'Length of "node_sizes" should be equal to number of clusters in FlowSOM object'
+        )
 
     if background_values is not None:
-        assert (
-            background_values.shape[0] == fsom.mudata["cell_data"].uns["n_nodes"]
-        ), "Length of background_values should be equal to number of clusters in FlowSOM object"
+        assert background_values.shape[0] == fsom.mudata["cell_data"].uns["n_nodes"], (
+            "Length of background_values should be equal to number of clusters in FlowSOM object"
+        )
 
     # Node sizes
     node_sizes = parse_node_sizes(

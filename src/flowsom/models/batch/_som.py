@@ -1,6 +1,6 @@
 """Code adapted from student assignment Computational Biology 2024, Ghent University."""
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 from numba import jit, prange
