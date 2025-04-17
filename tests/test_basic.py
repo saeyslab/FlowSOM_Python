@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 import flowsom as fs
 
@@ -152,4 +153,54 @@ def test_FlowSOM_class(FlowSOM_res):
             obs_keys_cluster,
             obsm_keys_cluster,
         ]
+    )
+
+
+def test_mfis():
+    # create a DataFrame with 4 cells and 4 markers with values in non-ascending order
+    markers = ["CD3", "CD4", "CD8", "CD19"]
+    data = pd.DataFrame(
+        [
+            [9, 11, 11, 10],
+            [2, 1, 2, 1],
+            [10, 11, 11, 10],
+            [3, 1, 2, 1],
+        ],
+        columns=markers,
+    )
+    fsom = fs.FlowSOM(data, cols_to_use=markers, n_clusters=2, replace=True, xdim=2, ydim=2, seed=42)
+    assert fsom.get_cell_data().shape == (4, 4)
+    assert fsom.get_cluster_data().shape == (4, 4)
+    np.testing.assert_array_equal(
+        fsom.get_cluster_data().X,
+        np.array(
+            [
+                # 4 clusters, coinciding with the 4 cells
+                [2.0, 1.0, 2.0, 1.0],
+                [3.0, 1.0, 2.0, 1.0],
+                [9.0, 11.0, 11.0, 10.0],
+                [10.0, 11.0, 11.0, 10.0],
+            ]
+        ),
+    )
+    # the two metaclusters group cell 0 and 2, and cell 1 and 3
+    pd.testing.assert_series_equal(
+        fsom.get_cell_data().obs["metaclustering"],
+        pd.Series([0, 1, 0, 1], name="metaclustering", index=pd.Index(range(4), dtype=str)),
+    )
+    # test MFI
+    assert fsom.get_cluster_data().uns["metacluster_MFIs"].shape == (2, 4)
+    assert fsom.get_cluster_data().uns["metacluster_MFIs"].columns.tolist() == markers
+    # test values of MFI for clusters
+    pd.testing.assert_frame_equal(
+        fsom.get_cluster_data().uns["metacluster_MFIs"],
+        pd.DataFrame(
+            [
+                # MFIs per cluster
+                [9.5, 11.0, 11.0, 10.0],
+                [2.5, 1.0, 2.0, 1.0],
+            ],
+            columns=markers,
+            index=pd.Index([0, 1], name="metaclustering"),
+        ),
     )
