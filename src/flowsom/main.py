@@ -237,13 +237,19 @@ class FlowSOM:
         cluster_mudata.obsm["codes"] = self.model.codes
         cluster_mudata.obsm["grid"] = np.array([(x, y) for x in range(self.xdim) for y in range(self.ydim)])
         cluster_mudata.uns["outliers"] = self.test_outliers(mad_allowed=self.mad_allowed).reset_index()
-        # update metacluster values
 
+        # update metacluster values
         self.mudata.mod["cluster_data"] = cluster_mudata
-        df = self.mudata["cell_data"].X[self.mudata["cell_data"].X[:, 0].argsort()]
-        df = np.c_[self.mudata["cell_data"].obs["metaclustering"], df]
-        metacluster_median_values: pd.DataFrame = pd.DataFrame(df).groupby(0).median()
+
+        # Get df with cell data and metaclustering labels
+        df = self.mudata["cell_data"].to_df()
+        df["metaclustering"] = self.mudata["cell_data"].obs["metaclustering"]
+        # Group by metaclustering labels and calculate median values
+        metacluster_median_values = df.groupby("metaclustering").median()
+        # Update the metacluster_MFIs in the cluster_data
         self.mudata["cluster_data"].uns["metacluster_MFIs"] = metacluster_median_values
+
+        # Build the Minimum Spanning Tree (MST)
         self.build_MST()
 
     def build_MST(self):
@@ -432,6 +438,8 @@ class FlowSOM:
         -------
             FlowSOM: A new instance of FlowSOM with all data copied.
         """
+        from copy import deepcopy
+
         # Create a new instance without calling __init__
         fsom_copy = self.__class__.__new__(self.__class__)
 
@@ -445,7 +453,7 @@ class FlowSOM:
         fsom_copy.alpha = self.alpha
         fsom_copy.seed = self.seed
         fsom_copy.n_clusters = self.n_clusters
-        fsom_copy.model = self.model
+        fsom_copy.model = deepcopy(self.model)
         fsom_copy.mudata = self.mudata.copy()
         return fsom_copy
 
