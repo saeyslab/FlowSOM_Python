@@ -1,5 +1,4 @@
 import numpy as np
-from pyFlowSOM import map_data_to_nodes, som
 from sklearn.utils.validation import check_is_fitted
 
 from . import BaseClusterEstimator
@@ -54,6 +53,8 @@ class PyFlowSOM_SOMEstimator(BaseClusterEstimator):
         according to importance
         :type importance: np.array
         """
+        from pyFlowSOM import map_data_to_nodes, som
+
         alpha = self.alpha
         X = X.astype("double")
 
@@ -77,7 +78,10 @@ class PyFlowSOM_SOMEstimator(BaseClusterEstimator):
 
     def predict(self, X, y=None):
         """Predict labels using the model."""
+        from pyFlowSOM import map_data_to_nodes
+
         check_is_fitted(self)
+
         X = X.astype("double")
         clusters, dists = map_data_to_nodes(self.codes, X)
         self.labels_ = clusters.astype(int) - 1
