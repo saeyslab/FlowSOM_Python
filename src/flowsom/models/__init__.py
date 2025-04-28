@@ -5,3 +5,5 @@ from .base_flowsom_estimator import BaseFlowSOMEstimator  # isort:skip
 from .consensus_cluster import ConsensusCluster  # isort:skip
 from .flowsom_estimator import FlowSOMEstimator  # isort:skip
 from .batch_flowsom_estimator import BatchFlowSOMEstimator  # isort:skip
+from .pyFlowSOM_som_estimator import PyFlowSOM_SOMEstimator  # isort:skip
+from .pyflowsom_estimator import PyFlowSOMEstimator  # isort:skip
