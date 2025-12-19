@@ -8,12 +8,11 @@ import numpy as np
 from flowsom.io import read_FCS
 from flowsom.tl import get_markers
 
-
-def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
+def aggregate_flowframes(files, c_total, channels=None, keep_order=False):
     """Aggregate multiple FCS files together.
 
-    :param filenames: An array containing full paths to the FCS files
-    :type filenames: np.array
+    :param files: An array/list containing full paths to the FCS files or fcs files as anndata objects
+    :type files: np.array
     :param c_total: Total number of cells to write to the output file
     :type c_total: int
     :param channels: Channels/markers to keep in the aggregate. Default None
@@ -26,12 +25,15 @@ def aggregate_flowframes(filenames, c_total, channels=None, keep_order=False):
     new file. Default = False.
     :type silent: boolean.
     """
-    nFiles = len(filenames)
+    nFiles = len(files)
     cFile = int(np.ceil(c_total / nFiles))
 
     flow_frame = []
-    for i, file_path in enumerate(filenames):
-        f = read_FCS(file_path)
+    for i, f in enumerate(files):
+
+        if not isinstance(f, ad.AnnData):
+            f = read_FCS(f)
+
         if channels is not None:
             f = f[:, list(get_markers(f, channels).keys())]
         cPerFile = min([f.X.shape[0], cFile])
