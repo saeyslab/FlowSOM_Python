@@ -11,7 +11,7 @@ license = { file = "LICENSE" }
 maintainers = [
   { name = "Artuur Couckuyt", email = "Artuur.Couckuyt@ugent.be" },
   { name = "Benjamin Rombaut", email = "Benjamin.Rombaut@ugent.be" },
-  { name = "Robbe Fonteyn", email = "Robbe.Fonteyn@ugent.be"},
+  { name = "Robbe Fonteyn", email = "Robbe.Fonteyn@ugent.be" },
   { name = "Yvan Saeys", email = "Yvan.Saeys@UGent.be" },
   { name = "Sofie Van Gassen", email = "Sofie.VanGassen@UGent.be" },
 ]

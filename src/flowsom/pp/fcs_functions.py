@@ -8,6 +8,7 @@ import numpy as np
 from flowsom.io import read_FCS
 from flowsom.tl import get_markers
 
+
 def aggregate_flowframes(files, c_total, channels=None, keep_order=False):
     """Aggregate multiple FCS files together.
 
@@ -30,7 +31,6 @@ def aggregate_flowframes(files, c_total, channels=None, keep_order=False):
 
     flow_frame = []
     for i, f in enumerate(files):
-
         if not isinstance(f, ad.AnnData):
             f = read_FCS(f)
 
