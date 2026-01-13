@@ -67,7 +67,7 @@ optional-dependencies.doc = [
   "sphinxcontrib-bibtex>=1",
   "sphinxext-opengraph",
 ]
-optional-dependencies.test = [ "coverage", "pyflowsom", "pytest" ]
+optional-dependencies.test = [ "coverage", "pyflowsom>=0.1.5", "pytest" ]
 urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
 urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
