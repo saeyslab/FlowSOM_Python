@@ -103,10 +103,12 @@ class ConsensusCluster(BaseClusterEstimator):
         return self
 
     def fit_predict(self, data):
-        """Predicts on the consensus matrix, for best found cluster number."""
-        if self.z_score:
-            data = self._z_score(data)
-        return self.cluster(n_clusters=self.n_clusters, linkage=self.linkage).fit_predict(data)
+        """Builds consensus matrix via fit(), then clusters on it."""
+        self.fit(data)
+        distance_matrix = 1 - self.Mk
+        return AgglomerativeClustering(
+            n_clusters=self.n_clusters, metric="precomputed", linkage=self.linkage
+        ).fit_predict(distance_matrix)
 
     def _z_score(self, data):
         data = zscore(data, axis=0)
