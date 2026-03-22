@@ -47,7 +47,7 @@ dependencies = [
   "session-info2>=0.1",
 ]
 
-optional-dependencies.dev = [ "pre-commit>=3.0", "twine>=4.0.2" ]
+optional-dependencies.dev = [ "pre-commit>=3", "twine>=4.0.2" ]
 optional-dependencies.doc = [
   "docutils>=0.8,!=0.18.*,!=0.19.*",
   # For notebooks
@@ -67,7 +67,7 @@ optional-dependencies.doc = [
   "sphinxcontrib-bibtex>=1",
   "sphinxext-opengraph",
 ]
-optional-dependencies.test = [ "coverage>=7.0", "pyflowsom>=0.1.5", "pytest>=7.0" ]
+optional-dependencies.test = [ "coverage>=7", "pyflowsom>=0.1.5", "pytest>=7" ]
 urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
 urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
