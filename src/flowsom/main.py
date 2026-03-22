@@ -183,53 +183,48 @@ class FlowSOM:
         )
         self.mudata["cell_data"].uns["n_metaclusters"] = self.n_clusters
         self.mudata["cell_data"].obs["metaclustering"] = self.model.metacluster_labels
-        # get dataframe of intensities and cluster labels on cell level
-        df = self.mudata["cell_data"].to_df()  # [self.adata.X[:, 0].argsort()]
-        df = pd.concat([self.mudata["cell_data"].obs["clustering"], df], axis=1)
+        X = self.mudata["cell_data"].X
         n_nodes = self.mudata["cell_data"].uns["n_nodes"]
+        n_features = X.shape[1]
+        labels = np.asarray(self.mudata["cell_data"].obs["clustering"]).astype(int)
 
-        # get median values per cluster on cell level
-        cluster_median_values = df.groupby("clustering").median()
-        # make sure cluster_median_values is of length n_nodes
-        # some clusters might be empty when fitting on new data
-        missing_clusters = set(range(n_nodes)) - set(cluster_median_values.index)
-        if len(missing_clusters) > 0:
-            cluster_median_values = cluster_median_values.reindex(
-                list(cluster_median_values.index) + list(missing_clusters)
-            )
-        cluster_median_values.sort_index(inplace=True)
-        # create values for cluster_data
-        cluster_mudata = ad.AnnData(cluster_median_values.values)
-        cluster_mudata.var_names = self.mudata["cell_data"].var_names
-        # standard deviation of cells per cluster
-        sd_values = []
-        # coefficient of variation of cells per cluster
-        cv_values = []
-        # median absolute deviation of cells per cluster
-        mad_values = []
-        # percentages of cells of cells per cluster
-        pctgs = {}
+        # Sort once by cluster label so each cluster's rows are contiguous,
+        # replacing N pandas boolean-index operations with a single argsort
+        # + N cheap slice operations on the underlying numpy array.
+        sort_idx = np.argsort(labels, kind="stable")
+        X_sorted = X[sort_idx]
+        labels_sorted = labels[sort_idx]
+        boundaries = np.searchsorted(labels_sorted, np.arange(n_nodes + 1))
+
+        # Preallocate per-cluster statistics
+        median_values = np.full((n_nodes, n_features), np.nan)
+        sd_values = np.full((n_nodes, n_features), np.nan)
+        cv_values = np.full((n_nodes, n_features), np.nan)
+        mad_values = np.full((n_nodes, n_features), np.nan)
+        counts = np.zeros(n_nodes, dtype=int)
+
         for cl in range(n_nodes):
-            cluster_data = df[df["clustering"] == cl]
-            # if cluster is empty, set values to nan for all markers
-            if cluster_data.shape[0] == 0:
-                cluster_mudata.X[cl, :] = np.nan
-                cv_values.append([np.nan] * cluster_data.shape[1])
-                sd_values.append([np.nan] * cluster_data.shape[1])
-                mad_values.append([np.nan] * cluster_data.shape[1])
-                pctgs[cl] = 0
+            start, end = boundaries[cl], boundaries[cl + 1]
+            if start == end:
                 continue
-            means = np.nanmean(cluster_data, axis=0)
+            chunk = X_sorted[start:end]
+            counts[cl] = end - start
+            med = np.nanmedian(chunk, axis=0)
+            median_values[cl] = med
+            sd_values[cl] = np.nanstd(chunk, axis=0)
+            means = np.nanmean(chunk, axis=0)
             means[means == 0] = np.nan
-            cv_values.append(np.divide(np.nanstd(cluster_data, axis=0), means))
-            sd_values.append(np.nanstd(cluster_data, axis=0))
-            mad_values.append(median_abs_deviation(cluster_data, axis=0, nan_policy="omit"))
-            pctgs[cl] = cluster_data.shape[0]
+            cv_values[cl] = sd_values[cl] / means
+            mad_values[cl] = np.nanmedian(np.abs(chunk - med), axis=0)
 
-        cluster_mudata.obsm["cv_values"] = np.vstack(cv_values)
-        cluster_mudata.obsm["sd_values"] = np.vstack(sd_values)
-        cluster_mudata.obsm["mad_values"] = np.vstack(mad_values)
-        pctgs = np.divide(list(pctgs.values()), np.sum(list(pctgs.values())))
+        cluster_mudata = ad.AnnData(median_values)
+        cluster_mudata.var_names = self.mudata["cell_data"].var_names
+
+        cluster_mudata.obsm["cv_values"] = cv_values
+        cluster_mudata.obsm["sd_values"] = sd_values
+        cluster_mudata.obsm["mad_values"] = mad_values
+        total_count = counts.sum()
+        pctgs = counts / total_count if total_count > 0 else counts.astype(float)
         cluster_mudata.obs["percentages"] = pctgs
         cluster_mudata.obs["metaclustering"] = self.model._y_codes
         cluster_mudata.uns["xdim"] = self.xdim
@@ -310,37 +305,46 @@ class FlowSOM:
         """
         if fsom_reference is None:
             fsom_reference = self
-        cell_cl = fsom_reference.mudata["cell_data"].obs["clustering"]
-        distance_to_bmu = fsom_reference.mudata["cell_data"].obs["distance_to_bmu"]
-        distances_median = [
-            np.median(distance_to_bmu[cell_cl == cl + 1]) if len(distance_to_bmu[cell_cl == cl + 1]) > 0 else 0
-            for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
-        ]
+        n_nodes = fsom_reference.mudata["cell_data"].uns["n_nodes"]
+        cell_cl = np.asarray(fsom_reference.mudata["cell_data"].obs["clustering"]).astype(int)
+        dist_to_bmu = np.asarray(fsom_reference.mudata["cell_data"].obs["distance_to_bmu"])
 
-        distances_mad = [
-            median_abs_deviation(distance_to_bmu[cell_cl == cl + 1])
-            if len(distance_to_bmu[cell_cl == cl + 1]) > 0
-            else 0
-            for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
-        ]
-        thresholds = np.add(distances_median, np.multiply(mad_allowed, distances_mad))
+        # Sort once by cluster label (1-indexed) so each cluster's distances
+        # are contiguous, replacing N pandas boolean-index lookups.
+        sort_idx = np.argsort(cell_cl, kind="stable")
+        cl_sorted = cell_cl[sort_idx]
+        dist_sorted = dist_to_bmu[sort_idx]
+        # Clusters are 1-indexed in test_outliers, so search for 0..n_nodes+1
+        boundaries = np.searchsorted(cl_sorted, np.arange(n_nodes + 2))
 
-        max_distances_new = [
-            np.max(
-                self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
-            )
-            if len(
-                self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
-            )
-            > 0
-            else 0
-            for cl in range(self.mudata["cell_data"].uns["n_nodes"])
-        ]
-        distances = [
-            self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl + 1]
-            for cl in range(self.mudata["cell_data"].uns["n_nodes"])
-        ]
-        outliers = [sum(distances[i] > thresholds[i]) for i in range(len(distances))]
+        distances_median = np.zeros(n_nodes)
+        distances_mad = np.zeros(n_nodes)
+        for cl in range(n_nodes):
+            start, end = boundaries[cl + 1], boundaries[cl + 2]
+            if start < end:
+                chunk = dist_sorted[start:end]
+                med = np.median(chunk)
+                distances_median[cl] = med
+                distances_mad[cl] = np.median(np.abs(chunk - med))
+
+        thresholds = distances_median + mad_allowed * distances_mad
+
+        # Compute outlier stats for self (may differ from fsom_reference)
+        self_cl = np.asarray(self.mudata["cell_data"].obs["clustering"]).astype(int)
+        self_dist = np.asarray(self.mudata["cell_data"].obs["distance_to_bmu"])
+        self_sort = np.argsort(self_cl, kind="stable")
+        self_cl_s = self_cl[self_sort]
+        self_dist_s = self_dist[self_sort]
+        self_bounds = np.searchsorted(self_cl_s, np.arange(n_nodes + 2))
+
+        max_distances_new = np.zeros(n_nodes)
+        outliers = np.zeros(n_nodes, dtype=int)
+        for cl in range(n_nodes):
+            start, end = self_bounds[cl + 1], self_bounds[cl + 2]
+            if start < end:
+                chunk = self_dist_s[start:end]
+                max_distances_new[cl] = chunk.max()
+                outliers[cl] = np.sum(chunk > thresholds[cl])
 
         result = pd.DataFrame(
             {
