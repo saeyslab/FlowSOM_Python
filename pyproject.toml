@@ -30,24 +30,24 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
-  "anndata",
-  "igraph",
-  "loguru",
-  "matplotlib",
-  "mudata",
-  "numba",
-  "numpy",
-  "pandas",
-  "readfcs",
-  "scanpy",
-  "scikit-learn",
-  "scipy",
-  "seaborn",
+  "anndata>=0.10",
+  "igraph>=0.9.8",
+  "loguru>=0.5",
+  "matplotlib>=3.5",
+  "mudata>=0.3.1",
+  "numba>=0.56",
+  "numpy>=1.23",
+  "pandas>=1.4",
+  "readfcs>=1.1",
+  "scanpy>=1.9.3",
+  "scikit-learn>=1.2",
+  "scipy>=1.8",
+  "seaborn>=0.12",
   # for debug logging (referenced from the issue template)
-  "session-info2",
+  "session-info2>=0.1",
 ]
 
-optional-dependencies.dev = [ "pre-commit", "twine>=4.0.2" ]
+optional-dependencies.dev = [ "pre-commit>=3.0", "twine>=4.0.2" ]
 optional-dependencies.doc = [
   "docutils>=0.8,!=0.18.*,!=0.19.*",
   # For notebooks
@@ -67,7 +67,7 @@ optional-dependencies.doc = [
   "sphinxcontrib-bibtex>=1",
   "sphinxext-opengraph",
 ]
-optional-dependencies.test = [ "coverage", "pyflowsom>=0.1.5", "pytest" ]
+optional-dependencies.test = [ "coverage>=7.0", "pyflowsom>=0.1.5", "pytest>=7.0" ]
 urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
 urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
