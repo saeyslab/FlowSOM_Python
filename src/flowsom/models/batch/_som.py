@@ -69,7 +69,7 @@ def SOM_Batch(
         np.random.seed(seed)
 
     # Number of data points
-    n = data[-1].shape[0]
+    n = data[0].shape[0]
 
     # Dimension of the data
     px = data[0].shape[1]

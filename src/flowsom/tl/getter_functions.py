@@ -253,7 +253,7 @@ def get_features(
     nfiles = len(files)
     i = 0
     if filenames is not None:
-        assert len(filenames) != nfiles, "The number of file names should be equal to the number of files"
+        assert len(filenames) == nfiles, "The number of file names should be equal to the number of files"
     assert all(i in ["metaclusters", "clusters"] for i in level), "Level should be 'metaclusters' or 'clusters'"
     assert all(i in ["counts", "percentages", "MFIs", "percentages_positive"] for i in type), (
         "Type should be 'counts', 'percentages','MFI' or 'percentages_positive'"

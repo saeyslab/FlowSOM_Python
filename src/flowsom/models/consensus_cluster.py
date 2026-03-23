@@ -54,7 +54,7 @@ class ConsensusCluster(BaseClusterEstimator):
         self.cluster = cluster
         self.linkage = linkage
         self.z_score = z_score
-        assert z_cap > 0, f"z_cap should be stricly positive, but got {z_cap}"
+        assert z_cap > 0, f"z_cap should be strictly positive, but got {z_cap}"
         self.z_cap = z_cap
 
     def _internal_resample(self, data, proportion):

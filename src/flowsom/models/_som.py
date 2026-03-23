@@ -56,7 +56,7 @@ def SOM(data, codes, nhbrdist, alphas, radii, ncodes, rlen, distf=eucl, seed=Non
     for k in range(niter):
         if k % n == 0:
             if change < 1:
-                k = niter
+                break
             change = 0.0
 
         i = np.random.randint(n)
