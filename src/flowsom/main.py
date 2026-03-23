@@ -318,20 +318,14 @@ class FlowSOM:
         ]
 
         distances_mad = [
-            median_abs_deviation(distance_to_bmu[cell_cl == cl])
-            if len(distance_to_bmu[cell_cl == cl]) > 0
-            else 0
+            median_abs_deviation(distance_to_bmu[cell_cl == cl]) if len(distance_to_bmu[cell_cl == cl]) > 0 else 0
             for cl in range(fsom_reference.mudata["cell_data"].uns["n_nodes"])
         ]
         thresholds = np.add(distances_median, np.multiply(mad_allowed, distances_mad))
 
         max_distances_new = [
-            np.max(
-                self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl]
-            )
-            if len(
-                self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl]
-            )
+            np.max(self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl])
+            if len(self.mudata["cell_data"].obs["distance_to_bmu"][self.mudata["cell_data"].obs["clustering"] == cl])
             > 0
             else 0
             for cl in range(self.mudata["cell_data"].uns["n_nodes"])
