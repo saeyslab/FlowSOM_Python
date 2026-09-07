@@ -28,6 +28,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
   "anndata",
@@ -46,7 +47,6 @@ dependencies = [
   # for debug logging (referenced from the issue template)
   "session-info2",
 ]
-
 optional-dependencies.dev = [ "pre-commit", "twine>=4.0.2" ]
 optional-dependencies.doc = [
   "docutils>=0.8,!=0.18.*,!=0.19.*",
@@ -72,27 +72,20 @@ urls.Documentation = "https://flowsom.readthedocs.io/en/latest/"
 urls.Home-page = "https://github.com/saeyslab/FlowSOM_Python"
 urls.Source = "https://github.com/saeyslab/FlowSOM_Python"
 
-[tool.hatch.build.targets.wheel]
-packages = [ 'src/flowsom' ]
-
-[tool.hatch.envs.default]
-installer = "uv"
-features = [ "dev" ]
-
-[tool.hatch.envs.docs]
-features = [ "doc" ]
-scripts.build = "sphinx-build -M html docs docs/_build {args}"
-scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
-scripts.clean = "git clean -fdX -- {args:docs}"
-
-[tool.hatch.envs.hatch-test]
-features = [ "test" ]
+[tool.hatch]
+build.targets.wheel.packages = [ "src/flowsom" ]
+envs.default.installer = "uv"
+envs.default.features = [ "dev" ]
+envs.docs.features = [ "doc" ]
+envs.docs.scripts.build = "sphinx-build -M html docs docs/_build {args}"
+envs.docs.scripts.clean = "git clean -fdX -- {args:docs}"
+envs.docs.scripts.open = "python -m webbrowser -t docs/_build/html/index.html"
+envs.hatch-test.features = [ "test" ]
 
 [tool.ruff]
 line-length = 120
 src = [ "src" ]
 extend-include = [ "*.ipynb" ]
-
 format.docstring-code-format = true
 lint.select = [
   "B",      # flake8-bugbear
@@ -127,20 +120,20 @@ lint.per-file-ignores."docs/*" = [ "I" ]
 lint.per-file-ignores."tests/*" = [ "D" ]
 lint.pydocstyle.convention = "numpy"
 
-[tool.pytest.ini_options]
-testpaths = [ "tests" ]
-xfail_strict = true
-addopts = [
+[tool.pytest]
+ini_options.testpaths = [ "tests" ]
+ini_options.addopts = [
   "--import-mode=importlib", # allow using test files with same name
 ]
+ini_options.xfail_strict = true
 
-[tool.coverage.run]
-source = [ "flowsom" ]
-omit = [ "**/test_*.py" ]
+[tool.coverage]
+run.source = [ "flowsom" ]
+run.omit = [ "**/test_*.py" ]
 
 [tool.fawltydeps]
-code = [ "src" ]                  # Only search for imports under ./src
-deps = [ "pyproject.toml" ]       # Only look for declared dependencies here
+code = [ "src" ]  # Only search for imports under ./src
+deps = [ "pyproject.toml" ]  # Only look for declared dependencies here
 ignore_undeclared = [ "flowsom" ]
 
 [tool.cruft]
