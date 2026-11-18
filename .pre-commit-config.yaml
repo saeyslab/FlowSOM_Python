@@ -16,6 +16,7 @@ repos:
     rev: v2.5.1
     hooks:
       - id: pyproject-fmt
+        language_version: python3.12
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.11.2
     hooks:
